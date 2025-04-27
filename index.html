@@ -468,9 +468,10 @@
       const maxMinutes = Math.max(...days.map(d => d.totalMinutes)) || 60;
       const chartHeight = 180;
       
-      // Add grid lines and labels - starting with 0 at the bottom
+      // Add grid lines and labels - FIXED: proper value mapping
       for (let i = 0; i <= 4; i++) {
-        const value = Math.round(maxMinutes * i / 4);
+        // Fix: use (4-i) to properly map values to positions
+        const value = Math.round(maxMinutes * (4-i) / 4);
         const yPos = chartHeight - (chartHeight * i / 4);
         
         const gridLine = document.createElement('div');
