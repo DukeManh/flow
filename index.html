@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flow State Hub</title>
+  <style>
+    /* Notion-inspired minimal style */
+    :root { --bg: #ffffff; --bg-alt: #f8f8f8; --fg: #1a1a1a; --muted: #6e6e6e; --accent: #2979ff; --shadow: rgba(0,0,0,0.1); --radius: 8px; --transition: 0.2s ease; }
+    body.dark { --bg: #1e1e1e; --bg-alt: #2a2a2a; --fg: #e0e0e0; --muted: #a0a0a0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--fg); padding: 24px; transition: background var(--transition), color var(--transition); }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .header h1 { font-size: 1.5rem; font-weight: 600; }
+    #datetime { font-size: 1rem; color: var(--fg); }
+    .header button { background: none; border: none; font-size: 1.25rem; color: var(--muted); cursor: pointer; margin-left: 12px; transition: color var(--transition); }
+    .header button:hover { color: var(--accent); }
+    button { background: var(--accent); color: #fff; border: none; padding: 6px 12px; border-radius: var(--radius); cursor: pointer; }
+    button:disabled { background: var(--muted); cursor: not-allowed; }
+    .container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 800px) { .container { grid-template-columns: 1fr; } }
+    .card { background: var(--bg-alt); border-radius: var(--radius); padding: 20px; box-shadow: 0 1px 3px var(--shadow); transition: box-shadow var(--transition); }
+    .card:hover { box-shadow: 0 4px 8px var(--shadow); }
+    .card h2 { font-size: 1.125rem; margin-bottom: 12px; font-weight: 500; display: flex; align-items: center; }
+    .tooltip { font-size: 0.9rem; margin-left: 6px; cursor: help; color: var(--muted); }
+    #timerCard { grid-column: 1 / -1; }
+    #timer { font-family: 'Courier New', monospace; font-size: 3rem; text-align: center; margin-bottom: 12px; color: var(--accent); }
+    .progress-bar { width: 100%; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-bottom: 16px; }
+    .progress { width: 0; height: 100%; background: var(--accent); transition: width var(--transition); }
+    .controls { display: flex; justify-content: center; gap: 12px; margin-bottom: 16px; }
+    .controls button { padding: 8px 16px; }
+    .note { font-size: 0.875rem; color: var(--muted); margin-bottom: 8px; }
+    #goalCard p { font-size: 1rem; margin-bottom: 8px; }
+    #goalCard textarea { width: 100%; padding: 12px; font-size: 1rem; border: 1px solid var(--muted); border-radius: var(--radius); background: var(--bg); color: var(--fg); resize: vertical; }
+    #todoCard .todo-input { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; }
+    #todoInput { flex: 1; padding: 8px; font-size: 0.9rem; border: 1px solid var(--muted); border-radius: var(--radius); background: var(--bg); color: var(--fg); }
+    #addTodoBtn { min-width: 3rem; }
+    #todoList { list-style: none; max-height: 200px; overflow-y: auto; }
+    #todoList li { display: flex; align-items: center; padding: 3px 0; border-bottom: 1px solid var(--shadow); }
+    #todoList li button { margin: 2px}
+    #todoList li input[type="checkbox"] { margin-right: 8px; }
+    .todo-text { flex: 1; }
+    #todoList li.completed .todo-text { text-decoration: line-through; color: var(--muted); font-style: italic; }
+    .todo-actions button { background: none; border: none; color: var(--muted); font-size: 1rem; cursor: pointer; margin-left: 8px; transition: color var(--transition); }
+    .todo-actions button:hover { color: var(--accent); }
+    /* hide tunes/history in distraction */
+    body.distraction #musicCard, body.distraction #historyCard, body.distraction #insightsCard { display: none; }
+    /* Ensure music iframe full width */
+    #musicCard iframe { width: 100%; height: 200px; border: none; border-radius: var(--radius); }
+    #flowGoal { font-size: 1.125rem; margin-bottom: 12px; min-height: 65px; }
+    #goalInput { margin-bottom: 12px;}
+    /* Sound notification control styles */
+    .sound-controls { display: flex; align-items: center; margin-top: 10px; }
+    .sound-controls label { margin-right: 10px; font-size: 0.875rem; }
+    /* Chart styles */
+    #chartContainer { width: 100%; height: 200px; margin-top: 12px; position: relative; }
+    .chart-bar { position: absolute; bottom: 0; background: var(--accent); border-radius: 3px 3px 0 0; transition: height 0.5s ease; }
+    .chart-label { position: absolute; bottom: -20px; font-size: 0.75rem; text-align: center; color: var(--muted); }
+    .chart-grid-line { position: absolute; width: 100%; height: 1px; background: var(--shadow); }
+    .chart-y-label { position: absolute; left: -25px; font-size: 0.75rem; color: var(--muted); transform: translateY(-50%); }
+    .chart-title { font-size: 0.875rem; font-weight: 500; margin-bottom: 8px; text-align: center; }
+    #chartContainer::before { content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px; background: var(--muted); }
+    #soundSettings { margin-top: 12px; }
+    
+    /* Improved Session History Styling */
+    #historyList { list-style: none; max-height: 300px; overflow-y: auto; }
+    #historyList li { 
+      padding: 12px; 
+      margin-bottom: 10px; 
+      border-left: 3px solid var(--accent); 
+      background: rgba(41, 121, 255, 0.1);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .history-duration {
+      background: var(--accent);
+      color: white;
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 0.8rem;
+    }
+    .history-details {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 6px 12px;
+      font-size: 0.9rem;
+    }
+    .history-label {
+      color: var(--muted);
+    }
+    .history-value {
+      color: var(--fg);
+    }
+  </style>
+</head>
+<body class="dark">
+  <div class="header">
+    <h1>🌊 Flow State Hub</h1>
+    <div id="datetime"></div>
+    <div>
+      <button id="distractionToggle" title="Toggle Distraction-Free">🚫</button>
+      <button id="themeToggle" title="Toggle Light/Dark">🌙</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="card" id="timerCard">
+      <h2>⏱️ 52/17 Rule<span class="tooltip" title="Engage in 52 minutes of uninterrupted focus followed by a 17-minute restorative break to sustain deep work and prevent burnout">ℹ️</span></h2>
+      <div class="progress-bar"><div class="progress" id="progress"></div></div>
+      <div id="timer">52:00</div>
+      <div class="controls">
+        <button id="startBtn">Start</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="endBtn">End</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+      <p class="note">🧘 If your mind drifts, gently bring it back.</p>
+      <p class="note">🎯 Focus on one task at a time.</p>
+      <p class="note">⏳ Set clear, bite-sized goals.</p>
+      
+      <div id="soundSettings">
+        <h3>Sound Notifications</h3>
+        <div class="sound-controls">
+          <input type="checkbox" id="soundToggle" checked>
+          <label for="soundToggle">Enable sound notifications</label>
+          <button id="testSoundBtn">Test Sound</button>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="goalCard">
+      <h2>🎯 What is your goal today?</h2>
+      <div id="goalContainer"></div>
+    </div>
+    <div class="card" id="todoCard">
+      <h2>📝 Tasks</h2>
+      <div class="todo-input">
+        <input type="text" id="todoInput" placeholder="Add a task…">
+        <button id="addTodoBtn">Add</button>
+      </div>
+      <ul id="todoList"></ul>
+    </div>
+    <div class="card" id="insightsCard">
+      <h2>📊 Productivity Insights</h2>
+      <div class="chart-title">Focus Time - Last 7 Days</div>
+      <div id="chartContainer"></div>
+    </div>
+    <div class="card" id="musicCard">
+      <h2>🎶 Tunes</h2>
+      <iframe id="ytPlayer" src="https://www.youtube.com/embed/wL8DVHuWI7Y?autoplay=1&loop=1&playlist=wL8DVHuWI7Y" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+      <div class="controls">
+        <button id="vBtn">VØJ, Narvent</button>
+        <button id="bBtn">Binaural Beats</button>
+        <input type="text" id="customVidInput" placeholder="YouTube ID…">
+        <button id="loadBtn">Load</button>
+      </div>
+    </div>
+    <div class="card" id="historyCard">
+      <h2>📜 Session History</h2>
+      <ul id="historyList"></ul>
+    </div>
+  </div>
+  
+  <!-- Updated audio elements with local file paths -->
+  <audio id="startSound" src="./button.wav"></audio>
+  <audio id="endSound" src="./alarm-bell.mp3"></audio>
+  <audio id="pauseSound" src="./button.wav"></audio>
+  
+  <script>
+    // Globals
+    const WORK = 52*60, BREAK = 17*60;
+    let rem = WORK, onBreak = false, iv, startTime = null;
+    const timerEl = document.getElementById('timer'), progressEl = document.getElementById('progress');
+    const startBtn = document.getElementById('startBtn'), pauseBtn = document.getElementById('pauseBtn'), endBtn = document.getElementById('endBtn'), resetBtn = document.getElementById('resetBtn');
+    const vBtn = document.getElementById('vBtn'), bBtn = document.getElementById('bBtn'), loadBtn = document.getElementById('loadBtn');
+    const customVidInput = document.getElementById('customVidInput');
+    const ytPlayer = document.getElementById('ytPlayer');
+    const datetimeEl = document.getElementById('datetime'), container = document.getElementById('goalContainer');
+    const todoInput = document.getElementById('todoInput'), addTodoBtn = document.getElementById('addTodoBtn'), todoList = document.getElementById('todoList');
+    const histList = document.getElementById('historyList');
+    let currentVideoID = 'wL8DVHuWI7Y';
+    
+    // Music labels for readable display
+    const musicLabels = {
+      'wL8DVHuWI7Y': 'VØJ, Narvent',
+      '1_G60OdEzXs': 'Binaural Beats'
+    };
+    
+    // Sound controls
+    const soundToggle = document.getElementById('soundToggle');
+    const testSoundBtn = document.getElementById('testSoundBtn');
+    const startSound = document.getElementById('startSound');
+    const endSound = document.getElementById('endSound');
+    const pauseSound = document.getElementById('pauseSound');
+    
+    // Load sound preferences
+    soundToggle.checked = localStorage.getItem('soundEnabled') !== 'false';
+    
+    // Sound notification functions
+    function playSound(audioElement) {
+      if (soundToggle.checked) {
+        audioElement.currentTime = 0;
+        audioElement.play();
+      }
+    }
+    
+    // Save sound preference
+    soundToggle.addEventListener('change', () => {
+      localStorage.setItem('soundEnabled', soundToggle.checked);
+    });
+    
+    // Test sound button
+    testSoundBtn.addEventListener('click', () => {
+      playSound(startSound);
+    });
+
+    // Theme & Distraction
+    document.getElementById('themeToggle').addEventListener('click', e => {
+      document.body.classList.toggle('dark');
+      e.target.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+    });
+    document.getElementById('distractionToggle').addEventListener('click', () => {
+      document.body.classList.toggle('distraction');
+    });
+
+    // DateTime
+    function updateDateTime() { const now = new Date(); const opts = { weekday:'short', month:'short', day:'numeric' }; const dateStr = now.toLocaleDateString('en-US', opts); const h = now.getHours()%12 || 12; const m = String(now.getMinutes()).padStart(2,'0'); datetimeEl.textContent = `${dateStr}   ${h}:${m}`; }
+    setInterval(updateDateTime, 1000); updateDateTime();
+
+    function fmt(s) { return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); }
+
+    // Goal UI
+    function renderGoalEditor() {
+      container.innerHTML = '<textarea id="goalInput" placeholder="Enter your focus…"></textarea><button id="saveGoalBtn">Save</button>';
+      document.getElementById('goalInput').value = localStorage.getItem('flowGoal') || '';
+      document.getElementById('saveGoalBtn').addEventListener('click', saveAndDisplay);
+    }
+    function renderGoalDisplay() {
+      const g = localStorage.getItem('flowGoal') || '';
+      container.innerHTML = `<p id="flowGoal">${g}</p><button id="editGoalBtn">Edit</button>`;
+      document.getElementById('editGoalBtn').addEventListener('click', renderGoalEditor);
+    }
+    function saveAndDisplay() { const val = document.getElementById('goalInput').value; localStorage.setItem('flowGoal', val); renderGoalDisplay(); }
+
+    // Todos
+    function createTodoItem(text) {
+      const li = document.createElement('li'); const cb = document.createElement('input'); cb.type = 'checkbox'; cb.addEventListener('change', () => { li.classList.toggle('completed', cb.checked); saveTodos(); });
+      const span = document.createElement('span'); span.className = 'todo-text'; span.textContent = text;
+      const up = document.createElement('button'); up.textContent = '↑'; up.title = 'Move up'; up.addEventListener('click', () => { const prev = li.previousElementSibling; if (prev) todoList.insertBefore(li, prev); saveTodos(); });
+      const down = document.createElement('button'); down.textContent = '↓'; down.title = 'Move down'; down.addEventListener('click', () => { const nxt = li.nextElementSibling; if (nxt) todoList.insertBefore(nxt, li); saveTodos(); });
+      const rm = document.createElement('button'); rm.textContent = '✕'; rm.title = 'Remove'; rm.addEventListener('click', () => { li.remove(); saveTodos(); });
+      li.append(cb, span, up, down, rm); return li;
+    }
+    function saveTodos() { const items = Array.from(todoList.children).map(li => ({ text: li.querySelector('.todo-text').textContent, completed: li.querySelector('input').checked })); localStorage.setItem('flowTodos', JSON.stringify(items)); }
+    function loadTodos() { JSON.parse(localStorage.getItem('flowTodos') || '[]').forEach(item => { const li = createTodoItem(item.text); if (item.completed) { li.classList.add('completed'); li.querySelector('input').checked = true; } todoList.append(li); }); }
+    addTodoBtn.addEventListener('click', () => { const t = todoInput.value.trim(); if (!t) return; todoList.append(createTodoItem(t)); todoInput.value = ''; todoInput.focus(); saveTodos(); });
+    todoInput.addEventListener('keypress', e => { if (e.key === 'Enter') addTodoBtn.click(); });
+
+    // Improved History with better formatting
+    function getMusicLabel(videoId) {
+      return musicLabels[videoId] || 'Custom music';
+    }
+    
+    function formatDateTime(timestamp) {
+      const date = new Date(timestamp);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}, ${hours}:${minutes}`;
+    }
+    
+    function addHistoryEntry({ start, end, duration, goal, music, todos }) { 
+      const li = document.createElement('li');
+      
+      // Create header with time and duration
+      const header = document.createElement('div');
+      header.className = 'history-header';
+      
+      const timeSpan = document.createElement('span');
+      timeSpan.textContent = `${formatDateTime(start)} → ${formatDateTime(end)}`;
+      
+      const durationSpan = document.createElement('span');
+      durationSpan.className = 'history-duration';
+      durationSpan.textContent = `${duration} min`;
+      
+      header.appendChild(timeSpan);
+      header.appendChild(durationSpan);
+      
+      // Create details grid
+      const details = document.createElement('div');
+      details.className = 'history-details';
+      
+      // Goal row
+      const goalLabel = document.createElement('div');
+      goalLabel.className = 'history-label';
+      goalLabel.textContent = 'Goal:';
+      
+      const goalValue = document.createElement('div');
+      goalValue.className = 'history-value';
+      goalValue.textContent = goal || 'No goal set';
+      
+      // Music row
+      const musicLabel = document.createElement('div');
+      musicLabel.className = 'history-label';
+      musicLabel.textContent = 'Music:';
+      
+      const musicValue = document.createElement('div');
+      musicValue.className = 'history-value';
+      musicValue.textContent = getMusicLabel(music);
+      
+      // Tasks row
+      const tasksLabel = document.createElement('div');
+      tasksLabel.className = 'history-label';
+      tasksLabel.textContent = 'Tasks:';
+      
+      const tasksValue = document.createElement('div');
+      tasksValue.className = 'history-value';
+      tasksValue.textContent = `${todos.length} ${todos.length === 1 ? 'task' : 'tasks'}`;
+      
+      // Add all elements to the details grid
+      details.appendChild(goalLabel);
+      details.appendChild(goalValue);
+      details.appendChild(musicLabel);
+      details.appendChild(musicValue);
+      details.appendChild(tasksLabel);
+      details.appendChild(tasksValue);
+      
+      // Append header and details to list item
+      li.appendChild(header);
+      li.appendChild(details);
+      
+      histList.prepend(li);
+      
+      // After adding history entry, update the productivity chart
+      renderProductivityChart();
+    }
+    
+    function loadHistory() { 
+      JSON.parse(localStorage.getItem('sessionHistory') || '[]').forEach(addHistoryEntry); 
+      // Initial render of productivity chart
+      renderProductivityChart();
+    }
+
+    // Music switch
+    function changeVideo(id) { if (!id) return; currentVideoID = id; ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}`; }
+    vBtn.addEventListener('click', () => changeVideo('wL8DVHuWI7Y'));
+    bBtn.addEventListener('click', () => changeVideo('1_G60OdEzXs'));
+    loadBtn.addEventListener('click', () => changeVideo(customVidInput.value.trim()));
+
+    // Controls
+    function updateControls(running) { startBtn.disabled = running; pauseBtn.disabled = !running; endBtn.disabled = !running; resetBtn.disabled = !running; }
+    function updateDisplay() { timerEl.textContent = fmt(rem); progressEl.style.width = (100*(WORK-rem)/WORK) + '%'; }
+    
+    function recordSession() { 
+      const st = startTime || Date.now(), en = Date.now(), dur = Math.round((en-st)/60000); 
+      const hist = JSON.parse(localStorage.getItem('sessionHistory') || '[]'); 
+      const entry = { 
+        start: st, 
+        end: en, 
+        duration: dur, 
+        goal: localStorage.getItem('flowGoal') || '', 
+        music: currentVideoID, 
+        todos: Array.from(todoList.children).map(li => ({ 
+          text: li.querySelector('.todo-text').textContent, 
+          completed: li.querySelector('input').checked 
+        })) 
+      }; 
+      hist.push(entry); 
+      localStorage.setItem('sessionHistory', JSON.stringify(hist)); 
+      addHistoryEntry(entry); 
+    }
+    
+    function start() { 
+      updateControls(true); 
+      if (!startTime) startTime = Date.now(); 
+      iv = setInterval(() => { 
+        rem--; 
+        updateDisplay(); 
+        if (rem <= 0) { 
+          clearInterval(iv); 
+          recordSession(); 
+          playSound(endSound); // Play sound when timer ends
+          rem = WORK; 
+          startTime = null; 
+          updateControls(false); 
+        } 
+      }, 1000); 
+      playSound(startSound); // Play sound when timer starts
+    }
+    
+    function pause() { 
+      const reason = prompt('Why pause? Provide reason:'); 
+      if (!reason || !reason.trim()) { 
+        alert('Pause cancelled'); 
+        return; 
+      } 
+      clearInterval(iv); 
+      updateControls(false);
+      playSound(pauseSound); // Play sound when timer pauses
+    }
+    
+    function endSession() { 
+      if (!confirm('End session early?')) return; 
+      clearInterval(iv); 
+      recordSession(); 
+      playSound(endSound); // Play sound when session ends
+      rem = WORK; 
+      startTime = null; 
+      updateControls(false); 
+      updateDisplay(); 
+    }
+    
+    function reset() { 
+      if (!confirm('Reset session?')) return; 
+      clearInterval(iv); 
+      rem = WORK; 
+      startTime = null; 
+      updateControls(false); 
+      updateDisplay(); 
+      playSound(pauseSound); // Play sound when timer is reset
+    }
+    
+    startBtn.addEventListener('click', () => { start(); updateDisplay(); });
+    pauseBtn.addEventListener('click', pause); 
+    endBtn.addEventListener('click', endSession); 
+    resetBtn.addEventListener('click', reset);
+    
+    // Fixed Productivity Insights Chart - With correct orientation (0 at bottom)
+    function renderProductivityChart() {
+      const chartContainer = document.getElementById('chartContainer');
+      chartContainer.innerHTML = '';
+      
+      // Get the last 7 days of sessions
+      const history = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
+      const now = new Date();
+      
+      // Create objects for the last 7 days
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        days.push({
+          date,
+          label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          totalMinutes: 0
+        });
+      }
+      
+      // Calculate total minutes for each day
+      history.forEach(session => {
+        const sessionDate = new Date(session.start);
+        for (let day of days) {
+          if (sessionDate.getDate() === day.date.getDate() && 
+              sessionDate.getMonth() === day.date.getMonth() && 
+              sessionDate.getFullYear() === day.date.getFullYear()) {
+            day.totalMinutes += session.duration;
+            break;
+          }
+        }
+      });
+      
+      // Find the maximum minutes for scaling
+      const maxMinutes = Math.max(...days.map(d => d.totalMinutes)) || 60;
+      const chartHeight = 180;
+      
+      // Add grid lines and labels - starting with 0 at the bottom
+      for (let i = 0; i <= 4; i++) {
+        const value = Math.round(maxMinutes * i / 4);
+        const yPos = chartHeight - (chartHeight * i / 4);
+        
+        const gridLine = document.createElement('div');
+        gridLine.className = 'chart-grid-line';
+        gridLine.style.bottom = `${yPos}px`;
+        chartContainer.appendChild(gridLine);
+        
+        const yLabel = document.createElement('div');
+        yLabel.className = 'chart-y-label';
+        yLabel.textContent = `${value} min`;
+        yLabel.style.bottom = `${yPos}px`;
+        chartContainer.appendChild(yLabel);
+      }
+      
+      // Create bars for each day
+      days.forEach((day, index) => {
+        const barWidth = (100 / days.length) - 5;
+        const barHeight = day.totalMinutes === 0 ? 0 : (day.totalMinutes / maxMinutes) * chartHeight;
+        
+        const bar = document.createElement('div');
+        bar.className = 'chart-bar';
+        bar.style.left = `${(index * (100 / days.length)) + 2.5}%`;
+        bar.style.width = `${barWidth}%`;
+        bar.style.height = `${barHeight}px`;
+        bar.title = `${day.totalMinutes} minutes`;
+        
+        const label = document.createElement('div');
+        label.className = 'chart-label';
+        label.textContent = day.label;
+        label.style.left = `${(index * (100 / days.length)) + (barWidth / 2) + 2.5}%`;
+        label.style.width = `${barWidth}%`;
+        
+        chartContainer.appendChild(bar);
+        chartContainer.appendChild(label);
+      });
+    }
+
+    // Init
+    loadTodos(); 
+    const sg = localStorage.getItem('flowGoal'); 
+    sg ? renderGoalDisplay() : renderGoalEditor(); 
+    loadHistory();
+    updateDisplay(); 
+    updateControls(false);
+  </script>
+</body>
+</html>
