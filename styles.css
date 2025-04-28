@@ -126,6 +126,13 @@ button:disabled {
   color: var(--accent);
 }
 
+#timerLabel {
+  text-align: center;
+  font-size: 1rem;
+  margin-bottom: 4px;
+  color: var(--muted);
+}
+
 .progress-bar {
   width: 100%;
   height: 8px;
@@ -406,6 +413,10 @@ body.distraction #insightsCard {
 
   #timer {
     font-size: 2.5rem;
+  }
+
+  #timerLabel {
+    font-size: 0.9rem;
   }
 
   .controls {

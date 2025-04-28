@@ -1,4 +1,4 @@
-const WORK = 52 * 60, BREAK = 17 * 60;
+const WORK = 1 * 60, BREAK = 17 * 60;
 let rem = WORK, onBreak = false, iv, startTime = null;
 const timerEl = document.getElementById('timer'), progressEl = document.getElementById('progress');
 const startBtn = document.getElementById('startBtn'), pauseBtn = document.getElementById('pauseBtn'), endBtn = document.getElementById('endBtn'), resetBtn = document.getElementById('resetBtn');
@@ -9,12 +9,45 @@ const datetimeEl = document.getElementById('datetime'), container = document.get
 const todoInput = document.getElementById('todoInput'), addTodoBtn = document.getElementById('addTodoBtn'), todoList = document.getElementById('todoList');
 const histList = document.getElementById('historyList');
 let currentVideoID = 'wL8DVHuWI7Y';
+let isRunning = false;
 
 // Music labels for readable display
 const musicLabels = {
   'wL8DVHuWI7Y': 'VØJ, Narvent',
   '1_G60OdEzXs': 'Binaural Beats'
 };
+
+// Load timer state from localStorage
+function loadTimerState() {
+  const savedState = localStorage.getItem('timerState');
+  if (savedState) {
+    const state = JSON.parse(savedState);
+    rem = state.rem;
+    onBreak = state.onBreak;
+    startTime = state.startTime;
+    isRunning = state.isRunning;
+    
+    updateDisplay();
+    updateBreakUI();
+    
+    if (isRunning) {
+      start(false); // Resume timer without resetting startTime
+    } else{
+      updateControls()
+    }
+  }
+}
+
+// Save timer state to localStorage
+function saveTimerState() {
+  const state = {
+    rem,
+    onBreak,
+    startTime,
+    isRunning
+  };
+  localStorage.setItem('timerState', JSON.stringify(state));
+}
 
 // Sound controls
 const soundToggle = document.getElementById('soundToggle');
@@ -181,44 +214,117 @@ bBtn.addEventListener('click', () => changeVideo('1_G60OdEzXs'));
 loadBtn.addEventListener('click', () => changeVideo(customVidInput.value.trim()));
 
 // Controls
-function updateControls(running) { startBtn.disabled = running; pauseBtn.disabled = !running; endBtn.disabled = !running; resetBtn.disabled = !running; }
-function updateDisplay() { timerEl.textContent = fmt(rem); progressEl.style.width = (100 * (WORK - rem) / WORK) + '%'; }
-
-function recordSession() {
-  const st = startTime || Date.now(), en = Date.now(), dur = Math.round((en - st) / 60000);
-  const hist = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
-  const entry = {
-    start: st,
-    end: en,
-    duration: dur,
-    goal: localStorage.getItem('flowGoal') || '',
-    music: currentVideoID,
-    todos: Array.from(todoList.children).map(li => ({
-      text: li.querySelector('.todo-text').textContent,
-      completed: li.querySelector('input').checked
-    }))
-  };
-  hist.push(entry);
-  localStorage.setItem('sessionHistory', JSON.stringify(hist));
-  addHistoryEntry(entry);
+function updateControls(running) { 
+  isRunning = running;
+  
+  if (onBreak) {
+    startBtn.disabled = running;
+    startBtn.textContent = running ? "Break Running" : "Start Break";
+    pauseBtn.disabled = true;
+    pauseBtn.style.display = 'none';
+    resetBtn.disabled = true;
+    resetBtn.style.display = 'none';
+    endBtn.disabled = !running;
+    endBtn.textContent = "Skip Break";
+  } else {
+    startBtn.disabled = running; 
+    startBtn.textContent = "Lock In";
+    pauseBtn.disabled = !running;
+    pauseBtn.style.display = '';
+    endBtn.disabled = !running;
+    endBtn.textContent = "End";
+    resetBtn.disabled = !running;
+    resetBtn.style.display = '';
+  }
+  
+  saveTimerState();
 }
 
-function start() {
+function updateBreakUI() {
+  if (onBreak) {
+    timerEl.style.color = 'var(--muted)';
+    document.getElementById('timerLabel').textContent = "Break Time";
+  } else {
+    timerEl.style.color = 'var(--accent)';
+    document.getElementById('timerLabel').textContent = "Focus Time";
+  }
+}
+
+function updateDisplay() {
+  timerEl.textContent = fmt(rem);
+  
+  if (onBreak) {
+    // For break, show progress of break time used
+    progressEl.style.width = (100 * (BREAK - rem) / BREAK) + '%';
+  } else {
+    // For work, show progress of work time used
+    progressEl.style.width = (100 * (WORK - rem) / WORK) + '%';
+  }
+  
+  saveTimerState();
+}
+
+function recordSession() {
+  if (!onBreak) { // Only record work sessions, not breaks
+    const st = startTime || Date.now(), en = Date.now(), dur = Math.round((en - st) / 60000);
+    const hist = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
+    const entry = {
+      start: st,
+      end: en,
+      duration: dur,
+      goal: localStorage.getItem('flowGoal') || '',
+      music: currentVideoID,
+      todos: Array.from(todoList.children).map(li => ({
+        text: li.querySelector('.todo-text').textContent,
+        completed: li.querySelector('input').checked
+      }))
+    };
+    hist.push(entry);
+    localStorage.setItem('sessionHistory', JSON.stringify(hist));
+    addHistoryEntry(entry);
+  }
+}
+
+function startBreak() {
+  onBreak = true;
+  rem = BREAK;
+  updateBreakUI();
+  updateDisplay();
+  updateControls(false);
+}
+
+function endBreak() {
+  onBreak = false;
+  rem = WORK;
+  startTime = null;
+  clearInterval(iv);
+  updateBreakUI();
+  updateDisplay();
+  updateControls(false);
+}
+
+function start(resetStartTime = true) {
   updateControls(true);
-  if (!startTime) startTime = Date.now();
+  if (resetStartTime && !onBreak) startTime = Date.now();
   iv = setInterval(() => {
     rem--;
     updateDisplay();
     if (rem <= 0) {
       clearInterval(iv);
-      recordSession();
-      playSound(endSound); // Play sound when timer ends
-      rem = WORK;
-      startTime = null;
-      updateControls(false);
+      
+      if (onBreak) {
+        // Break ended
+        playSound(endSound);
+        endBreak();
+      } else {
+        // Work session ended
+        recordSession();
+        playSound(endSound);
+        startBreak();
+      }
     }
   }, 1000);
-  playSound(startSound); // Play sound when timer starts
+  playSound(startSound);
 }
 
 function pause() {
@@ -229,18 +335,23 @@ function pause() {
   }
   clearInterval(iv);
   updateControls(false);
-  playSound(pauseSound); // Play sound when timer pauses
+  playSound(pauseSound);
 }
 
 function endSession() {
-  if (!confirm('End session early?')) return;
-  clearInterval(iv);
-  recordSession();
-  playSound(endSound); // Play sound when session ends
-  rem = WORK;
-  startTime = null;
-  updateControls(false);
-  updateDisplay();
+  if (onBreak) {
+    // Skip break
+    if (!confirm('Skip the rest of your break?')) return;
+    clearInterval(iv);
+    endBreak();
+  } else {
+    // End work session
+    if (!confirm('End session early?')) return;
+    clearInterval(iv);
+    recordSession();
+    playSound(endSound);
+    startBreak();
+  }
 }
 
 function reset() {
@@ -250,7 +361,7 @@ function reset() {
   startTime = null;
   updateControls(false);
   updateDisplay();
-  playSound(pauseSound); // Play sound when timer is reset
+  playSound(pauseSound);
 }
 
 startBtn.addEventListener('click', () => { start(); updateDisplay(); });
@@ -337,10 +448,20 @@ function renderProductivityChart() {
   });
 }
 
-// Init
-loadTodos();
-const sg = localStorage.getItem('flowGoal');
-sg ? renderGoalDisplay() : renderGoalEditor();
-loadHistory();
-updateDisplay();
-updateControls(false);
+function main() {
+
+}
+
+function main() {
+  loadTimerState();
+  loadTodos();
+  const sg = localStorage.getItem('flowGoal')
+  sg ? renderGoalDisplay() : renderGoalEditor();
+  loadHistory();
+}
+
+// Load timer state from localStorage on page load
+window.addEventListener('load', main);
+
+// Handle page unload to ensure we save the current state
+window.addEventListener('beforeunload', saveTimerState);
