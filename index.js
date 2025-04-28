@@ -1,4 +1,4 @@
-const WORK = 1 * 60, BREAK = 17 * 60;
+const WORK = 52 * 60, BREAK = 17 * 60;
 let rem = WORK, onBreak = false, iv, startTime = null;
 const timerEl = document.getElementById('timer'), progressEl = document.getElementById('progress');
 const startBtn = document.getElementById('startBtn'), pauseBtn = document.getElementById('pauseBtn'), endBtn = document.getElementById('endBtn'), resetBtn = document.getElementById('resetBtn');
@@ -14,7 +14,8 @@ let isRunning = false;
 // Music labels for readable display
 const musicLabels = {
   'wL8DVHuWI7Y': 'VØJ, Narvent',
-  '1_G60OdEzXs': 'Binaural Beats'
+  '1_G60OdEzXs': 'Binaural Beats',
+  'sF80I-TQiW0': 'Chill Study Beats',
 };
 
 // Load timer state from localStorage
@@ -211,6 +212,7 @@ function loadHistory() {
 function changeVideo(id) { if (!id) return; currentVideoID = id; ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}`; }
 vBtn.addEventListener('click', () => changeVideo('wL8DVHuWI7Y'));
 bBtn.addEventListener('click', () => changeVideo('1_G60OdEzXs'));
+lBtn.addEventListener('click', () => changeVideo('sF80I-TQiW0'));
 loadBtn.addEventListener('click', () => changeVideo(customVidInput.value.trim()));
 
 // Controls
