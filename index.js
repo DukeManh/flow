@@ -8,7 +8,7 @@ const ytPlayer = document.getElementById('ytPlayer');
 const datetimeEl = document.getElementById('datetime'), container = document.getElementById('goalContainer');
 const todoInput = document.getElementById('todoInput'), addTodoBtn = document.getElementById('addTodoBtn'), todoList = document.getElementById('todoList');
 const histList = document.getElementById('historyList');
-let currentVideoID = 'wL8DVHuWI7Y';
+let currentVideoID = localStorage.getItem('lastVideoID') || 'wL8DVHuWI7Y';
 let isRunning = false;
 
 // Music labels for readable display
@@ -217,7 +217,13 @@ function loadHistory() {
 }
 
 // Music switch
-function changeVideo(id) { if (!id) return; currentVideoID = id; ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}`; }
+function changeVideo(id) { 
+  if (!id) return; 
+  currentVideoID = id; 
+  ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}`;
+  localStorage.setItem('lastVideoID', id);
+}
+
 vBtn.addEventListener('click', () => changeVideo('wL8DVHuWI7Y'));
 bBtn.addEventListener('click', () => changeVideo('1_G60OdEzXs'));
 lBtn.addEventListener('click', () => changeVideo('sF80I-TQiW0'));
@@ -469,15 +475,14 @@ function renderProductivityChart() {
 }
 
 function main() {
-
-}
-
-function main() {
   loadTimerState();
   loadTodos();
   const sg = localStorage.getItem('flowGoal')
   sg ? renderGoalDisplay() : renderGoalEditor();
   loadHistory();
+  
+  // Initialize YouTube player with the remembered video
+  ytPlayer.src = `https://www.youtube.com/embed/${currentVideoID}?autoplay=0&loop=1&playlist=${currentVideoID}`;
 }
 
 // Load timer state from localStorage on page load
