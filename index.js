@@ -25,8 +25,16 @@ function loadTimerState() {
     const state = JSON.parse(savedState);
     rem = state.rem;
     onBreak = state.onBreak;
-    startTime = state.startTime;
-    isRunning = state.isRunning;
+    
+    // Validate startTime - if it's more than the WORK duration old, reset it
+    const now = Date.now();
+    if (state.startTime && (now - state.startTime > WORK * 60 * 1000)) {
+      startTime = null; // Reset if more than WORK duration old
+      isRunning = false; // Also don't auto-resume
+    } else {
+      startTime = state.startTime;
+      isRunning = state.isRunning;
+    }
     
     updateDisplay();
     updateBreakUI();
@@ -268,7 +276,17 @@ function updateDisplay() {
 
 function recordSession() {
   if (!onBreak) { // Only record work sessions, not breaks
-    const st = startTime || Date.now(), en = Date.now(), dur = Math.round((en - st) / 60000);
+    const st = startTime || Date.now(), en = Date.now();
+    
+    // Calculate duration with a reasonable maximum (3 hours)
+    const MAX_DURATION_MINUTES = 180; // 3 hours
+    let dur = Math.round((en - st) / 60000);
+    
+    // Cap duration at a reasonable maximum
+    if (dur > MAX_DURATION_MINUTES || dur < 0) {
+      dur = Math.min(MAX_DURATION_MINUTES, WORK / 60); // Use either max or current work session length
+    }
+    
     const hist = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
     const entry = {
       start: st,
