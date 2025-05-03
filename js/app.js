@@ -6,6 +6,7 @@ import { initGoals } from './goals.js';
 import { initTodos } from './todos.js';
 import { initHistory } from './history.js';
 import { initMusic } from './music.js';
+import { initAnimations, cleanupAnimations } from './animations.js';
 
 // Initialize date/time display
 function initDateTime() {
@@ -26,7 +27,10 @@ function initDateTime() {
 
 // Initialize all app modules
 function init() {
-  // Initialize all modules
+  // Initialize animations first for immediate visual feedback
+  initAnimations();
+  
+  // Initialize all other modules
   initSounds();
   initThemes();
   initDateTime();
@@ -35,6 +39,9 @@ function init() {
   const currentVideoID = initMusic();
   initHistory(currentVideoID);
   initTimer();
+  
+  // Clean up animations after they've completed
+  cleanupAnimations();
 }
 
 // Handle page unload to ensure we save the current state

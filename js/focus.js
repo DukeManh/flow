@@ -3,6 +3,7 @@ import { WORK, BREAK } from './constants.js';
 import { formatTime } from './utils.js';
 import { loadTheme } from './themes.js';
 import { playSound, getStartSound, getEndSound, getPauseSound, initSounds } from './sound.js';
+import { initAnimations, cleanupAnimations } from './animations.js';
 
 // Timer state
 let rem = WORK;
@@ -27,6 +28,10 @@ function isMobileDevice() {
 // Initialize the focus mode
 document.addEventListener('DOMContentLoaded', () => {
   initElements();
+  
+  // Add animations first for immediate visual feedback
+  initAnimations();
+  
   initSounds(); // Initialize sound system
   loadState();
   setupEventListeners();
@@ -37,6 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Setup YouTube mini player controls
   setupYouTubeControls();
+  
+  // Clean up animations after they've completed
+  cleanupAnimations();
 });
 
 // Initialize DOM elements
