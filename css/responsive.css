@@ -14,14 +14,44 @@
   }
 
   .header {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
     gap: 8px;
   }
 
+  .header h1 {
+    font-size: 1.6em;
+    margin-right: auto;
+  }
+
+  #datetime {
+    font-size: 0.9rem;
+    order: 2;
+  }
+
+  .header-controls {
+    order: 3;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .header .theme-dropdown-btn {
+    padding: 4px;
+  }
+
+  .header .focus-btn {
+    padding: 4px 8px;
+  }
+
+  .focus-text {
+    display: none;
+  }
+
   .header div:last-child {
-    align-self: flex-end;
-    margin-top: -30px;
+    align-self: center;
+    margin-top: 0;
   }
 
   #timer {
