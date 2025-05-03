@@ -16,6 +16,56 @@ body.dark {
   --muted: #a0a0a0;
 }
 
+/* New theme: Nature */
+body.nature {
+  --bg: #f5f7ed;
+  --bg-alt: #e8eadc;
+  --fg: #2c3e2e;
+  --muted: #6b8069;
+  --accent: #4a7c59;
+  --shadow: rgba(74, 124, 89, 0.1);
+}
+
+/* New theme: Ocean */
+body.ocean {
+  --bg: #e8f4f8;
+  --bg-alt: #d1e8f0;
+  --fg: #0a3b5c;
+  --muted: #5c8ba0;
+  --accent: #0077cc;
+  --shadow: rgba(0, 119, 204, 0.1);
+}
+
+/* New theme: Sunset */
+body.sunset {
+  --bg: #fff5eb;
+  --bg-alt: #f5e1d0;
+  --fg: #4b3832;
+  --muted: #854c45;
+  --accent: #e76f51;
+  --shadow: rgba(231, 111, 81, 0.1);
+}
+
+/* New theme: Midnight */
+body.midnight {
+  --bg: #0f1729;
+  --bg-alt: #1a2238;
+  --fg: #e1e6fa;
+  --muted: #9ca8d3;
+  --accent: #5d5fef;
+  --shadow: rgba(93, 95, 239, 0.1);
+}
+
+/* New theme: Mint */
+body.mint {
+  --bg: #f0fff0;
+  --bg-alt: #d8f3d8;
+  --fg: #2e5339;
+  --muted: #75b798;
+  --accent: #40916c;
+  --shadow: rgba(64, 145, 108, 0.1);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -59,6 +109,72 @@ body {
 
 .header button:hover {
   color: var(--accent);
+}
+
+/* Theme selector styles */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.theme-dropdown-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--transition);
+  padding: 2px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-dropdown-btn:hover {
+  color: var(--accent);
+}
+
+.theme-dropdown-content {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  min-width: 140px;
+  background: var(--bg-alt);
+  border-radius: var(--radius);
+  box-shadow: 0 3px 8px var(--shadow);
+  z-index: 100;
+  overflow: hidden;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: transform var(--transition), opacity var(--transition), visibility var(--transition);
+}
+
+.theme-dropdown.active .theme-dropdown-content {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.theme-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.theme-option:hover {
+  background: var(--bg);
+}
+
+.theme-option.active {
+  background: var(--accent);
+  color: white;
 }
 
 button {
@@ -392,6 +508,37 @@ body.distraction #insightsCard {
 
 .history-value {
   color: var(--fg);
+}
+
+/* Theme selector styles */
+.theme-selector {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 8px;
+  border-radius: var(--radius);
+  background: var(--bg-alt);
+}
+
+.theme-selector label {
+  margin-right: 10px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.theme-selector select {
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.theme-selector select:focus {
+  outline: 2px solid var(--accent);
+  border-color: var(--accent);
 }
 
 /* Mobile friendly adjustments */

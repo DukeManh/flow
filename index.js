@@ -86,11 +86,94 @@ testSoundBtn.addEventListener('click', () => {
   playSound(startSound);
 });
 
-// Theme & Distraction
-document.getElementById('themeToggle').addEventListener('click', e => {
-  document.body.classList.toggle('dark');
-  e.target.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+// Theme Management
+const themeDropdown = document.querySelector('.theme-dropdown');
+const themeDropdownBtn = document.getElementById('themeDropdownBtn');
+const themeOptions = document.querySelectorAll('.theme-option');
+
+// Toggle dropdown visibility
+themeDropdownBtn.addEventListener('click', () => {
+  themeDropdown.classList.toggle('active');
 });
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!themeDropdown.contains(e.target)) {
+    themeDropdown.classList.remove('active');
+  }
+});
+
+// Load saved theme from localStorage
+function loadTheme() {
+  const savedTheme = localStorage.getItem('selectedTheme') || 'midnight';
+  
+  // Remove any existing theme classes
+  document.body.classList.remove('dark', 'nature', 'ocean', 'sunset', 'midnight', 'mint');
+  
+  // If the theme is not default, add the class
+  if (savedTheme !== 'default') {
+    document.body.classList.add(savedTheme);
+  }
+  
+  // Update the active state in dropdown
+  themeOptions.forEach(option => {
+    option.classList.toggle('active', option.dataset.theme === savedTheme);
+  });
+  
+  // Update dropdown button icon based on theme
+  updateThemeIcon(savedTheme);
+}
+
+// Set theme icon based on current theme
+function updateThemeIcon(theme) {
+  const iconEl = themeDropdownBtn.querySelector('.current-theme-icon');
+  
+  // Theme-specific icons
+  switch(theme) {
+    case 'default':
+      iconEl.textContent = '☀️';
+      break;
+    case 'dark':
+      iconEl.textContent = '🌙';
+      break;
+    case 'nature':
+      iconEl.textContent = '🌿';
+      break;
+    case 'ocean':
+      iconEl.textContent = '🌊';
+      break;
+    case 'sunset':
+      iconEl.textContent = '🌅';
+      break;
+    case 'midnight':
+      iconEl.textContent = '✨';
+      break;
+    case 'mint':
+      iconEl.textContent = '🧊';
+      break;
+    default:
+      iconEl.textContent = '🎨';
+  }
+}
+
+// Theme option click handler
+themeOptions.forEach(option => {
+  option.addEventListener('click', () => {
+    const selectedTheme = option.dataset.theme;
+    localStorage.setItem('selectedTheme', selectedTheme);
+    
+    // Update active state
+    themeOptions.forEach(opt => opt.classList.remove('active'));
+    option.classList.add('active');
+    
+    loadTheme();
+    
+    // Close dropdown
+    themeDropdown.classList.remove('active');
+  });
+});
+
+// Distraction
 document.getElementById('distractionToggle').addEventListener('click', () => {
   document.body.classList.toggle('distraction');
 });
@@ -483,6 +566,7 @@ function main() {
   
   // Initialize YouTube player with the remembered video
   ytPlayer.src = `https://www.youtube.com/embed/${currentVideoID}?autoplay=0&loop=1&playlist=${currentVideoID}`;
+  loadTheme();
 }
 
 // Load timer state from localStorage on page load

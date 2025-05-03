@@ -9,21 +9,35 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 
-<body class="dark">
+<body>
   <div class="header">
     <h1 style="display: flex; align-items: center; font-family: 'Courier New', Courier, monospace; font-size: 1.5em; letter-spacing: 0.05em;">
       <img src="./favicon.ico" alt="Flow State Logo" style="height: 1.3em; margin-right: 0.5em;">  <span style="font-style: italic">Flow ∞ State</span>
     </h1>
     <div id="datetime"></div>
-    <div>
+    <div class="header-controls">
+      <!-- Custom theme dropdown -->
+      <div class="theme-dropdown">
+        <button id="themeDropdownBtn" class="theme-dropdown-btn" title="Change Theme">
+          <span class="current-theme-icon">🎨</span>
+        </button>
+        <div class="theme-dropdown-content">
+          <div class="theme-option" data-theme="default">Light</div>
+          <div class="theme-option" data-theme="dark">Dark</div>
+          <div class="theme-option" data-theme="nature">Nature</div>
+          <div class="theme-option" data-theme="ocean">Ocean</div>
+          <div class="theme-option" data-theme="sunset">Sunset</div>
+          <div class="theme-option" data-theme="midnight">Midnight</div>
+          <div class="theme-option" data-theme="mint">Mint</div>
+        </div>
+      </div>
       <button id="distractionToggle" title="Toggle Distraction-Free">🚫</button>
-      <button id="themeToggle" title="Toggle Light/Dark">🌙</button>
     </div>
   </div>
   <div class="container">
     <div class="card" id="timerCard">
       <h2>⏱️ 52/17 Rule<span class="tooltip"
-          title="Engage in 52 minutes of uninterrupted focus followed by a 17-minute restorative breakt">ℹ️</span>
+          title="Engage in 52 minutes of uninterrupted focus followed by a 17-minute restorative break">ℹ️</span>
       </h2>
       <div class="progress-bar">
         <div class="progress" id="progress"></div>
