@@ -404,4 +404,19 @@ body.mint {
   .controls button, .exit-button {
     min-height: 44px;
   }
+  
+  /* Hide volume controls completely on mobile */
+  .volume-control {
+    display: none !important;
+  }
+  
+  /* Make the controls more accessible on mobile */
+  .youtube-mini-player:hover .youtube-controls {
+    opacity: 1;
+  }
+  
+  /* Make the controls persistently visible when not collapsed on mobile */
+  .youtube-mini-player:not(.collapsed) .youtube-controls {
+    opacity: 1;
+  }
 }
