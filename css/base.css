@@ -99,6 +99,27 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* Focus button styling */
+.focus-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--accent);
+  transition: all var(--transition);
+}
+
+
+.focus-text {
+  font-size: 14px;
+}
+
+body.distraction .focus-btn {
+  background: var(--accent);
+  color: white;
+}
+
 /* Distraction mode */
 body.distraction #musicCard,
 body.distraction #historyCard,
