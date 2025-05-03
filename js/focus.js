@@ -187,8 +187,29 @@ function setupYouTubeControls() {
 function continueMusicPlayback() {
   const videoID = localStorage.getItem('lastVideoID');
   if (videoID) {
-    // Enable JS API for postMessage control
-    ytPlayer.src = `https://www.youtube.com/embed/${videoID}?autoplay=1&loop=1&playlist=${videoID}&mute=0&enablejsapi=1&origin=${window.location.origin}`;
+    // Enable JS API for postMessage control but don't autoplay
+    ytPlayer.src = `https://www.youtube.com/embed/${videoID}?autoplay=0&loop=1&playlist=${videoID}&mute=0&enablejsapi=1&origin=${window.location.origin}`;
+    
+    // Add a play button to the YouTube container
+    const playButtonContainer = document.createElement('div');
+    playButtonContainer.className = 'youtube-play-container';
+    playButtonContainer.innerHTML = '<button id="playYTBtn" class="youtube-play-button"><i class="fas fa-play"></i></button>';
+    ytPlayerContainer.appendChild(playButtonContainer);
+
+    // Add click event to play button
+    document.getElementById('playYTBtn').addEventListener('click', () => {
+      // Start playing video
+      try {
+        ytPlayer.contentWindow.postMessage(JSON.stringify({
+          event: 'command',
+          func: 'playVideo'
+        }), '*');
+        // Hide play button once playback starts
+        playButtonContainer.style.display = 'none';
+      } catch (e) {
+        console.log('YouTube playback error:', e);
+      }
+    });
     
     // Apply volume and muted state after player loads
     setTimeout(() => {
