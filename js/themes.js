@@ -87,30 +87,64 @@ function updateThemeIcon(theme) {
   const iconEl = themeDropdownBtn.querySelector('.current-theme-icon');
   if (!iconEl) return;
   
-  // Theme-specific icons
+  // Theme-specific icons with Font Awesome
+  iconEl.innerHTML = ''; // Clear any existing content
+  
+  let icon = document.createElement('i');
+  icon.className = 'fas '; // Base Font Awesome class
+  
+  // Add theme-specific icon class
   switch (theme) {
     case 'default':
-      iconEl.textContent = '☀️';
+      icon.className += 'fa-sun';
       break;
     case 'dark':
-      iconEl.textContent = '🌙';
+      icon.className += 'fa-moon';
       break;
     case 'nature':
-      iconEl.textContent = '🌿';
+      icon.className += 'fa-leaf';
       break;
     case 'ocean':
-      iconEl.textContent = '🌊';
+      icon.className += 'fa-water';
       break;
     case 'sunset':
-      iconEl.textContent = '🌅';
+      icon.className += 'fa-sunset';
       break;
     case 'midnight':
-      iconEl.textContent = '✨';
+      icon.className += 'fa-stars';
       break;
     case 'mint':
-      iconEl.textContent = '🧊';
+      icon.className += 'fa-ice-cube';
       break;
     default:
-      iconEl.textContent = '🎨';
+      icon.className += 'fa-palette';
   }
+  
+  // Some Font Awesome 6 icons might need different classes or alternatives
+  // Fallbacks for missing icons
+  if (theme === 'sunset' && !isFontAwesomeIconAvailable('fa-sunset')) {
+    icon.className = 'fas fa-sun';
+  } else if (theme === 'midnight' && !isFontAwesomeIconAvailable('fa-stars')) {
+    icon.className = 'fas fa-star';
+  } else if (theme === 'mint' && !isFontAwesomeIconAvailable('fa-ice-cube')) {
+    icon.className = 'fas fa-snowflake';
+  }
+  
+  iconEl.appendChild(icon);
+}
+
+// Helper function to handle fallbacks for unavailable Font Awesome icons
+function isFontAwesomeIconAvailable(iconClass) {
+  // This is a simple check - in production you might want a more robust solution
+  const tempIcon = document.createElement('i');
+  tempIcon.className = iconClass;
+  document.body.appendChild(tempIcon);
+  
+  const computedStyle = window.getComputedStyle(tempIcon);
+  const isAvailable = computedStyle.content !== '' && 
+                     computedStyle.content !== 'none' && 
+                     computedStyle.fontFamily.includes('Font Awesome');
+  
+  document.body.removeChild(tempIcon);
+  return isAvailable;
 }

@@ -6,6 +6,9 @@
   <link rel="icon" href="./assets/images/favicon.ico" type="image/ico">
   <title>Flow - Focus Mode</title>
   
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <!-- Modular CSS files - import only what's needed -->
   <link rel="stylesheet" href="./css/base.css">
   <link rel="stylesheet" href="./css/timer.css">
@@ -47,11 +50,11 @@
   <!-- YouTube mini player - positioned in bottom right corner -->
   <div class="youtube-mini-player">
     <div class="youtube-controls">
-      <button id="togglePlayerBtn" title="Toggle player size">↔️</button>
-      <button id="mutePlayerBtn" title="Mute/Unmute">🔊</button>
+      <button id="togglePlayerBtn" title="Toggle player size"><i class="fas fa-expand-arrows-alt"></i></button>
+      <button id="mutePlayerBtn" title="Mute/Unmute"><i class="fas fa-volume-up"></i></button>
     </div>
     <div class="volume-control">
-      <span class="volume-label">🔈</span>
+      <span class="volume-label"><i class="fas fa-volume-down"></i></span>
       <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
       <span class="volume-label" id="volumePercent">50%</span>
     </div>

@@ -84,6 +84,15 @@ body {
   transition: background var(--transition), color var(--transition);
 }
 
+/* Icon spacing - adds consistent space between icons and text */
+i.fas, i.far, i.fab {
+  margin-right: 8px;
+}
+
+.volume-label i.fas {
+  margin-right: 4px; /* Smaller margin for volume controls */
+}
+
 /* Base button styles */
 button {
   background: var(--accent);
@@ -109,7 +118,6 @@ button:disabled {
   border: 1px solid var(--accent);
   transition: all var(--transition);
 }
-
 
 .focus-text {
   font-size: 14px;
