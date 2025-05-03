@@ -1,0 +1,12 @@
+/* Music player component styles for the Flow State app */
+
+#musicCard iframe {
+  width: 100%;
+  height: 200px;
+  border: none;
+  border-radius: var(--radius);
+}
+
+#musicCard .controls {
+  /* Music-specific control modifications */
+}

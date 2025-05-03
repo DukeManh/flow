@@ -1,0 +1,79 @@
+/* Responsive styles for the Flow State app */
+
+/* Tablet layout */
+@media (max-width: 800px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile layout */
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .header div:last-child {
+    align-self: flex-end;
+    margin-top: -30px;
+  }
+
+  #timer {
+    font-size: 2.5rem;
+  }
+
+  #timerLabel {
+    font-size: 0.9rem;
+  }
+
+  .controls {
+    flex-wrap: wrap;
+  }
+
+  .controls button {
+    flex: 1;
+    min-width: 80px;
+    padding: 12px 8px;
+    margin-bottom: 8px;
+  }
+
+  #musicCard iframe {
+    height: 180px;
+  }
+
+  #musicCard .controls {
+    flex-direction: column;
+  }
+
+  #musicCard .controls button {
+    width: 100%;
+  }
+
+  #customVidInput {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+
+  /* Make buttons more touch-friendly */
+  button,
+  input[type="checkbox"] {
+    min-height: 44px;
+  }
+
+  #todoList li {
+    padding: 8px 0;
+  }
+
+  /* Improve touch target size for todo actions */
+  .todo-actions button {
+    padding: 8px;
+    margin: 0 4px;
+  }
+}

@@ -1,0 +1,67 @@
+/* Todo list component styles for the Flow State app */
+
+#todoCard .todo-input {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+#todoInput {
+  flex: 1;
+  padding: 8px;
+  font-size: 0.9rem;
+  border: 1px solid var(--muted);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+#addTodoBtn {
+  min-width: 3rem;
+}
+
+#todoList {
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+#todoList li {
+  display: flex;
+  align-items: center;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--shadow);
+}
+
+#todoList li button {
+  margin: 2px;
+}
+
+#todoList li input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.todo-text {
+  flex: 1;
+}
+
+#todoList li.completed .todo-text {
+  text-decoration: line-through;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.todo-actions button {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: color var(--transition);
+}
+
+.todo-actions button:hover {
+  color: var(--accent);
+}

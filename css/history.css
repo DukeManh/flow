@@ -1,0 +1,102 @@
+/* History and chart styles for the Flow State app */
+
+/* Session history styling */
+#historyList {
+  list-style: none;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#historyList li {
+  padding: 12px;
+  margin-bottom: 10px;
+  border-left: 3px solid var(--accent);
+  background: rgba(41, 121, 255, 0.1);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.history-duration {
+  background: var(--accent);
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+}
+
+.history-details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  font-size: 0.9rem;
+}
+
+.history-label {
+  color: var(--muted);
+}
+
+.history-value {
+  color: var(--fg);
+}
+
+/* Chart styles */
+#chartContainer {
+  width: 100%;
+  height: 200px;
+  margin-top: 12px;
+  position: relative;
+}
+
+.chart-bar {
+  position: absolute;
+  bottom: 0;
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+  transition: height 0.5s ease;
+}
+
+.chart-label {
+  position: absolute;
+  bottom: -20px;
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.chart-grid-line {
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background: var(--shadow);
+}
+
+.chart-y-label {
+  position: absolute;
+  left: -25px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  transform: translateY(-50%);
+}
+
+.chart-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+#chartContainer::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--muted);
+}

@@ -4,15 +4,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="./favicon.ico" type="image/ico">
+  <link rel="icon" href="./assets/images/favicon.ico" type="image/ico">
   <title>Flow</title>
-  <link rel="stylesheet" href="./styles.css">
+  
+  <!-- Modular CSS files -->
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/layout.css">
+  <link rel="stylesheet" href="./css/header.css">
+  <link rel="stylesheet" href="./css/timer.css">
+  <link rel="stylesheet" href="./css/goals.css">
+  <link rel="stylesheet" href="./css/todos.css">
+  <link rel="stylesheet" href="./css/music.css">
+  <link rel="stylesheet" href="./css/history.css">
+  <link rel="stylesheet" href="./css/responsive.css">
 </head>
 
 <body>
   <div class="header">
     <h1 style="display: flex; align-items: center; font-family: 'Courier New', Courier, monospace; font-size: 1.5em; letter-spacing: 0.05em;">
-      <img src="./favicon.ico" alt="Flow State Logo" style="height: 1.3em; margin-right: 0.5em;">  <span style="font-style: italic">Flow ∞ State</span>
+      <img src="./assets/images/favicon.ico" alt="Flow State Logo" style="height: 1.3em; margin-right: 0.5em;">  <span style="font-style: italic">Flow ∞ State</span>
     </h1>
     <div id="datetime"></div>
     <div class="header-controls">
@@ -97,13 +107,16 @@
     </div>
   </div>
 
-  <!-- Updated audio elements with local file paths -->
-  <audio id="startSound" src="./button.wav"></audio>
-  <audio id="endSound" src="./alarm-bell.wav"></audio>
-  <audio id="pauseSound" src="./button.wav"></audio>
+  <!-- Audio elements -->
+  <audio id="startSound" src="./assets/sounds/button.wav"></audio>
+  <audio id="endSound" src="./assets/sounds/alarm-bell.wav"></audio>
+  <audio id="pauseSound" src="./assets/sounds/button.wav"></audio>
 
-  <script src="./global.js"></script>
-  <script src="./index.js"></script>
+  <!-- Global utilities -->
+  <script src="./js/global.js"></script>
+  
+  <!-- Main application (using ES modules) -->
+  <script type="module" src="./js/app.js"></script>
 </body>
 
 </html>

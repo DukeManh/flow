@@ -1,0 +1,27 @@
+/* Goal component styles for the Flow State app */
+
+#goalCard p {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+#flowGoal {
+  font-size: 1.125rem;
+  margin-bottom: 12px;
+  min-height: 65px;
+}
+
+#goalInput {
+  margin-bottom: 12px;
+}
+
+#goalCard textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid var(--muted);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+  resize: vertical;
+}

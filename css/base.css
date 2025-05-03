@@ -1,0 +1,107 @@
+/* Base styles and theme variables */
+
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f8f8f8;
+  --fg: #1a1a1a;
+  --muted: #6e6e6e;
+  --accent: #2979ff;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --radius: 8px;
+  --transition: 0.2s ease;
+}
+
+/* Dark theme */
+body.dark {
+  --bg: #1e1e1e;
+  --bg-alt: #2a2a2a;
+  --fg: #e0e0e0;
+  --muted: #a0a0a0;
+}
+
+/* Nature theme */
+body.nature {
+  --bg: #f5f7ed;
+  --bg-alt: #e8eadc;
+  --fg: #2c3e2e;
+  --muted: #6b8069;
+  --accent: #4a7c59;
+  --shadow: rgba(74, 124, 89, 0.1);
+}
+
+/* Ocean theme */
+body.ocean {
+  --bg: #e8f4f8;
+  --bg-alt: #d1e8f0;
+  --fg: #0a3b5c;
+  --muted: #5c8ba0;
+  --accent: #0077cc;
+  --shadow: rgba(0, 119, 204, 0.1);
+}
+
+/* Sunset theme */
+body.sunset {
+  --bg: #fff5eb;
+  --bg-alt: #f5e1d0;
+  --fg: #4b3832;
+  --muted: #854c45;
+  --accent: #e76f51;
+  --shadow: rgba(231, 111, 81, 0.1);
+}
+
+/* Midnight theme */
+body.midnight {
+  --bg: #0f1729;
+  --bg-alt: #1a2238;
+  --fg: #e1e6fa;
+  --muted: #9ca8d3;
+  --accent: #5d5fef;
+  --shadow: rgba(93, 95, 239, 0.1);
+}
+
+/* Mint theme */
+body.mint {
+  --bg: #f0fff0;
+  --bg-alt: #d8f3d8;
+  --fg: #2e5339;
+  --muted: #75b798;
+  --accent: #40916c;
+  --shadow: rgba(64, 145, 108, 0.1);
+}
+
+/* Base element styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  padding: 24px;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* Base button styles */
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+button:disabled {
+  background: var(--muted);
+  cursor: not-allowed;
+}
+
+/* Distraction mode */
+body.distraction #musicCard,
+body.distraction #historyCard,
+body.distraction #insightsCard {
+  display: none;
+}

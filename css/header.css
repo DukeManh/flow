@@ -1,0 +1,129 @@
+/* Header styles for the Flow State app */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+#datetime {
+  font-size: 1rem;
+  color: var(--fg);
+}
+
+.header button {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--muted);
+  cursor: pointer;
+  margin-left: 12px;
+  transition: color var(--transition);
+}
+
+.header button:hover {
+  color: var(--accent);
+}
+
+/* Theme dropdown */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.theme-dropdown-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--transition);
+  padding: 2px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-dropdown-btn:hover {
+  color: var(--accent);
+}
+
+.theme-dropdown-content {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  min-width: 140px;
+  background: var(--bg-alt);
+  border-radius: var(--radius);
+  box-shadow: 0 3px 8px var(--shadow);
+  z-index: 100;
+  overflow: hidden;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: transform var(--transition), opacity var(--transition), visibility var(--transition);
+}
+
+.theme-dropdown.active .theme-dropdown-content {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.theme-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.theme-option:hover {
+  background: var(--bg);
+}
+
+.theme-option.active {
+  background: var(--accent);
+  color: white;
+}
+
+/* Legacy theme selector */
+.theme-selector {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 8px;
+  border-radius: var(--radius);
+  background: var(--bg-alt);
+}
+
+.theme-selector label {
+  margin-right: 10px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.theme-selector select {
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.theme-selector select:focus {
+  outline: 2px solid var(--accent);
+  border-color: var(--accent);
+}
