@@ -1,12 +1,11 @@
 // Sound management for the Flow State app
 
 // Initialize sound elements
-let soundToggle, testSoundBtn, startSound, endSound, pauseSound;
+let soundToggle, startSound, endSound, pauseSound;
 
 // Initialize the sound module
 export function initSounds() {
   soundToggle = document.getElementById('soundToggle');
-  testSoundBtn = document.getElementById('testSoundBtn');
   startSound = document.getElementById('startSound');
   endSound = document.getElementById('endSound');
   pauseSound = document.getElementById('pauseSound');
@@ -19,10 +18,6 @@ export function initSounds() {
     localStorage.setItem('soundEnabled', soundToggle.checked);
   });
 
-  // Test sound button
-  testSoundBtn.addEventListener('click', () => {
-    playSound(startSound);
-  });
 }
 
 // Sound notification function

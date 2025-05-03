@@ -1,0 +1,314 @@
+/* Focus mode specific styles */
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 0;
+  margin: 0;
+  background-image: radial-gradient(circle at center, rgba(var(--accent-rgb), 0.05) 0%, rgba(var(--accent-rgb), 0) 70%);
+}
+
+.focus-container {
+  text-align: center;
+  padding: 3rem;
+  border-radius: var(--radius);
+  background-color: var(--bg-alt);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  max-width: 550px;
+  width: 90%;
+  position: relative;
+  overflow: hidden;
+}
+
+.focus-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(to right, var(--accent), var(--accent-secondary, var(--accent)));
+}
+
+.timer-section {
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+/* Timer ring and progress styles */
+.timer-ring {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Background circle (lighter shade) */
+.timer-ring::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 6px solid rgba(var(--accent-rgb), 0.1);
+  box-sizing: border-box;
+}
+
+/* Circular progress indicator using conic-gradient */
+.timer-progress {
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--accent) 0deg, 
+    var(--accent-secondary, var(--accent)) calc(var(--progress-percent, 0) * 3.6deg), 
+    transparent calc(var(--progress-percent, 0) * 3.6deg)
+  );
+  z-index: 0;
+}
+
+.timer-circle {
+  position: absolute;
+  width: calc(100% - 12px);
+  height: calc(100% - 12px);
+  border-radius: 50%;
+  background-color: var(--bg-alt);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
+  z-index: 1;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.controls button {
+  padding: 0.8rem 1.6rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.controls button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.controls button:active {
+  transform: translateY(0);
+}
+
+.exit-button {
+  margin-top: 1.5rem;
+  padding: 0.6rem 1.2rem;
+  background-color: transparent;
+  color: var(--muted);
+  border: 1px solid var(--muted);
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.exit-button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background-color: rgba(var(--accent-rgb), 0.05);
+}
+
+#timerLabel {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+#timer {
+  font-size: 5rem;
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* Add custom accent RGB variable for gradients and transparency */
+:root {
+  --accent-rgb: 41, 121, 255;
+  --accent-secondary: #5d5fef;
+}
+
+/* Custom theme accent RGB variables */
+body.nature {
+  --accent-rgb: 74, 124, 89;
+  --accent-secondary: #6b8069;
+}
+
+body.ocean {
+  --accent-rgb: 0, 119, 204;
+  --accent-secondary: #5c8ba0;
+}
+
+body.sunset {
+  --accent-rgb: 231, 111, 81;
+  --accent-secondary: #f4a261;
+}
+
+body.midnight {
+  --accent-rgb: 93, 95, 239;
+  --accent-secondary: #7678ed;
+}
+
+body.mint {
+  --accent-rgb: 64, 145, 108;
+  --accent-secondary: #75b798;
+}
+
+/* Add sound controls to focus mode */
+.sound-settings {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+#soundToggle {
+  margin-right: 8px;
+}
+
+/* YouTube mini player styles */
+.youtube-mini-player {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 220px;
+  height: 150px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  transition: all 0.3s ease;
+  transform-origin: bottom right;
+}
+
+.youtube-mini-player.collapsed {
+  transform: scale(0.3);
+  opacity: 0.7;
+  border-radius: var(--radius);
+}
+
+.youtube-mini-player:hover {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.youtube-mini-player iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.youtube-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: space-between;
+  z-index: 101;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.youtube-mini-player:hover .youtube-controls {
+  opacity: 1;
+}
+
+.youtube-controls button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.youtube-controls button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+/* Volume control styles */
+.volume-control {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: 30px;
+  left: 0;
+  width: 100%;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 101;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  box-sizing: border-box;
+}
+
+.youtube-mini-player:hover .volume-control {
+  opacity: 1;
+}
+
+.volume-slider {
+  flex: 1;
+  height: 3px;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.3);
+  outline: none;
+  border-radius: 3px;
+  margin: 0 8px;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: none;
+}
+
+.volume-label {
+  color: white;
+  font-size: 0.7rem;
+  min-width: 24px;
+  text-align: center;
+}
