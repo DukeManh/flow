@@ -84,7 +84,10 @@ function setupYouTubeControls() {
   // Toggle player size (normal/collapsed)
   togglePlayerBtn.addEventListener('click', () => {
     ytPlayerContainer.classList.toggle('collapsed');
-    togglePlayerBtn.textContent = ytPlayerContainer.classList.contains('collapsed') ? '↕️' : '↔️';
+    // Replace emoji with FontAwesome icons
+    togglePlayerBtn.innerHTML = ytPlayerContainer.classList.contains('collapsed') 
+      ? '<i class="fas fa-compress-alt"></i>' 
+      : '<i class="fas fa-expand-arrows-alt"></i>';
     localStorage.setItem('ytPlayerCollapsed', ytPlayerContainer.classList.contains('collapsed'));
   });
   
@@ -97,7 +100,10 @@ function setupYouTubeControls() {
         event: 'command',
         func: isMuted ? 'mute' : 'unMute'
       }), '*');
-      mutePlayerBtn.textContent = isMuted ? '🔇' : '🔊';
+      // Replace emoji with FontAwesome icons
+      mutePlayerBtn.innerHTML = isMuted 
+        ? '<i class="fas fa-volume-mute"></i>' 
+        : '<i class="fas fa-volume-up"></i>';
       localStorage.setItem('ytPlayerMuted', isMuted);
     } catch (e) {
       console.log('YouTube postMessage error:', e);
@@ -127,7 +133,7 @@ function setupYouTubeControls() {
         // If we're changing volume and currently muted, unmute
         if (isMuted && volume > 0) {
           isMuted = false;
-          mutePlayerBtn.textContent = '🔊';
+          mutePlayerBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
           ytPlayer.contentWindow.postMessage(JSON.stringify({
             event: 'command',
             func: 'unMute'
@@ -147,12 +153,12 @@ function setupYouTubeControls() {
   const isCollapsed = localStorage.getItem('ytPlayerCollapsed') === 'true';
   if (isCollapsed) {
     ytPlayerContainer.classList.add('collapsed');
-    togglePlayerBtn.textContent = '↕️';
+    togglePlayerBtn.innerHTML = '<i class="fas fa-compress-alt"></i>';
   }
   
   isMuted = localStorage.getItem('ytPlayerMuted') === 'true';
   if (isMuted) {
-    mutePlayerBtn.textContent = '🔇';
+    mutePlayerBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
   }
 }
 
