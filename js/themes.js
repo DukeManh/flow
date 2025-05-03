@@ -62,7 +62,7 @@ export function loadTheme() {
   const savedTheme = localStorage.getItem('selectedTheme') || 'midnight';
   
   // Remove any existing theme classes
-  document.body.classList.remove('dark', 'nature', 'ocean', 'sunset', 'midnight', 'mint');
+  document.body.classList.remove('dark', 'nature', 'midnight', 'slate', 'carbon', 'mocha');
   
   // If the theme is not default, add the class
   if (savedTheme !== 'default') {
@@ -104,30 +104,20 @@ function updateThemeIcon(theme) {
     case 'nature':
       icon.className += 'fa-leaf';
       break;
-    case 'ocean':
-      icon.className += 'fa-water';
-      break;
-    case 'sunset':
-      icon.className += 'fa-sunset';
-      break;
     case 'midnight':
-      icon.className += 'fa-stars';
+      icon.className += 'fa-star';
       break;
-    case 'mint':
-      icon.className += 'fa-ice-cube';
+    case 'slate':
+      icon.className += 'fa-shield-alt';
+      break;
+    case 'carbon':
+      icon.className += 'fa-square';
+      break;
+    case 'mocha':
+      icon.className += 'fa-coffee';
       break;
     default:
       icon.className += 'fa-palette';
-  }
-  
-  // Some Font Awesome 6 icons might need different classes or alternatives
-  // Fallbacks for missing icons
-  if (theme === 'sunset' && !isFontAwesomeIconAvailable('fa-sunset')) {
-    icon.className = 'fas fa-sun';
-  } else if (theme === 'midnight' && !isFontAwesomeIconAvailable('fa-stars')) {
-    icon.className = 'fas fa-star';
-  } else if (theme === 'mint' && !isFontAwesomeIconAvailable('fa-ice-cube')) {
-    icon.className = 'fas fa-snowflake';
   }
   
   iconEl.appendChild(icon);
