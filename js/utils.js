@@ -1,5 +1,3 @@
-// Utility functions for the Flow State app
-
 // Format seconds to MM:SS display format
 export function formatTime(seconds) {
   return String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + 

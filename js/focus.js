@@ -18,6 +18,12 @@ let ytPlayer, togglePlayerBtn, mutePlayerBtn, ytPlayerContainer;
 let volumeSlider, volumePercentLabel;
 let isMuted = false;
 
+// Detect if device is mobile
+function isMobileDevice() {
+  return (window.innerWidth <= 768) || 
+         (navigator.maxTouchPoints > 0 && /Mobi|Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent));
+}
+
 // Initialize the focus mode
 document.addEventListener('DOMContentLoaded', () => {
   initElements();
@@ -149,12 +155,27 @@ function setupYouTubeControls() {
     });
   }
   
-  // Load saved state
-  const isCollapsed = localStorage.getItem('ytPlayerCollapsed') === 'true';
+  // Load saved state or use defaults based on device type
+  let isCollapsed;
+  
+  // If we're on mobile, default to collapsed regardless of previous state
+  if (isMobileDevice()) {
+    isCollapsed = true;
+  } else {
+    // On desktop, use the saved state or default to expanded
+    isCollapsed = localStorage.getItem('ytPlayerCollapsed') === 'true';
+  }
+  
   if (isCollapsed) {
     ytPlayerContainer.classList.add('collapsed');
     togglePlayerBtn.innerHTML = '<i class="fas fa-compress-alt"></i>';
+  } else {
+    ytPlayerContainer.classList.remove('collapsed');
+    togglePlayerBtn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
   }
+  
+  // Save the initial state
+  localStorage.setItem('ytPlayerCollapsed', isCollapsed);
   
   isMuted = localStorage.getItem('ytPlayerMuted') === 'true';
   if (isMuted) {
