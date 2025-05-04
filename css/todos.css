@@ -19,6 +19,7 @@
 
 #addTodoBtn {
   min-width: 3rem;
+  font-size: 0.9rem;
 }
 
 #todoList {
