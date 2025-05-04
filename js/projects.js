@@ -538,7 +538,7 @@ export async function renderProjectSelector() {
           
           // Show confirmation dialog
           const isConfirmed = confirm(
-            `Are you sure you want to delete permanently "${project.name}"?\n\nThis will also permanently delete its goals and tasks.`
+            `Are you sure to permanently delete "${project.name}"?\n\nThis will also permanently delete its goals and tasks.`
           );
           
           if (isConfirmed) {

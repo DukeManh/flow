@@ -84,8 +84,10 @@ body {
   transition: background var(--transition), color var(--transition);
 }
 
-/* Icon spacing - adds consistent space between icons and text */
-i.fas, i.far, i.fab {
+/* Icon spacing - only adds space for icons in card headers */
+.card h2 i.fas, 
+.card h2 i.far, 
+.card h2 i.fab {
   margin-right: 8px;
 }
 
