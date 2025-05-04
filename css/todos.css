@@ -32,10 +32,29 @@
   align-items: center;
   padding: 8px 0;
   border-bottom: 1px solid var(--shadow);
+  cursor: grab; /* Indicate item can be dragged */
+  transition: background-color var(--transition);
 }
 
 #todoList li:last-child {
   border-bottom: none;
+}
+
+/* Styling for when an item is being dragged */
+#todoList li.dragging {
+  opacity: 0.6;
+  background-color: var(--bg);
+  cursor: grabbing;
+  box-shadow: 0 0 8px var(--shadow);
+}
+
+/* Drop indicator styles */
+#todoList li.drop-target-above {
+  border-top: 2px solid var(--accent);
+}
+
+#todoList li.drop-target-below {
+  border-bottom: 2px solid var(--accent);
 }
 
 #todoList li input[type="checkbox"] {
@@ -78,4 +97,21 @@
 .todo-btn.remove-btn:hover {
   color: #ff5252;
   background-color: rgba(255, 82, 82, 0.1);
+}
+
+/* Drag handle styling */
+.todo-btn.drag-handle {
+  cursor: grab;
+  color: var(--muted);
+  opacity: 0.5;
+  transition: opacity var(--transition);
+}
+
+.todo-btn.drag-handle:hover {
+  opacity: 1;
+}
+
+/* Adjust cursor when dragging */
+#todoList li:active {
+  cursor: grabbing;
 }
