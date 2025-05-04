@@ -152,9 +152,9 @@ function clearDropTargetClasses() {
 }
 
 // Helper to update todo item status and appearance
-function updateTodoStatus(li, status) {
+function updateTodoStatus(li, status, shouldSave = true) {
   // First, remove all status classes
-  li.classList.remove('status-not-started', 'status-in-progress', 'status-blocked', 'completed');
+  li.classList.remove('status-not-started', 'status-in-progress', 'status-blocked', 'status-testing', 'completed');
   
   // Convert status to kebab case for CSS class
   const statusClass = 'status-' + status.toLowerCase().replace(/\s+/g, '-');
@@ -174,8 +174,10 @@ function updateTodoStatus(li, status) {
     statusSelect.value = status;
   }
   
-  // Save todos after status change
-  saveTodos();
+  // Save todos after status change, but only if requested
+  if (shouldSave) {
+    saveTodos();
+  }
 }
 
 // Create a new todo item element
@@ -284,8 +286,8 @@ function createTodoItem(text, status = TODO_STATUSES.NOT_STARTED) {
   btnContainer.append(upBtn, downBtn, removeBtn, dragHandleBtn);
   li.append(checkbox, statusIndicator, statusContainer, span, btnContainer); 
   
-  // Apply initial status class
-  updateTodoStatus(li, status);
+  // Apply initial status class without saving (passing false as the third parameter)
+  updateTodoStatus(li, status, false);
   
   return li;
 }
