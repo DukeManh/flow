@@ -355,6 +355,12 @@ async function createChartLegend(container, projectNames, projectColors) {
     const legendItem = document.createElement('div');
     legendItem.className = 'legend-item';
     
+    // Check if this is a deleted project by checking the name
+    const isDeleted = projectNames[projectId].includes('(deleted)');
+    if (isDeleted) {
+      legendItem.setAttribute('data-deleted', 'true');
+    }
+    
     const colorSwatch = document.createElement('div');
     colorSwatch.className = 'legend-color';
     colorSwatch.style.backgroundColor = projectColors[projectId] || 'var(--accent)';
@@ -368,6 +374,6 @@ async function createChartLegend(container, projectNames, projectColors) {
   }
   
   // Ensure we add the legend to a consistent location
-  const chartSection = document.querySelector('.chart-section') || container.parentNode;
+  const chartSection = document.querySelector('#insightsCard') || container.parentNode;
   chartSection.appendChild(legend);
 }

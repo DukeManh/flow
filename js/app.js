@@ -7,7 +7,7 @@ import { initTodos, loadTodos, migrateTodosToProject } from './todos.js';
 import { initHistory } from './history.js';
 import { initMusic } from './music.js';
 import { initAnimations, cleanupAnimations } from './animations.js';
-import { initProjects } from './projects.js';
+import { initProjects, cleanupDuplicateProjects } from './projects.js';
 import { initSettings } from './settings.js';
 import storageService from './storage.js';
 
@@ -39,7 +39,7 @@ async function reloadProjectData() {
 window.reloadProjectData = reloadProjectData;
 
 // Initialize all app modules
-function init() {
+async function init() {
   // Initialize animations first for immediate visual feedback
   initAnimations();
   
@@ -50,6 +50,9 @@ function init() {
   
   // Initialize projects system before goals and todos
   initProjects();
+  
+  // Clean up any duplicate default projects
+  await cleanupDuplicateProjects();
   
   // Migrate legacy data to project system
   migrateGoalToProject();

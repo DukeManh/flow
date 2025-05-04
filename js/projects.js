@@ -295,13 +295,22 @@ export async function getCurrentProject() {
       if (project) return project;
     }
     
-    // Fallback to first project or create default
+    // Fallback to first project if one exists
     if (projects.length > 0) {
       await setCurrentProject(projects[0].id);
       return projects[0];
     }
     
-    // If no projects exist, create a default one
+    // If no projects exist at all, create a default one
+    // But first check if any projects got created in the meantime
+    const refreshedProjects = await getProjects();
+    if (refreshedProjects.length > 0) {
+      await setCurrentProject(refreshedProjects[0].id);
+      return refreshedProjects[0];
+    }
+    
+    // Create a default project as last resort
+    console.log('No projects found, creating default project');
     const defaultId = await createProject('Default Project');
     const updatedProjects = await getProjects();
     return updatedProjects.find(p => p.id === defaultId);
@@ -388,6 +397,9 @@ export async function deleteProject(id) {
     return false;
   }
   
+  // Get the project to delete before removing it
+  const projectToDelete = projects.find(p => p.id === id);
+  
   // Filter out the project to delete
   projects = projects.filter(p => p.id !== id);
   const saveSuccess = await saveProjects(projects);
@@ -399,10 +411,37 @@ export async function deleteProject(id) {
       await setCurrentProject(projects[0].id);
     }
     
+    // Store the deleted project info for history charts
+    if (projectToDelete) {
+      await saveDeletedProject(projectToDelete);
+    }
+    
     return true;
   }
   
   return false;
+}
+
+// Save deleted project info for history tracking
+async function saveDeletedProject(project) {
+  try {
+    // Get existing deleted projects
+    const deletedProjects = await storageService.getJSON('deletedProjects', {});
+    
+    // Add this project to the deleted projects
+    deletedProjects[project.id] = {
+      id: project.id,
+      name: project.name,
+      color: project.color || '#5D8AA8',
+      deletedAt: Date.now()
+    };
+    
+    // Save the updated deleted projects
+    await storageService.setJSON('deletedProjects', deletedProjects);
+    console.log(`Project "${project.name}" marked as deleted but preserved for history charts`);
+  } catch (error) {
+    console.error('Error saving deleted project:', error);
+  }
 }
 
 // Load current project
@@ -491,12 +530,66 @@ export async function renderProjectSelector() {
         const nameSpan = document.createElement('span');
         nameSpan.textContent = project.name;
         
-        // Add to option
-        option.appendChild(colorDot);
-        option.appendChild(nameSpan);
+        // Create wrapper for name and dot
+        const nameWrapper = document.createElement('div');
+        nameWrapper.className = 'project-name-wrapper';
+        nameWrapper.appendChild(colorDot);
+        nameWrapper.appendChild(nameSpan);
         
-        // Add click handler
-        option.addEventListener('click', async () => {
+        // Create delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'project-delete-btn';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.title = 'Delete project';
+        
+        // Add delete handler with confirmation
+        deleteBtn.addEventListener('click', async (e) => {
+          e.stopPropagation(); // Prevent triggering the parent click handler
+          
+          // Don't allow deleting the last project
+          if (projects.length <= 1) {
+            alert('Cannot delete the only project. Create another project first.');
+            return;
+          }
+          
+          // Don't allow deleting during an active session
+          if (await isTimerRunning()) {
+            alert('Cannot delete a project during an active focus session.');
+            return;
+          }
+          
+          // Show confirmation dialog
+          const isConfirmed = confirm(
+            `Are you sure you want to delete "${project.name}"?\n\nThis will permanently delete the project and all its associated data including goals and tasks.`
+          );
+          
+          if (isConfirmed) {
+            const success = await deleteProject(project.id);
+            if (success) {
+              // Re-render the selector
+              renderProjectSelector();
+              
+              // Reload goals and todos
+              if (window.reloadProjectData) {
+                window.reloadProjectData();
+              }
+            } else {
+              alert('Failed to delete project. Please try again.');
+            }
+          }
+        });
+        
+        // Add to option
+        option.appendChild(nameWrapper);
+        option.appendChild(deleteBtn);
+        
+        // Add click handler for selecting project
+        option.addEventListener('click', async (e) => {
+          // Don't trigger if the click was on the delete button
+          if (e.target.closest('.project-delete-btn')) {
+            return;
+          }
+          
           // Only allow switching if not in active session
           if (await isTimerRunning()) {
             alert('Cannot switch projects during an active focus session.');
@@ -542,13 +635,21 @@ export async function getProjectStats() {
   try {
     const history = await getSessionHistoryFromStorage();
     const projects = await getProjects();
+    const deletedProjects = await storageService.getJSON('deletedProjects', {});
     
     // Create a map of project IDs to their names and colors
     const projectNames = {};
     const projectColors = {};
     
+    // Add active projects
     projects.forEach(project => {
       projectNames[project.id] = project.name;
+      projectColors[project.id] = project.color || '#5D8AA8';
+    });
+    
+    // Add deleted projects (to ensure they still show in charts)
+    Object.values(deletedProjects).forEach(project => {
+      projectNames[project.id] = `${project.name} (deleted)`;
       projectColors[project.id] = project.color || '#5D8AA8';
     });
     
@@ -561,4 +662,44 @@ export async function getProjectStats() {
     console.error('Error getting project stats:', error);
     return { history: [], projectNames: {}, projectColors: {} };
   }
+}
+
+// Clean up duplicate projects
+export async function cleanupDuplicateProjects() {
+  const projects = await getProjects();
+  
+  // Check if we have duplicate Default Projects
+  const defaultProjects = projects.filter(p => p.name === 'Default Project');
+  
+  if (defaultProjects.length > 1) {
+    console.log(`Found ${defaultProjects.length} Default Projects, cleaning up...`);
+    
+    // Keep only the oldest Default Project
+    const sortedDefaults = [...defaultProjects].sort((a, b) => a.createdAt - b.createdAt);
+    const keepProject = sortedDefaults[0];
+    
+    // Get the current project ID
+    const currentId = await getCurrentProjectIdFromStorage();
+    
+    // Filter out duplicate default projects, keep the oldest one
+    const cleanedProjects = projects.filter(p => 
+      p.id === keepProject.id || p.name !== 'Default Project'
+    );
+    
+    // Save the cleaned projects list
+    await saveProjects(cleanedProjects);
+    
+    // If current project was one of the removed ones, set to the kept one
+    if (defaultProjects.some(p => p.id === currentId && p.id !== keepProject.id)) {
+      await setCurrentProject(keepProject.id);
+    }
+    
+    // Re-render the project selector
+    await renderProjectSelector();
+    
+    console.log(`Cleaned up duplicate Default Projects, keeping ${keepProject.id}`);
+    return true;
+  }
+  
+  return false;
 }
