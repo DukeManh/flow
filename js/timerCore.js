@@ -191,7 +191,7 @@ export class TimerCore {
       }
       
       if (this.elements.endBtn) {
-        this.elements.endBtn.disabled = !running;
+        // this.elements.endBtn.disabled = !running;
         this.elements.endBtn.textContent = "Skip Break";
       }
     } else {
