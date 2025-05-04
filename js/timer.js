@@ -74,13 +74,13 @@ function updateTimerTitle(presetKey) {
   // Set the appropriate title based on preset
   switch(presetKey) {
     case 'pomodoro':
-      titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 25/5<span class="tooltip" title="Pomodoro technique with shorter cycles"><i class="fas fa-info-circle"></i></span>';
+      titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 25/5 Pomodoro<span class="tooltip" title="Pomodoro technique with short cycles"><i class="fas fa-info-circle"></i></span>';
       break;
     case 'deepWork':
-      titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 90/20<span class="tooltip" title="Extended focus time for complex tasks requiring deep concentration"><i class="fas fa-info-circle"></i></span>';
+      titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 90/20 Deep Work<span class="tooltip" title="Extended focus time for complex tasks requiring deep concentration"><i class="fas fa-info-circle"></i></span>';
       break;
     default: // default is 52/17
-      titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 52/17 Rule<span class="tooltip" title="Engage in 52 minutes of uninterrupted focus followed by a 17-minute restorative break"><i class="fas fa-info-circle"></i></span>';
+      titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 52/17 Rule<span class="tooltip" title="52 minutes of concentrated work time followed by a 17-minute break"><i class="fas fa-info-circle"></i></span>';
       break;
   }
   
