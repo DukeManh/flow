@@ -273,8 +273,18 @@ function setupEventListeners() {
     window.location.href = 'index.html';
   });
   
-  // Handle before unload to save state
-  window.addEventListener('beforeunload', saveState);
+  // Handle before unload to save state and show warning if timer is running
+  window.addEventListener('beforeunload', function(event) {
+    // Always save the state
+    saveState();
+    
+    // Show confirmation dialog only if timer is running
+    if (isRunning) {
+      const message = "You have an active timer running. Are you sure you want to leave?";
+      event.returnValue = message; // For most browsers
+      return message; // For some older browsers
+    }
+  });
 }
 
 // Save timer state to localStorage

@@ -67,8 +67,28 @@ function init() {
   cleanupAnimations();
 }
 
+// Check if timer is running for the beforeunload warning
+function isTimerRunning() {
+  const timerState = localStorage.getItem('timerState');
+  if (!timerState) return false;
+  
+  const state = JSON.parse(timerState);
+  return state.isRunning;
+}
+
 // Handle page unload to ensure we save the current state
-window.addEventListener('beforeunload', saveTimerState);
+window.addEventListener('beforeunload', function(event) {
+  // Always save the timer state
+  saveTimerState();
+  
+  // Show confirmation dialog only if timer is running
+  if (isTimerRunning()) {
+    // Standard way to show a confirmation dialog when closing a tab
+    const message = "You have an active timer running. Are you sure you want to leave?";
+    event.returnValue = message; // For most browsers
+    return message; // For some older browsers
+  }
+});
 
 // Initialize the app when DOM is fully loaded
 window.addEventListener('load', init);
