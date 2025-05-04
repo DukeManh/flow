@@ -2,7 +2,7 @@
 import { musicLabels, MAX_DURATION_MINUTES } from './constants.js';
 import { formatDateTime } from './utils.js';
 import { getCurrentGoal } from './goals.js';
-import { getCurrentProject, getProjectStats } from './projects.js';
+import { getCurrentProject, getProjectStats, getProjects } from './projects.js';
 import storageService from './storage.js';
 
 // Storage keys
@@ -325,6 +325,10 @@ async function createChartLegend(container, projectNames, projectColors) {
   // Get all days data to find which projects actually have data
   const history = await getSessionHistoryFromStorage();
   const now = new Date();
+  const activeProjects = await getProjects();
+  
+  // Create a set of active project IDs for quick lookup
+  const activeProjectIds = new Set(activeProjects.map(p => p.id));
   
   // Find projects that have data in the last 7 days
   const projectsWithData = new Set();
@@ -355,21 +359,30 @@ async function createChartLegend(container, projectNames, projectColors) {
     const legendItem = document.createElement('div');
     legendItem.className = 'legend-item';
     
-    // Check if this is a deleted project by checking the name
-    const isDeleted = projectNames[projectId].includes('(deleted)');
-    if (isDeleted) {
-      legendItem.setAttribute('data-deleted', 'true');
-    }
+    // Check if this is a deleted project
+    const isDeleted = !activeProjectIds.has(projectId) && projectId !== 'default';
     
     const colorSwatch = document.createElement('div');
     colorSwatch.className = 'legend-color';
-    colorSwatch.style.backgroundColor = projectColors[projectId] || 'var(--accent)';
+    colorSwatch.style.backgroundColor = projectColors[projectId];
+    
+    // For deleted projects, add an X inside the color dot
+    if (isDeleted) {
+      legendItem.classList.add('deleted-project');
+      
+      // Add X directly inside the color dot
+      const xMark = document.createElement('span');
+      xMark.className = 'color-x-mark';
+      xMark.innerHTML = '&#10005;'; // X symbol
+      colorSwatch.appendChild(xMark);
+    }
     
     const nameSpan = document.createElement('span');
     nameSpan.textContent = projectNames[projectId];
     
     legendItem.appendChild(colorSwatch);
     legendItem.appendChild(nameSpan);
+    
     legend.appendChild(legendItem);
   }
   

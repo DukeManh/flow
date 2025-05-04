@@ -65,6 +65,8 @@
 .chart-bar-segment {
   position: absolute;
   transition: height 0.5s ease;
+  /* Add a subtle border at the top of each segment */
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Only apply border radius to the top of the top-most segment in a stack */
@@ -80,6 +82,8 @@
 /* For the bottom segment, only round the bottom corners if it's alone */
 .chart-bar-segment:first-child:last-child {
   border-radius: 3px 3px 0 0;
+  /* Remove border from the first/only segment */
+  border-top: none;
 }
 
 .chart-label {
@@ -151,6 +155,7 @@
 }
 
 .legend-color {
+  position: relative;
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -166,4 +171,35 @@
 .legend-item[data-deleted="true"] {
   font-style: italic;
   opacity: 0.8;
+}
+
+.legend-item.deleted-project span:not(.color-x-mark) {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.legend-item.deleted-project {
+  opacity: 0.7;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* X mark inside the color dot */
+.color-x-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 8px;
+  font-weight: bold;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.7);
+}
+
+.deleted-icon {
+  font-size: 0.7rem;
+  color: #888888;
+  margin-left: 4px;
 }

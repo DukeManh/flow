@@ -411,37 +411,10 @@ export async function deleteProject(id) {
       await setCurrentProject(projects[0].id);
     }
     
-    // Store the deleted project info for history charts
-    if (projectToDelete) {
-      await saveDeletedProject(projectToDelete);
-    }
-    
     return true;
   }
   
   return false;
-}
-
-// Save deleted project info for history tracking
-async function saveDeletedProject(project) {
-  try {
-    // Get existing deleted projects
-    const deletedProjects = await storageService.getJSON('deletedProjects', {});
-    
-    // Add this project to the deleted projects
-    deletedProjects[project.id] = {
-      id: project.id,
-      name: project.name,
-      color: project.color || '#5D8AA8',
-      deletedAt: Date.now()
-    };
-    
-    // Save the updated deleted projects
-    await storageService.setJSON('deletedProjects', deletedProjects);
-    console.log(`Project "${project.name}" marked as deleted but preserved for history charts`);
-  } catch (error) {
-    console.error('Error saving deleted project:', error);
-  }
 }
 
 // Load current project
@@ -560,7 +533,7 @@ export async function renderProjectSelector() {
           
           // Show confirmation dialog
           const isConfirmed = confirm(
-            `Are you sure you want to delete "${project.name}"?\n\nThis will permanently delete the project and all its associated data including goals and tasks.`
+            `Are you sure you want to delete permanently "${project.name}"?\n\nThis will also permanently delete its goals and tasks.`
           );
           
           if (isConfirmed) {
@@ -635,11 +608,13 @@ export async function getProjectStats() {
   try {
     const history = await getSessionHistoryFromStorage();
     const projects = await getProjects();
-    const deletedProjects = await storageService.getJSON('deletedProjects', {});
     
     // Create a map of project IDs to their names and colors
     const projectNames = {};
     const projectColors = {};
+    
+    // Create a map of active project IDs for quick lookup
+    const activeProjectIds = new Set(projects.map(p => p.id));
     
     // Add active projects
     projects.forEach(project => {
@@ -647,20 +622,35 @@ export async function getProjectStats() {
       projectColors[project.id] = project.color || '#5D8AA8';
     });
     
-    // Add deleted projects (to ensure they still show in charts)
-    Object.values(deletedProjects).forEach(project => {
-      projectNames[project.id] = `${project.name} (deleted)`;
-      projectColors[project.id] = project.color || '#5D8AA8';
+    // Find any projects in history that no longer exist in the active projects list
+    const historyProjectIds = new Set();
+    history.forEach(session => {
+      if (session.projectId) {
+        historyProjectIds.add(session.projectId);
+      }
+    });
+    
+    // For each project ID in history that's not in active projects,
+    // create a generic deleted project entry with neutral color
+    historyProjectIds.forEach(projectId => {
+      if (!activeProjectIds.has(projectId) && projectId !== 'default') {
+        // Use the project name from history if available, otherwise generic name
+        const projectEntry = history.find(h => h.projectId === projectId);
+        const projectName = projectEntry?.projectName || 'Unknown Project';
+        
+        projectNames[projectId] = projectName;
+        projectColors[projectId] = '#888888'; // Neutral gray for deleted projects
+      }
     });
     
     // Add default project name for older sessions without projectId
     projectNames['default'] = 'Unassigned';
     projectColors['default'] = 'var(--accent)';
     
-    return { history, projectNames, projectColors };
+    return { history, projectNames, projectColors, deletedProjects: historyProjectIds };
   } catch (error) {
     console.error('Error getting project stats:', error);
-    return { history: [], projectNames: {}, projectColors: {} };
+    return { history: [], projectNames: {}, projectColors: {}, deletedProjects: new Set() };
   }
 }
 
