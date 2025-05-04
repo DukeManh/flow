@@ -289,14 +289,35 @@ function createChartLegend(container, projectNames, projectColors) {
     existingLegend.remove();
   }
   
+  // Get all days data to find which projects actually have data
+  const history = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
+  const now = new Date();
+  
+  // Find projects that have data in the last 7 days
+  const projectsWithData = new Set();
+  
+  history.forEach(session => {
+    const sessionDate = new Date(session.start);
+    const daysDiff = Math.floor((now - sessionDate) / (1000 * 60 * 60 * 24));
+    
+    // Only include sessions from the last 7 days
+    if (daysDiff < 7) {
+      const projectId = session.projectId || 'default';
+      projectsWithData.add(projectId);
+    }
+  });
+  
+  // Don't show legend if no project has data
+  if (projectsWithData.size === 0) return;
+  
   const legend = document.createElement('div');
   legend.className = 'chart-legend';
   
-  // Only show legend if we have multiple projects
-  if (Object.keys(projectNames).length <= 1) return;
-  
-  // Add legend items
-  for (const [projectId, projectName] of Object.entries(projectNames)) {
+  // Add legend items only for projects with data
+  for (const projectId of projectsWithData) {
+    // Skip if project doesn't exist in projectNames (safety check)
+    if (!projectNames[projectId]) continue;
+    
     const legendItem = document.createElement('div');
     legendItem.className = 'legend-item';
     
@@ -305,7 +326,7 @@ function createChartLegend(container, projectNames, projectColors) {
     colorSwatch.style.backgroundColor = projectColors[projectId] || 'var(--accent)';
     
     const nameSpan = document.createElement('span');
-    nameSpan.textContent = projectName;
+    nameSpan.textContent = projectNames[projectId];
     
     legendItem.appendChild(colorSwatch);
     legendItem.appendChild(nameSpan);
