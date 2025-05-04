@@ -1,12 +1,15 @@
 // Focus mode JavaScript file
-import { WORK, BREAK } from './constants.js';
+import { TIMER_PRESETS } from './constants.js';
 import { formatTime } from './utils.js';
 import { loadTheme } from './themes.js';
 import { playSound, getStartSound, getEndSound, getPauseSound, initSounds } from './sound.js';
 import { initAnimations, cleanupAnimations } from './animations.js';
 
 // Timer state
-let rem = WORK;
+let currentPreset = 'default';
+let workDuration = TIMER_PRESETS.default.work;
+let breakDuration = TIMER_PRESETS.default.break;
+let rem = workDuration;
 let onBreak = false;
 let iv;
 let startTime = null;
@@ -72,9 +75,16 @@ function loadState() {
     rem = state.rem;
     onBreak = state.onBreak;
     
-    // Validate startTime
+    // Load the current preset from state if available
+    currentPreset = state.currentPreset || 'default';
+    
+    // Set work and break durations based on the preset
+    workDuration = TIMER_PRESETS[currentPreset].work;
+    breakDuration = TIMER_PRESETS[currentPreset].break;
+    
+    // Validate startTime - if it's more than the work duration old, reset it
     const now = Date.now();
-    if (state.startTime && (now - state.startTime > WORK * 60 * 1000)) {
+    if (state.startTime && (now - state.startTime > workDuration * 1000)) {
       startTime = null;
       isRunning = false;
     } else {
@@ -273,7 +283,8 @@ function saveState() {
     rem,
     onBreak,
     startTime,
-    isRunning
+    isRunning,
+    currentPreset
   };
   localStorage.setItem('timerState', JSON.stringify(state));
 }
@@ -320,11 +331,14 @@ function updateBreakUI() {
 function updateDisplay() {
   timerEl.textContent = formatTime(rem);
   
+  // Calculate progress percentage based on current preset's durations
   let progressPercent;
   if (onBreak) {
-    progressPercent = 100 * (BREAK - rem) / BREAK;
+    // For break time, show progress of break time used
+    progressPercent = 100 * (breakDuration - rem) / breakDuration;
   } else {
-    progressPercent = 100 * (WORK - rem) / WORK;
+    // For work time, show progress of work time used
+    progressPercent = 100 * (workDuration - rem) / workDuration;
   }
   
   // Update circular progress indicator by setting the CSS variable
@@ -348,7 +362,7 @@ function recordSession() {
     let dur = Math.round((en - st) / 60000);
     
     if (dur > MAX_DURATION_MINUTES || dur < 0) {
-      dur = Math.min(MAX_DURATION_MINUTES, WORK / 60);
+      dur = Math.min(MAX_DURATION_MINUTES, workDuration / 60); // Use current preset's work duration
     }
     
     const hist = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
@@ -358,7 +372,8 @@ function recordSession() {
       duration: dur,
       goal: localStorage.getItem('flowGoal') || '',
       music: localStorage.getItem('lastVideoID') || '',
-      todos: JSON.parse(localStorage.getItem('flowTodos') || '[]')
+      todos: JSON.parse(localStorage.getItem('flowTodos') || '[]'),
+      currentPreset: currentPreset // Record which preset was used for the session
     };
     hist.push(entry);
     localStorage.setItem('sessionHistory', JSON.stringify(hist));
@@ -368,7 +383,7 @@ function recordSession() {
 // Start break
 function startBreak() {
   onBreak = true;
-  rem = BREAK;
+  rem = breakDuration; // Use current preset's break duration
   updateBreakUI();
   updateDisplay();
   updateControls(false);
@@ -377,7 +392,7 @@ function startBreak() {
 // End break
 function endBreak() {
   onBreak = false;
-  rem = WORK;
+  rem = workDuration; // Use current preset's work duration
   startTime = null;
   clearInterval(iv);
   updateBreakUI();
@@ -439,7 +454,7 @@ function endSession() {
 function reset() {
   if (!confirm('Reset session?')) return;
   clearInterval(iv);
-  rem = WORK;
+  rem = workDuration; // Use current preset's work duration
   startTime = null;
   updateControls(false);
   updateDisplay();

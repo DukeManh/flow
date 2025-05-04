@@ -134,3 +134,125 @@ body.distraction #historyCard,
 body.distraction #insightsCard {
   display: none;
 }
+
+/* Settings button styling */
+.settings-btn {
+  background: transparent;
+  color: var(--fg);
+  border: none;
+  padding: 6px;
+  border-radius: 50%;
+  margin-right: 8px;
+  transition: all var(--transition);
+}
+
+.settings-btn:hover {
+  background: var(--bg-alt);
+}
+
+/* Timer presets in settings */
+.timer-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 15px 0;
+}
+
+.preset-option {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--shadow);
+  transition: all var(--transition);
+  cursor: pointer;
+}
+
+.preset-option:hover {
+  border-color: var(--accent);
+}
+
+.preset-option input[type="radio"] {
+  margin-top: 3px;
+  margin-right: 10px;
+}
+
+.preset-option label {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  cursor: pointer;
+}
+
+.preset-description {
+  color: var(--muted);
+  font-size: 0.85em;
+  margin-top: 3px;
+}
+
+.settings-description {
+  color: var(--muted);
+  margin-bottom: 15px;
+  font-size: 0.9em;
+}
+
+/* Add or update these styles for the modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+  overflow: auto;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: var(--bg);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  position: relative;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.close-modal {
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  font-size: 24px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.close-modal:hover {
+  color: var(--accent);
+}
+
+.modal-form {
+  margin-top: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.modal-save-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+/* Make sure form groups have proper spacing */
+.form-group {
+  margin-bottom: 20px;
+}

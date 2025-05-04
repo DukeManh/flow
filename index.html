@@ -54,6 +54,9 @@
           <div class="theme-option" data-theme="mocha">Mocha</div>
         </div>
       </div>
+      <button id="settingsBtn" title="Settings" class="settings-btn">
+        <i class="fas fa-cog" style="margin-right: 0 !important;"></i>
+      </button>
       <button id="distractionToggle" title="Toggle Distraction-Free" class="focus-btn">
         <span class="focus-icon"><i class="fas fa-bullseye"></i></span>
         <span class="focus-text">Focus</span>
@@ -75,16 +78,6 @@
         <button id="pauseBtn">Pause</button>
         <button id="endBtn">End</button>
         <button id="resetBtn">Reset</button>
-      </div>
-      <p class="note"><i class="fas fa-bullseye"></i> Focus on one task at a time.</p>
-      <p class="note"><i class="fas fa-hourglass-half"></i> Set clear, bite-sized goals.</p>
-
-      <div id="soundSettings">
-        <h3>Sound Notifications</h3>
-        <div class="sound-controls">
-          <input type="checkbox" id="soundToggle" checked>
-          <label for="soundToggle">Enable sound notifications</label>
-        </div>
       </div>
     </div>
 
@@ -122,6 +115,10 @@
     
     <div class="card" id="todoCard">
       <h2><i class="fas fa-tasks"></i> Tasks</h2>
+      <div class="focus-tips" style="margin-bottom: 15px;">
+        <p class="note"><i class="fas fa-bullseye"></i> Focus on one task at a time.</p>
+        <p class="note"><i class="fas fa-hourglass-half"></i> Set clear, bite-sized goals.</p>
+      </div>
       <div class="todo-input">
         <input type="text" id="todoInput" placeholder="Add a task…">
         <button id="addTodoBtn">Add</button>
@@ -177,6 +174,53 @@
           </div>
         </div>
         <button id="modalSaveProjectBtn" class="modal-save-btn">Create Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Dialog Modal -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Settings</h2>
+      <div class="modal-form">
+        <div class="form-group">
+          <h3>Timer Presets</h3>
+          <p class="settings-description">Select your preferred timer configuration while maintaining the Flow philosophy.</p>
+          <div class="timer-presets">
+            <div class="preset-option" data-preset="default">
+              <input type="radio" id="preset-default" name="timer-preset" value="default" checked>
+              <label for="preset-default">
+                <strong>52/17 (Recommended)</strong>
+                <div class="preset-description">The 52/17 rule.</div>
+              </label>
+            </div>
+            <div class="preset-option" data-preset="pomodoro">
+              <input type="radio" id="preset-pomodoro" name="timer-preset" value="pomodoro">
+              <label for="preset-pomodoro">
+                <strong>25/5 (Pomodoro)</strong>
+                <div class="preset-description">Pomodoro technique with shorter cycles.</div>
+              </label>
+            </div>
+            <div class="preset-option" data-preset="deepWork">
+              <input type="radio" id="preset-deepWork" name="timer-preset" value="deepWork">
+              <label for="preset-deepWork">
+                <strong>90/20 (Deep Work)</strong>
+                <div class="preset-description">Extended focus time for complex tasks requiring deep concentration.</div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <h3>Sound Notifications</h3>
+          <div class="sound-controls">
+            <input type="checkbox" id="soundToggle" checked>
+            <label for="soundToggle">Enable sound notifications</label>
+          </div>
+        </div>
+        
+        <button id="saveSettingsBtn" class="modal-save-btn">Save Settings</button>
       </div>
     </div>
   </div>

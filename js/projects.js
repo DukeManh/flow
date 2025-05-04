@@ -1,4 +1,3 @@
-// filepath: /Users/chrisbui/Documents/repos/AI Apps/flow-state/js/projects.js
 // Project management for the Flow State app
 
 // Project data structure and state

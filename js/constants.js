@@ -1,8 +1,15 @@
 // Constants for the Flow State app
 
-// Timer constants
-export const WORK = 52 * 60; // 52 minutes in seconds
-export const BREAK = 17 * 60; // 17 minutes in seconds
+// Timer preset constants
+export const TIMER_PRESETS = {
+  default: { name: '52/17 (Recommended)', work: 52 * 60, break: 17 * 60 },
+  pomodoro: { name: '25/5 (Pomodoro)', work: 25 * 60, break: 5 * 60 },
+  deepWork: { name: '90/20 (Deep Work)', work: 90 * 60, break: 20 * 60 }
+};
+
+// Default timer values
+export const WORK = TIMER_PRESETS.default.work; // 52 minutes in seconds
+export const BREAK = TIMER_PRESETS.default.break; // 17 minutes in seconds
 
 // YouTube Video IDs
 export const REBOOT_VIDEO_ID = 'wL8DVHuWI7Y';

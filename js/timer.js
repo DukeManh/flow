@@ -1,11 +1,14 @@
 // Timer functionality for the Flow State app
-import { WORK, BREAK } from './constants.js';
+import { TIMER_PRESETS } from './constants.js';
 import { formatTime } from './utils.js';
 import { playSound, getStartSound, getEndSound, getPauseSound } from './sound.js';
 import { recordSession } from './history.js';
 
 // Timer state
-let rem = WORK;
+let currentPreset = 'default';
+let workDuration = TIMER_PRESETS.default.work;
+let breakDuration = TIMER_PRESETS.default.break;
+let rem = workDuration;
 let onBreak = false;
 let iv;
 let startTime = null;
@@ -37,6 +40,56 @@ export function initTimer() {
   loadTimerState();
 }
 
+// Update timer preset based on settings
+export function updateTimerPreset(presetKey) {
+  if (!TIMER_PRESETS[presetKey]) {
+    console.error('Invalid timer preset:', presetKey);
+    return;
+  }
+  
+  currentPreset = presetKey;
+  workDuration = TIMER_PRESETS[presetKey].work;
+  breakDuration = TIMER_PRESETS[presetKey].break;
+  
+  // Reset the timer if not currently running
+  if (!isRunning) {
+    rem = onBreak ? breakDuration : workDuration;
+    updateDisplay();
+  }
+  
+  // Update timer title based on preset
+  updateTimerTitle(presetKey);
+  
+  // Save the updated state
+  saveTimerState();
+}
+
+// Update timer title based on preset
+function updateTimerTitle(presetKey) {
+  const timerLabel = document.getElementById('timerLabel');
+  const titleElement = document.querySelector('#timerCard h2');
+  
+  if (!titleElement || !timerLabel) return;
+  
+  // Set the appropriate title based on preset
+  switch(presetKey) {
+    case 'pomodoro':
+      titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 25/5<span class="tooltip" title="Pomodoro technique with shorter cycles"><i class="fas fa-info-circle"></i></span>';
+      break;
+    case 'deepWork':
+      titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 90/20<span class="tooltip" title="Extended focus time for complex tasks requiring deep concentration"><i class="fas fa-info-circle"></i></span>';
+      break;
+    default: // default is 52/17
+      titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 52/17 Rule<span class="tooltip" title="Engage in 52 minutes of uninterrupted focus followed by a 17-minute restorative break"><i class="fas fa-info-circle"></i></span>';
+      break;
+  }
+  
+  // Update the timer label
+  if (!onBreak) {
+    timerLabel.textContent = "Focus Time";
+  }
+}
+
 // Load timer state from localStorage
 function loadTimerState() {
   const savedState = localStorage.getItem('timerState');
@@ -44,11 +97,16 @@ function loadTimerState() {
     const state = JSON.parse(savedState);
     rem = state.rem;
     onBreak = state.onBreak;
+    currentPreset = state.currentPreset || 'default';
     
-    // Validate startTime - if it's more than the WORK duration old, reset it
+    // Reload preset durations
+    workDuration = TIMER_PRESETS[currentPreset].work;
+    breakDuration = TIMER_PRESETS[currentPreset].break;
+    
+    // Validate startTime - if it's more than the work duration old, reset it
     const now = Date.now();
-    if (state.startTime && (now - state.startTime > WORK * 60 * 1000)) {
-      startTime = null; // Reset if more than WORK duration old
+    if (state.startTime && (now - state.startTime > workDuration * 1000)) {
+      startTime = null; // Reset if more than work duration old
       isRunning = false; // Also don't auto-resume
     } else {
       startTime = state.startTime;
@@ -72,7 +130,8 @@ export function saveTimerState() {
     rem,
     onBreak,
     startTime,
-    isRunning
+    isRunning,
+    currentPreset
   };
   localStorage.setItem('timerState', JSON.stringify(state));
 }
@@ -121,10 +180,10 @@ function updateDisplay() {
   
   if (onBreak) {
     // For break, show progress of break time used
-    progressEl.style.width = (100 * (BREAK - rem) / BREAK) + '%';
+    progressEl.style.width = (100 * (breakDuration - rem) / breakDuration) + '%';
   } else {
     // For work, show progress of work time used
-    progressEl.style.width = (100 * (WORK - rem) / WORK) + '%';
+    progressEl.style.width = (100 * (workDuration - rem) / workDuration) + '%';
   }
   
   saveTimerState();
@@ -133,7 +192,7 @@ function updateDisplay() {
 // Start a break
 function startBreak() {
   onBreak = true;
-  rem = BREAK;
+  rem = breakDuration;
   updateBreakUI();
   updateDisplay();
   updateControls(false);
@@ -142,7 +201,7 @@ function startBreak() {
 // End a break
 function endBreak() {
   onBreak = false;
-  rem = WORK;
+  rem = workDuration;
   startTime = null;
   clearInterval(iv);
   updateBreakUI();
@@ -217,7 +276,7 @@ function endSession() {
 function reset() {
   if (!confirm('Reset session?')) return;
   clearInterval(iv);
-  rem = WORK;
+  rem = workDuration;
   startTime = null;
   updateControls(false);
   updateDisplay();

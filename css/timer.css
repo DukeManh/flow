@@ -2,17 +2,19 @@
 
 #timer {
   font-family: 'Courier New', monospace;
-  font-size: 3rem;
+  font-size: 4rem; /* Increased from 3rem to 4rem */
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px; /* Increased from 12px to 16px for better spacing */
   color: var(--accent);
+  font-weight: bold; /* Added to make timer more prominent */
 }
 
 #timerLabel {
   text-align: center;
-  font-size: 1rem;
-  margin-bottom: 4px;
+  font-size: 1.2rem; /* Increased from 1rem to 1.2rem */
+  margin-bottom: 6px; /* Increased from 4px to 6px */
   color: var(--muted);
+  font-weight: 500; /* Added for better visibility */
 }
 
 .progress-bar {

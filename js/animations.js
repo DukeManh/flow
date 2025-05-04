@@ -1,4 +1,3 @@
-// filepath: /Users/chrisbui/Documents/repos/AI Apps/flow-state/js/animations.js
 // Page load animations for the Flow State app
 
 // Initialize animations

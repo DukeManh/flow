@@ -8,6 +8,7 @@ import { initHistory } from './history.js';
 import { initMusic } from './music.js';
 import { initAnimations, cleanupAnimations } from './animations.js';
 import { initProjects } from './projects.js';
+import { initSettings } from './settings.js';
 
 // Initialize date/time display
 function initDateTime() {
@@ -60,6 +61,7 @@ function init() {
   const currentVideoID = initMusic();
   initHistory(currentVideoID);
   initTimer();
+  initSettings();
   
   // Clean up animations after they've completed
   cleanupAnimations();
