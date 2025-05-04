@@ -240,9 +240,14 @@ function selectColor(colorOption) {
 function createProjectFromModal() {
   const name = modalProjectName.value.trim();
   if (name) {
-    createProject(name, selectedColor).then(() => {
+    createProject(name, selectedColor).then((id) => {
       renderProjectSelector();
       closeProjectModal();
+      
+      // Reload goals and todos for the newly created project
+      if (window.reloadProjectData) {
+        window.reloadProjectData();
+      }
     });
   } else {
     // Alert the user to enter a name
