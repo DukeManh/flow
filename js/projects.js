@@ -136,13 +136,23 @@ function openProjectModal() {
   });
   
   // Show modal
-  projectModal.style.display = 'block';
-  modalProjectName.focus();
+  projectModal.classList.add('active');
+  projectModal.style.display = 'flex';
+  
+  // Prevent background scrolling
+  document.body.style.overflow = 'hidden';
+  
+  // Focus on the input field
+  setTimeout(() => modalProjectName.focus(), 100);
 }
 
 // Close the project modal
 function closeProjectModal() {
+  projectModal.classList.remove('active');
   projectModal.style.display = 'none';
+  
+  // Restore background scrolling
+  document.body.style.overflow = '';
 }
 
 // Select a color from the color options

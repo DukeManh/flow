@@ -122,12 +122,10 @@
     margin: 0 4px;
   }
 
-  /* Improved modal styling for mobile while maintaining 80vh height */
   .modal-content {
     margin: 10vh auto;
     padding: 20px 15px;
     width: 95%;
-    height: 80vh;
     max-height: 80vh;
     border-radius: 12px;
     display: flex;

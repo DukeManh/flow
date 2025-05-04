@@ -203,16 +203,25 @@
   height: 100%;
   background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(3px);
+  justify-content: center;
+  align-items: center;
+}
+
+/* Ensures the modal is properly displayed */
+#projectModal.modal.active {
+  display: flex !important;
 }
 
 .modal-content {
   position: relative;
   background-color: var(--bg);
   border-radius: var(--radius);
+  width: 90%;
   max-width: 500px;
-  margin: 15% auto;
   padding: 25px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 .close-modal {
@@ -238,7 +247,8 @@
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .form-group label {
@@ -254,22 +264,45 @@
   font-size: 1rem;
 }
 
+/* Enhanced color options display */
 .modal-color-options {
-  padding: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px;
   background-color: var(--bg-alt);
   border-radius: var(--radius);
+  justify-content: center;
+}
+
+.color-option {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s, border 0.2s;
+  border: 2px solid transparent;
+}
+
+.color-option:hover {
+  transform: scale(1.15);
+}
+
+.color-option.selected {
+  border: 3px solid var(--fg);
+  box-shadow: 0 0 0 2px var(--bg);
 }
 
 .modal-save-btn {
   background-color: var(--accent);
   color: white;
   border: none;
-  padding: 10px 15px;
+  padding: 12px 15px;
   border-radius: var(--radius);
   font-size: 1rem;
   cursor: pointer;
-  align-self: flex-end;
-  margin-top: 10px;
+  width: 100%;
+  margin-top: 15px;
   transition: background-color 0.2s;
 }
 
@@ -323,7 +356,18 @@
   
   .modal-content {
     width: 90%;
-    margin: 30% auto;
-    padding: 15px;
+    margin: 0 auto;
+    padding: 20px;
+    max-height: 80vh;
+  }
+  
+  .modal-color-options {
+    gap: 10px;
+    padding: 10px;
+  }
+  
+  .color-option {
+    width: 30px;
+    height: 30px;
   }
 }
