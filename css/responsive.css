@@ -78,11 +78,18 @@
   }
 
   #musicCard .controls {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: space-between;
   }
 
   #musicCard .controls button {
-    width: 100%;
+    width: calc(50% - 3px);
+    padding: 4px 2px;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+    min-height: 34px;
   }
 
   #customVidInput {
