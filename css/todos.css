@@ -30,20 +30,21 @@
 #todoList li {
   display: flex;
   align-items: center;
-  padding: 3px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--shadow);
 }
 
-#todoList li button {
-  margin: 2px;
+#todoList li:last-child {
+  border-bottom: none;
 }
 
 #todoList li input[type="checkbox"] {
-  margin-right: 8px;
+  margin-right: 12px;
 }
 
 .todo-text {
   flex: 1;
+  margin-right: 10px;
 }
 
 #todoList li.completed .todo-text {
@@ -52,16 +53,29 @@
   font-style: italic;
 }
 
-.todo-actions button {
+/* Styling for the new todo buttons with FA icons */
+.todo-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.todo-btn {
   background: none;
   border: none;
   color: var(--muted);
-  font-size: 1rem;
   cursor: pointer;
-  margin-left: 8px;
-  transition: color var(--transition);
+  padding: 4px 6px;
+  font-size: 0.8rem;
+  border-radius: var(--radius);
+  transition: all var(--transition);
 }
 
-.todo-actions button:hover {
-  color: var(--accent);
+.todo-btn:hover {
+  color: var(--fg);
+  background-color: rgba(var(--accent-rgb), 0.1);
+}
+
+.todo-btn.remove-btn:hover {
+  color: #ff5252;
+  background-color: rgba(255, 82, 82, 0.1);
 }

@@ -61,6 +61,27 @@
   transition: height 0.5s ease;
 }
 
+/* New chart bar segment for stacked bars */
+.chart-bar-segment {
+  position: absolute;
+  transition: height 0.5s ease;
+}
+
+/* Only apply border radius to the top of the top-most segment in a stack */
+.chart-bar-segment:last-child {
+  border-radius: 3px 3px 0 0;
+}
+
+/* No border radius for segments that are not at the top */
+.chart-bar-segment:not(:last-child) {
+  border-radius: 0;
+}
+
+/* For the bottom segment, only round the bottom corners if it's alone */
+.chart-bar-segment:first-child:last-child {
+  border-radius: 3px 3px 0 0;
+}
+
 .chart-label {
   position: absolute;
   bottom: -20px;
@@ -99,4 +120,26 @@
   width: 100%;
   height: 1px;
   background: var(--muted);
+}
+
+/* Chart legend styles */
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 30px;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  margin-right: 5px;
 }

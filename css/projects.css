@@ -1,0 +1,330 @@
+/* filepath: /Users/chrisbui/Documents/repos/AI Apps/flow-state/css/projects.css */
+/* Project management styles for the Flow State app */
+
+#projectCard {
+  grid-column: 1 / -1;
+  margin-bottom: 10px;
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Project Dropdown - Theme-style */
+.project-dropdown {
+  position: relative;
+  flex: 1;
+  margin-right: 20px; /* Space between dropdown and button */
+}
+
+.project-dropdown-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--muted);
+  border-radius: var(--radius);
+  color: var(--fg);
+  font-size: 0.9rem;
+  cursor: pointer;
+  justify-content: space-between;
+  transition: border-color var(--transition);
+}
+
+.project-dropdown-btn:hover {
+  border-color: var(--accent);
+}
+
+.project-name-display {
+  display: flex;
+  align-items: center;
+}
+
+.project-color-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.project-dropdown-content {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 5px);
+  width: 100%;
+  background: var(--bg-alt);
+  border-radius: var(--radius);
+  box-shadow: 0 3px 8px var(--shadow);
+  z-index: 100;
+  overflow: hidden;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: transform var(--transition), opacity var(--transition), visibility var(--transition);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.project-dropdown.active .project-dropdown-content {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.project-option {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background var(--transition);
+  display: flex;
+  align-items: center;
+}
+
+.project-option:hover {
+  background: var(--bg);
+}
+
+.project-option.active {
+  background: rgba(var(--accent-rgb), 0.1);
+}
+
+/* Old project selector (kept for fallback) */
+.project-selector-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex: 1;
+  margin-right: 20px;
+  display: none; /* Hidden in favor of the new dropdown */
+}
+
+#projectSelector {
+  flex: 1;
+  padding: 8px;
+  border-radius: var(--radius);
+  background-color: var(--bg);
+  border: 1px solid var(--muted);
+  color: var(--fg);
+  font-size: 0.9rem;
+}
+
+#newProjectBtn {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap; /* Prevent button text from wrapping */
+}
+
+#newProjectBtn i {
+  font-size: 0.8rem;
+}
+
+#projectFormContainer {
+  margin-top: 10px;
+  background-color: var(--bg-alt);
+  padding: 12px;
+  border-radius: var(--radius);
+  display: none;
+}
+
+.project-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#projectNameInput {
+  flex: 1;
+  padding: 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--muted);
+  background-color: var(--bg);
+  color: var(--fg);
+}
+
+#saveProjectBtn {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  align-self: flex-end;
+}
+
+/* Color picker styles */
+.color-picker-container {
+  margin-top: 5px;
+}
+
+.color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.color-option {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+  border: 2px solid transparent;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.selected {
+  border: 2px solid var(--fg);
+  box-shadow: 0 0 0 2px var(--bg);
+}
+
+/* Modal Dialog Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+}
+
+.modal-content {
+  position: relative;
+  background-color: var(--bg);
+  border-radius: var(--radius);
+  max-width: 500px;
+  margin: 15% auto;
+  padding: 25px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.close-modal:hover {
+  color: var(--fg);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 500;
+}
+
+#modalProjectName {
+  padding: 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--muted);
+  background-color: var(--bg-alt);
+  color: var(--fg);
+  font-size: 1rem;
+}
+
+.modal-color-options {
+  padding: 5px;
+  background-color: var(--bg-alt);
+  border-radius: var(--radius);
+}
+
+.modal-save-btn {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  cursor: pointer;
+  align-self: flex-end;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.modal-save-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Project color indicator in selector */
+.project-color-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Goal card project styling */
+#goalCard .project-header {
+  margin-top: 5px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--shadow);
+  padding-bottom: 15px;
+}
+
+/* Mobile styles */
+@media (max-width: 600px) {
+  .project-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .project-dropdown {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  .project-selector-container {
+    margin-right: 0; /* Remove spacing on mobile */
+    margin-bottom: 10px;
+  }
+  
+  .project-form {
+    flex-direction: column;
+  }
+  
+  #projectNameInput, #saveProjectBtn {
+    width: 100%;
+  }
+  
+  .modal-content {
+    width: 90%;
+    margin: 30% auto;
+    padding: 15px;
+  }
+}

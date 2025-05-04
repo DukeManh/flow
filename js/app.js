@@ -2,11 +2,12 @@
 import { initSounds } from './sound.js';
 import { initThemes } from './themes.js';
 import { initTimer, saveTimerState } from './timer.js';
-import { initGoals } from './goals.js';
-import { initTodos } from './todos.js';
+import { initGoals, loadGoal, migrateGoalToProject } from './goals.js';
+import { initTodos, loadTodos, migrateTodosToProject } from './todos.js';
 import { initHistory } from './history.js';
 import { initMusic } from './music.js';
 import { initAnimations, cleanupAnimations } from './animations.js';
+import { initProjects } from './projects.js';
 
 // Initialize date/time display
 function initDateTime() {
@@ -25,6 +26,16 @@ function initDateTime() {
   updateDateTime();
 }
 
+// Function to reload project-specific data
+function reloadProjectData() {
+  // Reload goals and todos
+  loadGoal();
+  loadTodos();
+}
+
+// Register global function for project switching
+window.reloadProjectData = reloadProjectData;
+
 // Initialize all app modules
 function init() {
   // Initialize animations first for immediate visual feedback
@@ -34,8 +45,18 @@ function init() {
   initSounds();
   initThemes();
   initDateTime();
+  
+  // Initialize projects system before goals and todos
+  initProjects();
+  
+  // Migrate legacy data to project system
+  migrateGoalToProject();
+  migrateTodosToProject();
+  
+  // Initialize goals and todos after projects
   initGoals();
   initTodos();
+  
   const currentVideoID = initMusic();
   initHistory(currentVideoID);
   initTimer();

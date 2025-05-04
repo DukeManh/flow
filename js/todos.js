@@ -1,4 +1,5 @@
 // Todo list management for the Flow State app
+import { getCurrentProject, saveProjectTodos } from './projects.js';
 
 // Todo elements
 let todoInput, addTodoBtn, todoList;
@@ -23,7 +24,7 @@ export function initTodos() {
     if (e.key === 'Enter') addTodoBtn.click(); 
   });
 
-  // Load saved todos
+  // Load todos for current project
   loadTodos();
 }
 
@@ -42,9 +43,13 @@ function createTodoItem(text) {
   span.className = 'todo-text'; 
   span.textContent = text;
   
+  const btnContainer = document.createElement('div');
+  btnContainer.className = 'todo-buttons';
+  
   const upBtn = document.createElement('button'); 
-  upBtn.textContent = '↑'; 
+  upBtn.innerHTML = '<i class="fas fa-arrow-up"></i>'; 
   upBtn.title = 'Move up'; 
+  upBtn.className = 'todo-btn';
   upBtn.addEventListener('click', () => { 
     const prev = li.previousElementSibling; 
     if (prev) todoList.insertBefore(li, prev); 
@@ -52,8 +57,9 @@ function createTodoItem(text) {
   });
   
   const downBtn = document.createElement('button'); 
-  downBtn.textContent = '↓'; 
+  downBtn.innerHTML = '<i class="fas fa-arrow-down"></i>'; 
   downBtn.title = 'Move down'; 
+  downBtn.className = 'todo-btn';
   downBtn.addEventListener('click', () => { 
     const next = li.nextElementSibling; 
     if (next) todoList.insertBefore(next, li); 
@@ -61,36 +67,46 @@ function createTodoItem(text) {
   });
   
   const removeBtn = document.createElement('button'); 
-  removeBtn.textContent = '✕'; 
+  removeBtn.innerHTML = '<i class="fas fa-times"></i>'; 
   removeBtn.title = 'Remove'; 
+  removeBtn.className = 'todo-btn remove-btn';
   removeBtn.addEventListener('click', () => { 
     li.remove(); 
     saveTodos(); 
   });
   
-  li.append(checkbox, span, upBtn, downBtn, removeBtn); 
+  btnContainer.append(upBtn, downBtn, removeBtn);
+  li.append(checkbox, span, btnContainer); 
   return li;
 }
 
-// Save todos to localStorage
-function saveTodos() { 
+// Save todos to the current project
+export function saveTodos() { 
   const items = Array.from(todoList.children).map(li => ({ 
     text: li.querySelector('.todo-text').textContent, 
     completed: li.querySelector('input').checked 
   }));
-  localStorage.setItem('flowTodos', JSON.stringify(items)); 
+  
+  // Save to project system
+  saveProjectTodos(items);
 }
 
-// Load todos from localStorage
-function loadTodos() { 
-  JSON.parse(localStorage.getItem('flowTodos') || '[]').forEach(item => { 
-    const li = createTodoItem(item.text); 
-    if (item.completed) { 
-      li.classList.add('completed'); 
-      li.querySelector('input').checked = true; 
-    } 
-    todoList.append(li); 
-  });
+// Load todos from current project
+export function loadTodos() { 
+  // Clear existing todos
+  todoList.innerHTML = '';
+  
+  const currentProject = getCurrentProject();
+  if (currentProject && currentProject.todos) {
+    currentProject.todos.forEach(item => { 
+      const li = createTodoItem(item.text); 
+      if (item.completed) { 
+        li.classList.add('completed'); 
+        li.querySelector('input').checked = true; 
+      } 
+      todoList.append(li); 
+    });
+  }
 }
 
 // Get current todos
@@ -99,4 +115,20 @@ export function getTodos() {
     text: li.querySelector('.todo-text').textContent,
     completed: li.querySelector('input').checked
   }));
+}
+
+// For legacy compatibility - migrate old todos to project system
+export function migrateTodosToProject() {
+  const oldTodos = localStorage.getItem('flowTodos');
+  if (oldTodos) {
+    try {
+      const todos = JSON.parse(oldTodos);
+      if (Array.isArray(todos)) {
+        saveProjectTodos(todos);
+      }
+      localStorage.removeItem('flowTodos');
+    } catch (e) {
+      console.error('Error migrating todos', e);
+    }
+  }
 }
