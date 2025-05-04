@@ -58,8 +58,10 @@ function openSettings() {
   const soundToggle = document.getElementById('soundToggle');
   soundToggle.checked = currentSettings.soundNotifications;
   
-  // Show modal with proper flexbox centering
+  // Show modal with explicit display and flexbox properties
   settingsModal.style.display = 'flex';
+  settingsModal.style.justifyContent = 'center';
+  settingsModal.style.alignItems = 'center';
   settingsModal.classList.add('active');
   
   // Prevent background scrolling when modal is open

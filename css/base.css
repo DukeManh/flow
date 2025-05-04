@@ -207,9 +207,14 @@ body.distraction #insightsCard {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(3px);
-  overflow: auto;
   justify-content: center;
   align-items: center;
+}
+
+/* Active class for modal */
+.modal.active {
+  /* Ensure the modal is visible in all browsers */
+  display: flex !important;
 }
 
 .modal-content {
@@ -221,7 +226,10 @@ body.distraction #insightsCard {
   width: 90%;
   max-width: 600px;
   max-height: 80vh;
+  /* Only the modal content should be scrollable */
   overflow-y: auto;
+  /* Fallback positioning in case flexbox centering fails */
+  margin: 10vh auto;
 }
 
 .close-modal {
@@ -240,8 +248,8 @@ body.distraction #insightsCard {
 
 .modal-form {
   margin-top: 20px;
+  /* Remove overflow-y from here */
   flex: 1;
-  overflow-y: auto;
 }
 
 .modal-save-btn {
