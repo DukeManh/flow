@@ -1,6 +1,6 @@
 // Timer functionality for the Flow State app
 import { TIMER_PRESETS } from './constants.js';
-import { formatTime } from './utils.js';
+import { formatTime, updateDocumentTitle } from './utils.js';
 import { playSound, getStartSound, getEndSound, getPauseSound } from './sound.js';
 import { recordSession } from './history.js';
 
@@ -185,6 +185,16 @@ function updateDisplay() {
     // For work, show progress of work time used
     progressEl.style.width = (100 * (workDuration - rem) / workDuration) + '%';
   }
+  
+  // Update document title with timer state using shared utility function
+  updateDocumentTitle({
+    isRunning,
+    remainingTime: rem,
+    workDuration,
+    breakDuration,
+    onBreak,
+    currentPreset,
+  });
   
   saveTimerState();
 }

@@ -1,6 +1,6 @@
 // Focus mode JavaScript file
 import { TIMER_PRESETS } from './constants.js';
-import { formatTime } from './utils.js';
+import { formatTime, updateDocumentTitle } from './utils.js';
 import { loadTheme } from './themes.js';
 import { playSound, getStartSound, getEndSound, getPauseSound, initSounds } from './sound.js';
 import { initAnimations, cleanupAnimations } from './animations.js';
@@ -350,6 +350,16 @@ function updateDisplay() {
   } else {
     circularProgressEl.classList.remove('over-50');
   }
+  
+  // Update document title with timer state using shared utility function
+  updateDocumentTitle({
+    isRunning,
+    remainingTime: rem,
+    workDuration,
+    breakDuration,
+    onBreak,
+    currentPreset,
+  });
   
   saveState();
 }

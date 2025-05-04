@@ -15,3 +15,28 @@ export function formatDateTime(timestamp) {
 
   return `${year}-${month}-${day}, ${hours}:${minutes}`;
 }
+
+// Get timer preset display name
+export function getPresetDisplayName(presetKey) {
+  switch(presetKey) {
+    case 'pomodoro':
+      return 'Pomodoro';
+    case 'deepWork':
+      return 'Deep Work';
+    default:
+      return '52/17 Rule';
+  }
+}
+
+// Update document title with timer information
+export function updateDocumentTitle(params) {
+  const { 
+    remainingTime,
+    onBreak,
+    currentPreset,
+  } = params;
+  
+  const presetName = getPresetDisplayName(currentPreset);
+  const modeName = onBreak ? "Break Time!" : `${presetName}`;
+  document.title = `${formatTime(remainingTime)} - ${modeName}`;
+}
