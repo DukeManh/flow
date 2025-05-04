@@ -9,6 +9,7 @@ import { initMusic } from './music.js';
 import { initAnimations, cleanupAnimations } from './animations.js';
 import { initProjects } from './projects.js';
 import { initSettings } from './settings.js';
+import storageService from './storage.js';
 
 // Initialize date/time display
 function initDateTime() {
@@ -28,10 +29,10 @@ function initDateTime() {
 }
 
 // Function to reload project-specific data
-function reloadProjectData() {
+async function reloadProjectData() {
   // Reload goals and todos
-  loadGoal();
-  loadTodos();
+  await loadGoal();
+  await loadTodos();
 }
 
 // Register global function for project switching
@@ -68,21 +69,25 @@ function init() {
 }
 
 // Check if timer is running for the beforeunload warning
-function isTimerRunning() {
-  const timerState = localStorage.getItem('timerState');
-  if (!timerState) return false;
-  
-  const state = JSON.parse(timerState);
-  return state.isRunning;
+async function isTimerRunning() {
+  try {
+    const timerState = await storageService.getJSON('timerState');
+    if (!timerState) return false;
+    
+    return timerState.isRunning;
+  } catch (error) {
+    console.error('Error checking timer state:', error);
+    return false;
+  }
 }
 
 // Handle page unload to ensure we save the current state
-window.addEventListener('beforeunload', function(event) {
+window.addEventListener('beforeunload', async function(event) {
   // Always save the timer state
   saveTimerState();
   
   // Show confirmation dialog only if timer is running
-  if (isTimerRunning()) {
+  if (await isTimerRunning()) {
     // Standard way to show a confirmation dialog when closing a tab
     const message = "You have an active timer running. Are you sure you want to leave?";
     event.returnValue = message; // For most browsers

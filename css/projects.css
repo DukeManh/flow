@@ -329,17 +329,20 @@
 }
 
 /* Mobile styles */
-@media (max-width: 600px) {
+@media (max-width: 1200px) {
   .project-header {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
   }
   
   .project-dropdown {
     margin-right: 0;
     margin-bottom: 10px;
   }
+}
+
+/* Mobile styles */
+@media (max-width: 600px) {
   
   .project-selector-container {
     margin-right: 0; /* Remove spacing on mobile */

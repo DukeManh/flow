@@ -3,10 +3,36 @@ import { musicLabels, MAX_DURATION_MINUTES } from './constants.js';
 import { formatDateTime } from './utils.js';
 import { getCurrentGoal } from './goals.js';
 import { getCurrentProject, getProjectStats } from './projects.js';
+import storageService from './storage.js';
+
+// Storage keys
+const STORAGE_KEYS = {
+  SESSION_HISTORY: 'sessionHistory'
+};
 
 // History elements
 let historyList;
 let currentVideoID;
+
+// Storage utility functions
+async function getSessionHistoryFromStorage() {
+  try {
+    return await storageService.getJSON(STORAGE_KEYS.SESSION_HISTORY, []);
+  } catch (error) {
+    console.error('Error getting session history from storage:', error);
+    return [];
+  }
+}
+
+async function saveSessionHistoryToStorage(history) {
+  try {
+    await storageService.setJSON(STORAGE_KEYS.SESSION_HISTORY, history);
+    return true;
+  } catch (error) {
+    console.error('Error saving session history to storage:', error);
+    return false;
+  }
+}
 
 // Initialize history functionality
 export function initHistory(videoID) {
@@ -100,80 +126,89 @@ function addHistoryEntry({ start, end, duration, goal, music, todos, projectId, 
   li.appendChild(details);
 
   historyList.prepend(li);
-
-  // After adding history entry, update the productivity chart
-  renderProductivityChart();
 }
 
-// Load history from localStorage
-function loadHistory() {
-  const history = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
-  const { projectNames } = getProjectStats();
-  
-  // Add project name to history entries when displaying
-  history.forEach(entry => {
-    const displayEntry = { ...entry };
+// Load history from storage
+async function loadHistory() {
+  try {
+    const history = await getSessionHistoryFromStorage();
+    const { projectNames } = await getProjectStats();
     
-    // Add project name if projectId exists
-    if (entry.projectId) {
-      displayEntry.projectName = projectNames[entry.projectId] || 'Unknown Project';
-    } else {
-      displayEntry.projectName = 'Unassigned';
-    }
+    // Add project name to history entries when displaying
+    history.forEach(entry => {
+      const displayEntry = { ...entry };
+      
+      // Add project name if projectId exists
+      if (entry.projectId) {
+        displayEntry.projectName = projectNames[entry.projectId] || 'Unknown Project';
+      } else {
+        displayEntry.projectName = 'Unassigned';
+      }
+      
+      addHistoryEntry(displayEntry);
+    });
     
-    addHistoryEntry(displayEntry);
-  });
-  
-  // Initial render of productivity chart
-  renderProductivityChart();
+    // Initial render of productivity chart
+    renderProductivityChart();
+  } catch (error) {
+    console.error('Error loading history:', error);
+  }
 }
 
 // Record a completed session
-export function recordSession(sessionStartTime, todos) {
-  // Only record work sessions, not breaks
-  const startTime = sessionStartTime || Date.now();
-  const endTime = Date.now();
-  
-  // Calculate duration with a reasonable maximum
-  let duration = Math.round((endTime - startTime) / 60000);
-  
-  // Cap duration at a reasonable maximum
-  if (duration > MAX_DURATION_MINUTES || duration < 0) {
-    duration = Math.min(MAX_DURATION_MINUTES, 52); // Use either max or default work session length
+export async function recordSession(sessionStartTime, todos) {
+  try {
+    // Only record work sessions, not breaks
+    const startTime = sessionStartTime || Date.now();
+    const endTime = Date.now();
+    
+    // Calculate duration with a reasonable maximum
+    let duration = Math.round((endTime - startTime) / 60000);
+    
+    // Cap duration at a reasonable maximum
+    if (duration > MAX_DURATION_MINUTES || duration < 0) {
+      duration = Math.min(MAX_DURATION_MINUTES, 52); // Use either max or default work session length
+    }
+    
+    // Get current project and goal
+    const currentProject = await getCurrentProject();
+    const currentGoal = await getCurrentGoal();
+    
+    const entry = {
+      start: startTime,
+      end: endTime,
+      duration: duration,
+      goal: currentGoal,
+      music: currentVideoID,
+      todos: todos,
+      projectId: currentProject ? currentProject.id : 'default',
+      projectName: currentProject ? currentProject.name : 'Unassigned'
+    };
+    
+    // Save to storage
+    const history = await getSessionHistoryFromStorage();
+    history.push(entry);
+    await saveSessionHistoryToStorage(history);
+    
+    // Update UI
+    addHistoryEntry(entry);
+    
+    // Render the chart once after adding the new entry
+    renderProductivityChart();
+  } catch (error) {
+    console.error('Error recording session:', error);
   }
-  
-  // Get current project
-  const currentProject = getCurrentProject();
-  
-  const entry = {
-    start: startTime,
-    end: endTime,
-    duration: duration,
-    goal: getCurrentGoal(),
-    music: currentVideoID,
-    todos: todos,
-    projectId: currentProject ? currentProject.id : 'default',
-    projectName: currentProject ? currentProject.name : 'Unassigned'
-  };
-  
-  // Save to localStorage
-  const history = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
-  history.push(entry);
-  localStorage.setItem('sessionHistory', JSON.stringify(history));
-  
-  // Update UI
-  addHistoryEntry(entry);
 }
 
 // Render productivity chart with stacked bars by project
-export function renderProductivityChart() {
+export async function renderProductivityChart() {
   const chartContainer = document.getElementById('chartContainer');
   if (!chartContainer) return;
   
   chartContainer.innerHTML = '';
 
   // Get project stats and history
-  const { history, projectNames, projectColors } = getProjectStats();
+  const { history, projectNames, projectColors } = await getProjectStats();
   const now = new Date();
 
   // Create objects for the last 7 days
@@ -282,15 +317,13 @@ export function renderProductivityChart() {
 }
 
 // Create a legend for the chart
-function createChartLegend(container, projectNames, projectColors) {
-  // Remove any existing legend first
-  const existingLegend = document.querySelector('.chart-legend');
-  if (existingLegend) {
-    existingLegend.remove();
-  }
+async function createChartLegend(container, projectNames, projectColors) {
+  // Remove ALL existing legends from the DOM
+  const existingLegends = document.querySelectorAll('.chart-legend');
+  existingLegends.forEach(legend => legend.remove());
   
   // Get all days data to find which projects actually have data
-  const history = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
+  const history = await getSessionHistoryFromStorage();
   const now = new Date();
   
   // Find projects that have data in the last 7 days
@@ -312,6 +345,7 @@ function createChartLegend(container, projectNames, projectColors) {
   
   const legend = document.createElement('div');
   legend.className = 'chart-legend';
+  legend.id = 'productivityChartLegend'; // Add an ID for easier selection
   
   // Add legend items only for projects with data
   for (const projectId of projectsWithData) {
@@ -333,5 +367,7 @@ function createChartLegend(container, projectNames, projectColors) {
     legend.appendChild(legendItem);
   }
   
-  container.parentNode.appendChild(legend);
+  // Ensure we add the legend to a consistent location
+  const chartSection = document.querySelector('.chart-section') || container.parentNode;
+  chartSection.appendChild(legend);
 }

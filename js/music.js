@@ -8,14 +8,40 @@ import {
   TICKING_VIDEO_ID,
   musicLabels
 } from './constants.js';
+import storageService from './storage.js';
 
 // Music elements
 let ytPlayer, customVidInput;
 let vBtn, bBtn, lBtn, wBtn, tBtn, loadBtn;
 let currentVideoID;
 
+// Storage keys
+const STORAGE_KEYS = {
+  LAST_VIDEO_ID: 'lastVideoID'
+};
+
+// Storage utility functions
+async function getLastVideoIDFromStorage() {
+  try {
+    return await storageService.getItem(STORAGE_KEYS.LAST_VIDEO_ID);
+  } catch (error) {
+    console.error('Error getting last video ID from storage:', error);
+    return null;
+  }
+}
+
+async function saveLastVideoIDToStorage(videoID) {
+  try {
+    await storageService.setItem(STORAGE_KEYS.LAST_VIDEO_ID, videoID);
+    return true;
+  } catch (error) {
+    console.error('Error saving video ID to storage:', error);
+    return false;
+  }
+}
+
 // Initialize music player
-export function initMusic() {
+export async function initMusic() {
   // Get DOM elements
   ytPlayer = document.getElementById('ytPlayer');
   customVidInput = document.getElementById('customVidInput');
@@ -26,8 +52,9 @@ export function initMusic() {
   tBtn = document.getElementById('tBtn');
   loadBtn = document.getElementById('loadBtn');
   
-  // Load last used video from localStorage
-  currentVideoID = localStorage.getItem('lastVideoID') || WHITE_NOISE_VIDEO_ID;
+  // Load last used video from storage
+  const savedVideoID = await getLastVideoIDFromStorage();
+  currentVideoID = savedVideoID || WHITE_NOISE_VIDEO_ID;
   
   // Set up event listeners
   vBtn.addEventListener('click', () => changeVideo(REBOOT_VIDEO_ID));
@@ -47,11 +74,12 @@ export function initMusic() {
 }
 
 // Change the current video
-function changeVideo(id) { 
+async function changeVideo(id) { 
   if (!id) return; 
   currentVideoID = id; 
   ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}`;
-  localStorage.setItem('lastVideoID', id);
+  
+  await saveLastVideoIDToStorage(id);
   setCurrentVideo(id);
 }
 

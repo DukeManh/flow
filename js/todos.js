@@ -1,8 +1,37 @@
 // Todo list management for the Flow State app
 import { getCurrentProject, saveProjectTodos } from './projects.js';
+import storageService from './storage.js';
+
+// Storage keys
+const STORAGE_KEYS = {
+  OLD_TODOS: 'flowTodos'
+};
 
 // Todo elements
 let todoInput, addTodoBtn, todoList;
+
+// Storage utility functions
+async function getOldTodosFromStorage() {
+  try {
+    const oldTodosString = await storageService.getItem(STORAGE_KEYS.OLD_TODOS);
+    if (!oldTodosString) return null;
+    
+    return JSON.parse(oldTodosString);
+  } catch (error) {
+    console.error('Error getting old todos from storage:', error);
+    return null;
+  }
+}
+
+async function removeOldTodosFromStorage() {
+  try {
+    await storageService.removeItem(STORAGE_KEYS.OLD_TODOS);
+    return true;
+  } catch (error) {
+    console.error('Error removing old todos from storage:', error);
+    return false;
+  }
+}
 
 // Initialize todos functionality
 export function initTodos() {
@@ -11,13 +40,13 @@ export function initTodos() {
   todoList = document.getElementById('todoList');
 
   // Add event listeners
-  addTodoBtn.addEventListener('click', () => { 
+  addTodoBtn.addEventListener('click', async () => { 
     const text = todoInput.value.trim(); 
     if (!text) return; 
     todoList.append(createTodoItem(text)); 
     todoInput.value = ''; 
     todoInput.focus(); 
-    saveTodos(); 
+    await saveTodos(); 
   });
   
   todoInput.addEventListener('keypress', e => { 
@@ -81,31 +110,35 @@ function createTodoItem(text) {
 }
 
 // Save todos to the current project
-export function saveTodos() { 
+export async function saveTodos() { 
   const items = Array.from(todoList.children).map(li => ({ 
     text: li.querySelector('.todo-text').textContent, 
     completed: li.querySelector('input').checked 
   }));
   
   // Save to project system
-  saveProjectTodos(items);
+  await saveProjectTodos(items);
 }
 
 // Load todos from current project
-export function loadTodos() { 
+export async function loadTodos() { 
   // Clear existing todos
   todoList.innerHTML = '';
   
-  const currentProject = getCurrentProject();
-  if (currentProject && currentProject.todos) {
-    currentProject.todos.forEach(item => { 
-      const li = createTodoItem(item.text); 
-      if (item.completed) { 
-        li.classList.add('completed'); 
-        li.querySelector('input').checked = true; 
-      } 
-      todoList.append(li); 
-    });
+  try {
+    const currentProject = await getCurrentProject();
+    if (currentProject && currentProject.todos) {
+      currentProject.todos.forEach(item => { 
+        const li = createTodoItem(item.text); 
+        if (item.completed) { 
+          li.classList.add('completed'); 
+          li.querySelector('input').checked = true; 
+        } 
+        todoList.append(li); 
+      });
+    }
+  } catch (error) {
+    console.error('Error loading todos:', error);
   }
 }
 
@@ -118,17 +151,14 @@ export function getTodos() {
 }
 
 // For legacy compatibility - migrate old todos to project system
-export function migrateTodosToProject() {
-  const oldTodos = localStorage.getItem('flowTodos');
-  if (oldTodos) {
-    try {
-      const todos = JSON.parse(oldTodos);
-      if (Array.isArray(todos)) {
-        saveProjectTodos(todos);
-      }
-      localStorage.removeItem('flowTodos');
-    } catch (e) {
-      console.error('Error migrating todos', e);
+export async function migrateTodosToProject() {
+  try {
+    const oldTodos = await getOldTodosFromStorage();
+    if (oldTodos && Array.isArray(oldTodos)) {
+      await saveProjectTodos(oldTodos);
+      await removeOldTodosFromStorage();
     }
+  } catch (error) {
+    console.error('Error migrating todos:', error);
   }
 }

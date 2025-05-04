@@ -1,26 +1,21 @@
 // Focus mode JavaScript file
 import { TIMER_PRESETS } from './constants.js';
-import { formatTime, updateDocumentTitle } from './utils.js';
+import { formatTime } from './utils.js';
 import { loadTheme } from './themes.js';
-import { playSound, getStartSound, getEndSound, getPauseSound, initSounds } from './sound.js';
 import { initAnimations, cleanupAnimations } from './animations.js';
-
-// Timer state
-let currentPreset = 'default';
-let workDuration = TIMER_PRESETS.default.work;
-let breakDuration = TIMER_PRESETS.default.break;
-let rem = workDuration;
-let onBreak = false;
-let iv;
-let startTime = null;
-let isRunning = false;
+import storageService from './storage.js';
+import { TimerCore } from './timerCore.js';
+import { initSounds } from './sound.js';
 
 // DOM elements
-let timerEl, progressEl, circularProgressEl;
+let timerEl, circularProgressEl;
 let startBtn, pauseBtn, endBtn, resetBtn, exitBtn;
 let ytPlayer, togglePlayerBtn, mutePlayerBtn, ytPlayerContainer;
 let volumeSlider, volumePercentLabel;
 let isMuted = false;
+
+// Timer core instance
+let timerCore;
 
 // Detect if device is mobile
 function isMobileDevice() {
@@ -36,7 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initAnimations();
   
   initSounds(); // Initialize sound system
-  loadState();
+  
+  // Initialize timer core with custom UI update function for circular progress
+  initTimerCore();
+  
   setupEventListeners();
   loadTheme();
   
@@ -65,41 +63,54 @@ function initElements() {
   ytPlayerContainer = document.querySelector('.youtube-mini-player');
   volumeSlider = document.getElementById('volumeSlider');
   volumePercentLabel = document.getElementById('volumePercent');
+  
+  // Show initial value while timer is initializing
+  if (timerEl) {
+    timerEl.textContent = formatTime(TIMER_PRESETS.default.work);
+  }
 }
 
-// Load timer state from localStorage
-function loadState() {
-  const savedState = localStorage.getItem('timerState');
-  if (savedState) {
-    const state = JSON.parse(savedState);
-    rem = state.rem;
-    onBreak = state.onBreak;
-    
-    // Load the current preset from state if available
-    currentPreset = state.currentPreset || 'default';
-    
-    // Set work and break durations based on the preset
-    workDuration = TIMER_PRESETS[currentPreset].work;
-    breakDuration = TIMER_PRESETS[currentPreset].break;
-    
-    // Validate startTime - if it's more than the work duration old, reset it
-    const now = Date.now();
-    if (state.startTime && (now - state.startTime > workDuration * 1000)) {
-      startTime = null;
-      isRunning = false;
-    } else {
-      startTime = state.startTime;
-      isRunning = state.isRunning;
-    }
-    
-    updateDisplay();
-    updateBreakUI();
-    
-    if (isRunning) {
-      start(false); // Resume timer without resetting startTime
-    } else {
-      updateControls();
-    }
+// Initialize timer core with focus mode specific UI updates
+function initTimerCore() {
+  timerCore = new TimerCore({
+    // Custom callbacks for focus mode
+    updateUI: updateCircularProgress,
+    onSessionEnd: recordSession,
+    getTodos: () => [] // No todos in focus mode
+  });
+  
+  // Set up elements for the timer core
+  timerCore.initElements({
+    timer: timerEl,
+    progress: circularProgressEl, // This will be used differently in focus mode
+    startBtn: startBtn,
+    pauseBtn: pauseBtn,
+    endBtn: endBtn,
+    resetBtn: resetBtn,
+    timerLabel: document.getElementById('timerLabel')
+  });
+}
+
+// Custom UI update function for focus mode's circular progress
+function updateCircularProgress(state) {
+  // Calculate progress percentage based on current preset's durations
+  let progressPercent;
+  if (state.onBreak) {
+    // For break time, show progress of break time used
+    progressPercent = 100 * (state.breakDuration - state.remainingTime) / state.breakDuration;
+  } else {
+    // For work time, show progress of work time used
+    progressPercent = 100 * (state.workDuration - state.remainingTime) / state.workDuration;
+  }
+  
+  // Update circular progress indicator by setting the CSS variable
+  circularProgressEl.style.setProperty('--progress-percent', progressPercent);
+  
+  // Toggle the over-50 class when progress exceeds 50%
+  if (progressPercent >= 50) {
+    circularProgressEl.classList.add('over-50');
+  } else {
+    circularProgressEl.classList.remove('over-50');
   }
 }
 
@@ -112,11 +123,11 @@ function setupYouTubeControls() {
     togglePlayerBtn.innerHTML = ytPlayerContainer.classList.contains('collapsed') 
       ? '<i class="fas fa-compress-alt"></i>' 
       : '<i class="fas fa-expand-arrows-alt"></i>';
-    localStorage.setItem('ytPlayerCollapsed', ytPlayerContainer.classList.contains('collapsed'));
+    storageService.setItem('ytPlayerCollapsed', ytPlayerContainer.classList.contains('collapsed'));
   });
   
   // Mute/unmute player
-  mutePlayerBtn.addEventListener('click', () => {
+  mutePlayerBtn.addEventListener('click', async () => {
     isMuted = !isMuted;
     // Use postMessage to control YouTube iframe
     try {
@@ -128,7 +139,7 @@ function setupYouTubeControls() {
       mutePlayerBtn.innerHTML = isMuted 
         ? '<i class="fas fa-volume-mute"></i>' 
         : '<i class="fas fa-volume-up"></i>';
-      localStorage.setItem('ytPlayerMuted', isMuted);
+      await storageService.setItem('ytPlayerMuted', isMuted);
     } catch (e) {
       console.log('YouTube postMessage error:', e);
     }
@@ -136,13 +147,15 @@ function setupYouTubeControls() {
   
   // Volume control for YouTube player
   if (volumeSlider && volumePercentLabel) {
-    // Set initial volume from localStorage or default to 50
-    const savedVolume = parseInt(localStorage.getItem('ytPlayerVolume')) || 50;
-    volumeSlider.value = savedVolume;
-    volumePercentLabel.textContent = `${savedVolume}%`;
+    // Set initial volume from storage or default to 50
+    storageService.getItem('ytPlayerVolume').then(savedVolume => {
+      const volume = parseInt(savedVolume) || 50;
+      volumeSlider.value = volume;
+      volumePercentLabel.textContent = `${volume}%`;
+    });
     
     // Update volume when slider changes
-    volumeSlider.addEventListener('input', () => {
+    volumeSlider.addEventListener('input', async () => {
       const volume = volumeSlider.value;
       volumePercentLabel.textContent = `${volume}%`;
       
@@ -162,11 +175,11 @@ function setupYouTubeControls() {
             event: 'command',
             func: 'unMute'
           }), '*');
-          localStorage.setItem('ytPlayerMuted', 'false');
+          await storageService.setItem('ytPlayerMuted', 'false');
         }
         
         // Save volume setting
-        localStorage.setItem('ytPlayerVolume', volume);
+        await storageService.setItem('ytPlayerVolume', volume);
       } catch (e) {
         console.log('YouTube volume control error:', e);
       }
@@ -181,7 +194,9 @@ function setupYouTubeControls() {
     isCollapsed = true;
   } else {
     // On desktop, use the saved state or default to expanded
-    isCollapsed = localStorage.getItem('ytPlayerCollapsed') === 'true';
+    storageService.getItem('ytPlayerCollapsed').then(collapsed => {
+      isCollapsed = collapsed === 'true';
+    });
   }
   
   if (isCollapsed) {
@@ -193,93 +208,91 @@ function setupYouTubeControls() {
   }
   
   // Save the initial state
-  localStorage.setItem('ytPlayerCollapsed', isCollapsed);
+  storageService.setItem('ytPlayerCollapsed', isCollapsed);
   
-  isMuted = localStorage.getItem('ytPlayerMuted') === 'true';
-  if (isMuted) {
-    mutePlayerBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-  }
+  storageService.getItem('ytPlayerMuted').then(muted => {
+    isMuted = muted === 'true';
+    if (isMuted) {
+      mutePlayerBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+    }
+  });
 }
 
 // Continue music playback from the main page
-function continueMusicPlayback() {
-  const videoID = localStorage.getItem('lastVideoID');
-  if (videoID) {
-    // Enable JS API for postMessage control but don't autoplay
-    ytPlayer.src = `https://www.youtube.com/embed/${videoID}?autoplay=0&loop=1&playlist=${videoID}&mute=0&enablejsapi=1&origin=${window.location.origin}`;
-    
-    // Add a play button to the YouTube container
-    const playButtonContainer = document.createElement('div');
-    playButtonContainer.className = 'youtube-play-container';
-    playButtonContainer.innerHTML = '<button id="playYTBtn" class="youtube-play-button"><i class="fas fa-play"></i></button>';
-    ytPlayerContainer.appendChild(playButtonContainer);
+async function continueMusicPlayback() {
+  try {
+    const videoID = await storageService.getItem('lastVideoID');
+    if (videoID) {
+      // Enable JS API for postMessage control but don't autoplay
+      ytPlayer.src = `https://www.youtube.com/embed/${videoID}?autoplay=0&loop=1&playlist=${videoID}&mute=0&enablejsapi=1&origin=${window.location.origin}`;
+      
+      // Add a play button to the YouTube container
+      const playButtonContainer = document.createElement('div');
+      playButtonContainer.className = 'youtube-play-container';
+      playButtonContainer.innerHTML = '<button id="playYTBtn" class="youtube-play-button"><i class="fas fa-play"></i></button>';
+      ytPlayerContainer.appendChild(playButtonContainer);
 
-    // Add click event to play button
-    document.getElementById('playYTBtn').addEventListener('click', () => {
-      // Start playing video
-      try {
-        ytPlayer.contentWindow.postMessage(JSON.stringify({
-          event: 'command',
-          func: 'playVideo'
-        }), '*');
-        // Hide play button once playback starts
-        playButtonContainer.style.display = 'none';
-      } catch (e) {
-        console.log('YouTube playback error:', e);
-      }
-    });
-    
-    // Apply volume and muted state after player loads
-    setTimeout(() => {
-      try {
-        // Set volume from localStorage
-        const savedVolume = parseInt(localStorage.getItem('ytPlayerVolume')) || 50;
-        ytPlayer.contentWindow.postMessage(JSON.stringify({
-          event: 'command',
-          func: 'setVolume',
-          args: [savedVolume]
-        }), '*');
-        
-        // Apply muted state if needed
-        if (isMuted) {
+      // Add click event to play button
+      document.getElementById('playYTBtn').addEventListener('click', () => {
+        // Start playing video
+        try {
           ytPlayer.contentWindow.postMessage(JSON.stringify({
             event: 'command',
-            func: 'mute'
+            func: 'playVideo'
           }), '*');
+          // Hide play button once playback starts
+          playButtonContainer.style.display = 'none';
+        } catch (e) {
+          console.log('YouTube playback error:', e);
         }
-      } catch (e) {
-        console.log('YouTube settings error:', e);
-      }
-    }, 1500);
-  } else {
-    // Hide player if no video
+      });
+      
+      // Apply volume and muted state after player loads
+      setTimeout(async () => {
+        try {
+          // Set volume from storage
+          const savedVolume = parseInt(await storageService.getItem('ytPlayerVolume')) || 50;
+          ytPlayer.contentWindow.postMessage(JSON.stringify({
+            event: 'command',
+            func: 'setVolume',
+            args: [savedVolume]
+          }), '*');
+          
+          // Apply muted state if needed
+          if (isMuted) {
+            ytPlayer.contentWindow.postMessage(JSON.stringify({
+              event: 'command',
+              func: 'mute'
+            }), '*');
+          }
+        } catch (e) {
+          console.log('YouTube settings error:', e);
+        }
+      }, 1500);
+    } else {
+      // Hide player if no video
+      ytPlayerContainer.style.display = 'none';
+    }
+  } catch (error) {
+    console.error('Error loading video ID:', error);
     ytPlayerContainer.style.display = 'none';
   }
 }
 
 // Setup event listeners
 function setupEventListeners() {
-  startBtn.addEventListener('click', () => { 
-    start(); 
-    updateDisplay(); 
-  });
-  
-  pauseBtn.addEventListener('click', pause);
-  endBtn.addEventListener('click', endSession);
-  resetBtn.addEventListener('click', reset);
+  // We don't need timer button listeners as they're set up by TimerCore
   
   // Exit focus mode
   exitBtn.addEventListener('click', () => {
+    // Exit to main page
     window.location.href = 'index.html';
   });
   
-  // Handle before unload to save state and show warning if timer is running
+  // Handle before unload to show warning if timer is running
   window.addEventListener('beforeunload', function(event) {
-    // Always save the state
-    saveState();
-    
     // Show confirmation dialog only if timer is running
-    if (isRunning) {
+    if (timerCore.state.isRunning) {
       const message = "You have an active timer running. Are you sure you want to leave?";
       event.returnValue = message; // For most browsers
       return message; // For some older browsers
@@ -287,196 +300,38 @@ function setupEventListeners() {
   });
 }
 
-// Save timer state to localStorage
-function saveState() {
-  const state = {
-    rem,
-    onBreak,
-    startTime,
-    isRunning,
-    currentPreset
-  };
-  localStorage.setItem('timerState', JSON.stringify(state));
-}
-
-// Update timer controls
-function updateControls(running) { 
-  isRunning = running;
-  
-  if (onBreak) {
-    startBtn.disabled = running;
-    startBtn.textContent = running ? "Break Running" : "Start Break";
-    pauseBtn.disabled = true;
-    pauseBtn.style.display = 'none';
-    resetBtn.disabled = true;
-    resetBtn.style.display = 'none';
-    endBtn.disabled = !running;
-    endBtn.textContent = "Skip Break";
-  } else {
-    startBtn.disabled = running; 
-    startBtn.textContent = "Lock In";
-    pauseBtn.disabled = !running;
-    pauseBtn.style.display = '';
-    endBtn.disabled = !running;
-    endBtn.textContent = "End";
-    resetBtn.disabled = !running;
-    resetBtn.style.display = '';
-  }
-  
-  saveState();
-}
-
-// Update UI for break/focus modes
-function updateBreakUI() {
-  if (onBreak) {
-    timerEl.style.color = 'var(--muted)';
-    document.getElementById('timerLabel').textContent = "Break Time";
-  } else {
-    timerEl.style.color = 'var(--accent)';
-    document.getElementById('timerLabel').textContent = "Focus Time";
-  }
-}
-
-// Update timer display
-function updateDisplay() {
-  timerEl.textContent = formatTime(rem);
-  
-  // Calculate progress percentage based on current preset's durations
-  let progressPercent;
-  if (onBreak) {
-    // For break time, show progress of break time used
-    progressPercent = 100 * (breakDuration - rem) / breakDuration;
-  } else {
-    // For work time, show progress of work time used
-    progressPercent = 100 * (workDuration - rem) / workDuration;
-  }
-  
-  // Update circular progress indicator by setting the CSS variable
-  circularProgressEl.style.setProperty('--progress-percent', progressPercent);
-  
-  // Toggle the over-50 class when progress exceeds 50%
-  if (progressPercent >= 50) {
-    circularProgressEl.classList.add('over-50');
-  } else {
-    circularProgressEl.classList.remove('over-50');
-  }
-  
-  // Update document title with timer state using shared utility function
-  updateDocumentTitle({
-    isRunning,
-    remainingTime: rem,
-    workDuration,
-    breakDuration,
-    onBreak,
-    currentPreset,
-  });
-  
-  saveState();
-}
-
-// Record session in localStorage
-function recordSession() {
-  if (!onBreak) {
+// Record session in storage
+async function recordSession(startTime, todos) {
+  // Only record if not on break
+  if (!timerCore.state.onBreak) {
     const st = startTime || Date.now(), en = Date.now();
     const MAX_DURATION_MINUTES = 180;
     let dur = Math.round((en - st) / 60000);
     
     if (dur > MAX_DURATION_MINUTES || dur < 0) {
-      dur = Math.min(MAX_DURATION_MINUTES, workDuration / 60); // Use current preset's work duration
+      dur = Math.min(MAX_DURATION_MINUTES, timerCore.state.workDuration / 60); // Use current preset's work duration
     }
     
-    const hist = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
-    const entry = {
-      start: st,
-      end: en,
-      duration: dur,
-      goal: localStorage.getItem('flowGoal') || '',
-      music: localStorage.getItem('lastVideoID') || '',
-      todos: JSON.parse(localStorage.getItem('flowTodos') || '[]'),
-      currentPreset: currentPreset // Record which preset was used for the session
-    };
-    hist.push(entry);
-    localStorage.setItem('sessionHistory', JSON.stringify(hist));
-  }
-}
-
-// Start break
-function startBreak() {
-  onBreak = true;
-  rem = breakDuration; // Use current preset's break duration
-  updateBreakUI();
-  updateDisplay();
-  updateControls(false);
-}
-
-// End break
-function endBreak() {
-  onBreak = false;
-  rem = workDuration; // Use current preset's work duration
-  startTime = null;
-  clearInterval(iv);
-  updateBreakUI();
-  updateDisplay();
-  updateControls(false);
-}
-
-// Start timer
-function start(resetStartTime = true) {
-  updateControls(true);
-  if (resetStartTime && !onBreak) startTime = Date.now();
-  iv = setInterval(() => {
-    rem--;
-    updateDisplay();
-    if (rem <= 0) {
-      clearInterval(iv);
+    try {
+      const hist = await storageService.getJSON('sessionHistory', []);
+      const flowGoal = await storageService.getItem('flowGoal') || '';
+      const lastVideoID = await storageService.getItem('lastVideoID') || '';
+      const flowTodos = await storageService.getJSON('flowTodos', []);
       
-      if (onBreak) {
-        playSound(getEndSound());
-        endBreak();
-      } else {
-        recordSession();
-        playSound(getEndSound());
-        startBreak();
-      }
+      const entry = {
+        start: st,
+        end: en,
+        duration: dur,
+        goal: flowGoal,
+        music: lastVideoID,
+        todos: flowTodos,
+        currentPreset: timerCore.state.currentPreset // Record which preset was used for the session
+      };
+      
+      hist.push(entry);
+      await storageService.setJSON('sessionHistory', hist);
+    } catch (error) {
+      console.error('Error recording session:', error);
     }
-  }, 1000);
-  playSound(getStartSound());
-}
-
-// Pause timer
-function pause() {
-  const reason = prompt('Why pause? Provide reason:');
-  if (!reason || !reason.trim()) {
-    alert('Pause cancelled');
-    return;
   }
-  clearInterval(iv);
-  updateControls(false);
-  playSound(getPauseSound());
-}
-
-// End session
-function endSession() {
-  if (onBreak) {
-    if (!confirm('Skip the rest of your break?')) return;
-    clearInterval(iv);
-    endBreak();
-  } else {
-    if (!confirm('End session early?')) return;
-    clearInterval(iv);
-    recordSession();
-    playSound(getEndSound());
-    startBreak();
-  }
-}
-
-// Reset timer
-function reset() {
-  if (!confirm('Reset session?')) return;
-  clearInterval(iv);
-  rem = workDuration; // Use current preset's work duration
-  startTime = null;
-  updateControls(false);
-  updateDisplay();
-  playSound(getPauseSound());
 }

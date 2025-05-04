@@ -1,17 +1,43 @@
 // Settings management for Flow State app
 import { TIMER_PRESETS } from './constants.js';
 import { updateTimerPreset, saveTimerState } from './timer.js';
+import storageService from './storage.js';
 
 // DOM elements
 let settingsModal;
 let saveSettingsBtn;
 let closeModalBtn;
 
+// Storage keys
+const STORAGE_KEYS = {
+  SETTINGS: 'settings'
+};
+
 // Current settings state
 let currentSettings = {
   timerPreset: 'default',
   soundNotifications: true
 };
+
+// Storage utility functions
+async function getSettingsFromStorage() {
+  try {
+    return await storageService.getJSON(STORAGE_KEYS.SETTINGS);
+  } catch (error) {
+    console.error('Error getting settings from storage:', error);
+    return null;
+  }
+}
+
+async function saveSettingsToStorage(settings) {
+  try {
+    await storageService.setJSON(STORAGE_KEYS.SETTINGS, settings);
+    return true;
+  } catch (error) {
+    console.error('Error saving settings to storage:', error);
+    return false;
+  }
+}
 
 export function initSettings() {
   // Get DOM elements
@@ -78,7 +104,7 @@ function closeSettings() {
 }
 
 // Save settings
-function saveSettings() {
+async function saveSettings() {
   // Get selected timer preset
   const selectedPreset = document.querySelector('input[name="timer-preset"]:checked').value;
   
@@ -92,19 +118,23 @@ function saveSettings() {
   // Apply settings
   updateTimerPreset(selectedPreset);
   
-  // Save settings to localStorage
-  localStorage.setItem('settings', JSON.stringify(currentSettings));
+  // Save settings to storage
+  const success = await saveSettingsToStorage(currentSettings);
   
-  // Close modal
-  closeSettings();
+  if (success) {
+    // Close modal
+    closeSettings();
+  } else {
+    alert('Failed to save settings. Please try again.');
+  }
 }
 
-// Load settings from localStorage
-function loadSettings() {
-  const savedSettings = localStorage.getItem('settings');
+// Load settings from storage
+async function loadSettings() {
+  const savedSettings = await getSettingsFromStorage();
   
   if (savedSettings) {
-    currentSettings = JSON.parse(savedSettings);
+    currentSettings = savedSettings;
     
     // Apply saved timer preset
     if (currentSettings.timerPreset && TIMER_PRESETS[currentSettings.timerPreset]) {

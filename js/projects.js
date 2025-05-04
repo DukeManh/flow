@@ -1,4 +1,13 @@
 // Project management for the Flow State app
+import storageService from './storage.js';
+
+// Storage keys
+const STORAGE_KEYS = {
+  PROJECTS: 'flowProjects',
+  CURRENT_PROJECT_ID: 'currentProjectId',
+  TIMER_STATE: 'timerState',
+  SESSION_HISTORY: 'sessionHistory'
+};
 
 // Project data structure and state
 let currentProjectId = null;
@@ -31,6 +40,63 @@ const PROJECT_COLORS = [
   "#4682B4", // Steel Blue
   "#6B8E23"  // Olive Drab
 ];
+
+// Storage utility functions
+async function getProjectsFromStorage() {
+  try {
+    return await storageService.getJSON(STORAGE_KEYS.PROJECTS, []);
+  } catch (error) {
+    console.error('Error getting projects from storage:', error);
+    return [];
+  }
+}
+
+async function saveProjectsToStorage(projects) {
+  try {
+    await storageService.setJSON(STORAGE_KEYS.PROJECTS, projects);
+    return true;
+  } catch (error) {
+    console.error('Error saving projects to storage:', error);
+    return false;
+  }
+}
+
+async function getCurrentProjectIdFromStorage() {
+  try {
+    return await storageService.getItem(STORAGE_KEYS.CURRENT_PROJECT_ID);
+  } catch (error) {
+    console.error('Error getting current project ID from storage:', error);
+    return null;
+  }
+}
+
+async function saveCurrentProjectIdToStorage(id) {
+  try {
+    await storageService.setItem(STORAGE_KEYS.CURRENT_PROJECT_ID, id);
+    return true;
+  } catch (error) {
+    console.error('Error saving current project ID to storage:', error);
+    return false;
+  }
+}
+
+async function getTimerStateFromStorage() {
+  try {
+    return await storageService.getJSON(STORAGE_KEYS.TIMER_STATE);
+  } catch (error) {
+    console.error('Error getting timer state from storage:', error);
+    return null;
+  }
+}
+
+async function getSessionHistoryFromStorage() {
+  try {
+    return await storageService.getJSON(STORAGE_KEYS.SESSION_HISTORY, []);
+  } catch (error) {
+    console.error('Error getting session history from storage:', error);
+    return [];
+  }
+}
 
 // Initialize projects functionality
 export function initProjects() {
@@ -94,17 +160,18 @@ export function initProjects() {
   });
   
   // Initialize projects if none exist
-  const projects = getProjects();
-  if (projects.length === 0) {
-    // Create a default project
-    createProject('Default Project', "#5D8AA8");
-  }
+  getProjects().then(projects => {
+    if (projects.length === 0) {
+      // Create a default project
+      createProject('Default Project', "#5D8AA8");
+    }
   
-  // Load current project or set to the first one
-  loadCurrentProject();
+    // Load current project or set to the first one
+    loadCurrentProject();
   
-  // Render project selectors
-  renderProjectSelector();
+    // Render project selectors
+    renderProjectSelector();
+  });
 }
 
 // Toggle project dropdown visibility
@@ -173,9 +240,10 @@ function selectColor(colorOption) {
 function createProjectFromModal() {
   const name = modalProjectName.value.trim();
   if (name) {
-    createProject(name, selectedColor);
-    renderProjectSelector();
-    closeProjectModal();
+    createProject(name, selectedColor).then(() => {
+      renderProjectSelector();
+      closeProjectModal();
+    });
   } else {
     // Alert the user to enter a name
     alert('Please enter a project name.');
@@ -184,8 +252,8 @@ function createProjectFromModal() {
 }
 
 // Create a new project
-export function createProject(name, color = "#5D8AA8") {
-  const projects = getProjects();
+export async function createProject(name, color = "#5D8AA8") {
+  const projects = await getProjects();
   const id = 'project_' + Date.now();
   
   const newProject = {
@@ -198,97 +266,122 @@ export function createProject(name, color = "#5D8AA8") {
   };
   
   projects.push(newProject);
-  saveProjects(projects);
-  setCurrentProject(id);
+  await saveProjects(projects);
+  await setCurrentProject(id);
   
   return id;
 }
 
 // Get all projects
-export function getProjects() {
-  return JSON.parse(localStorage.getItem('flowProjects') || '[]');
+export async function getProjects() {
+  return await getProjectsFromStorage();
 }
 
 // Save all projects
-function saveProjects(projects) {
-  localStorage.setItem('flowProjects', JSON.stringify(projects));
+async function saveProjects(projects) {
+  return await saveProjectsToStorage(projects);
 }
 
 // Get current project
-export function getCurrentProject() {
-  const projects = getProjects();
-  const currentId = localStorage.getItem('currentProjectId');
+export async function getCurrentProject() {
+  const projects = await getProjects();
   
-  // Try to find the current project
-  if (currentId) {
-    const project = projects.find(p => p.id === currentId);
-    if (project) return project;
+  try {
+    const currentId = await getCurrentProjectIdFromStorage();
+    
+    // Try to find the current project
+    if (currentId) {
+      const project = projects.find(p => p.id === currentId);
+      if (project) return project;
+    }
+    
+    // Fallback to first project or create default
+    if (projects.length > 0) {
+      await setCurrentProject(projects[0].id);
+      return projects[0];
+    }
+    
+    // If no projects exist, create a default one
+    const defaultId = await createProject('Default Project');
+    const updatedProjects = await getProjects();
+    return updatedProjects.find(p => p.id === defaultId);
+  } catch (error) {
+    console.error('Error getting current project:', error);
+    
+    // Fallback to first project if available
+    if (projects.length > 0) {
+      return projects[0];
+    }
+    
+    // Last resort fallback
+    return {
+      id: 'default',
+      name: 'Default Project',
+      color: "#5D8AA8",
+      createdAt: Date.now(),
+      goal: '',
+      todos: []
+    };
   }
-  
-  // Fallback to first project or create default
-  if (projects.length > 0) {
-    setCurrentProject(projects[0].id);
-    return projects[0];
-  }
-  
-  // If no projects exist, create a default one
-  const defaultId = createProject('Default Project');
-  return getProjects().find(p => p.id === defaultId);
 }
 
 // Set current project
-export function setCurrentProject(id) {
-  const projects = getProjects();
+export async function setCurrentProject(id) {
+  const projects = await getProjects();
   const project = projects.find(p => p.id === id);
   
   if (project) {
-    localStorage.setItem('currentProjectId', id);
-    currentProjectId = id;
-    
-    // Update UI displays
-    if (projectSelector) {
-      projectSelector.value = id;
+    const success = await saveCurrentProjectIdToStorage(id);
+    if (success) {
+      currentProjectId = id;
+      
+      // Update UI displays
+      if (projectSelector) {
+        projectSelector.value = id;
+      }
+      
+      updateProjectDisplay(project);
+      
+      return true;
     }
-    
-    updateProjectDisplay(project);
-    
-    return true;
   }
   
   return false;
 }
 
 // Save project goal
-export function saveProjectGoal(goal) {
-  const projects = getProjects();
-  const currentProject = getCurrentProject();
+export async function saveProjectGoal(goal) {
+  const projects = await getProjects();
+  const currentProject = await getCurrentProject();
   
   if (currentProject) {
     const index = projects.findIndex(p => p.id === currentProject.id);
     if (index !== -1) {
       projects[index].goal = goal;
-      saveProjects(projects);
+      return await saveProjects(projects);
     }
   }
+  return false;
 }
 
 // Save project todos
-export function saveProjectTodos(todos) {
-  const projects = getProjects();
-  const currentProject = getCurrentProject();
+export async function saveProjectTodos(todos) {
+  const projects = await getProjects();
+  const currentProject = await getCurrentProject();
   
   if (currentProject) {
     const index = projects.findIndex(p => p.id === currentProject.id);
     if (index !== -1) {
       projects[index].todos = todos;
-      saveProjects(projects);
+      return await saveProjects(projects);
     }
   }
+  return false;
 }
 
 // Delete a project
-export function deleteProject(id) {
-  let projects = getProjects();
+export async function deleteProject(id) {
+  let projects = await getProjects();
   
   // Don't delete if it's the only project
   if (projects.length <= 1) {
@@ -297,19 +390,24 @@ export function deleteProject(id) {
   
   // Filter out the project to delete
   projects = projects.filter(p => p.id !== id);
-  saveProjects(projects);
+  const saveSuccess = await saveProjects(projects);
   
-  // Update current project if we deleted the current one
-  if (localStorage.getItem('currentProjectId') === id) {
-    setCurrentProject(projects[0].id);
+  if (saveSuccess) {
+    // Update current project if we deleted the current one
+    const currentId = await getCurrentProjectIdFromStorage();
+    if (currentId === id) {
+      await setCurrentProject(projects[0].id);
+    }
+    
+    return true;
   }
   
-  return true;
+  return false;
 }
 
 // Load current project
-function loadCurrentProject() {
-  const currentProject = getCurrentProject();
+async function loadCurrentProject() {
+  const currentProject = await getCurrentProject();
   if (currentProject) {
     currentProjectId = currentProject.id;
     updateProjectDisplay(currentProject);
@@ -317,144 +415,150 @@ function loadCurrentProject() {
 }
 
 // Render the project selector dropdown
-export function renderProjectSelector() {
-  // Render the old selector (kept for compatibility)
-  if (projectSelector) {
-    // Clear selector
-    projectSelector.innerHTML = '';
+export async function renderProjectSelector() {
+  try {
+    // Get all projects and current project ID
+    const projects = await getProjects();
+    const currentId = await getCurrentProjectIdFromStorage();
     
-    // Add all projects as options
-    const projects = getProjects();
-    projects.forEach(project => {
-      const option = document.createElement('option');
-      option.value = project.id;
-      option.dataset.color = project.color || '#5D8AA8';
-      option.textContent = project.name;
-      projectSelector.appendChild(option);
-    });
-    
-    // Set current selection
-    projectSelector.value = localStorage.getItem('currentProjectId');
-    
-    // Apply color indicators to options
-    Array.from(projectSelector.options).forEach(option => {
-      const color = option.dataset.color;
-      if (color) {
-        option.style.background = `linear-gradient(to right, ${color} 0%, ${color} 5px, transparent 5px, transparent 100%)`;
-        option.style.paddingLeft = '15px';
-      }
-    });
-    
-    // Add change handler if not already added
-    if (!projectSelector.hasChangeListener) {
-      projectSelector.addEventListener('change', () => {
-        // Only allow switching if not in active session
-        if (isTimerRunning()) {
-          alert('Cannot switch projects during an active focus session.');
-          projectSelector.value = localStorage.getItem('currentProjectId');
-          return;
-        }
-        
-        setCurrentProject(projectSelector.value);
-        
-        // Reload goals and todos
-        if (window.reloadProjectData) {
-          window.reloadProjectData();
+    // Render the old selector (kept for compatibility)
+    if (projectSelector) {
+      // Clear selector
+      projectSelector.innerHTML = '';
+      
+      // Add all projects as options
+      projects.forEach(project => {
+        const option = document.createElement('option');
+        option.value = project.id;
+        option.dataset.color = project.color || '#5D8AA8';
+        option.textContent = project.name;
+        projectSelector.appendChild(option);
+      });
+      
+      // Set current selection
+      projectSelector.value = currentId;
+      
+      // Apply color indicators to options
+      Array.from(projectSelector.options).forEach(option => {
+        const color = option.dataset.color;
+        if (color) {
+          option.style.background = `linear-gradient(to right, ${color} 0%, ${color} 5px, transparent 5px, transparent 100%)`;
+          option.style.paddingLeft = '15px';
         }
       });
       
-      projectSelector.hasChangeListener = true;
-    }
-  }
-  
-  // Render the new theme-style dropdown
-  if (projectDropdownContent) {
-    // Clear content
-    projectDropdownContent.innerHTML = '';
-    
-    // Get current project
-    const currentId = localStorage.getItem('currentProjectId');
-    
-    // Add all projects as options
-    const projects = getProjects();
-    projects.forEach(project => {
-      const option = document.createElement('div');
-      option.className = 'project-option';
-      if (project.id === currentId) {
-        option.classList.add('active');
+      // Add change handler if not already added
+      if (!projectSelector.hasChangeListener) {
+        projectSelector.addEventListener('change', async () => {
+          // Only allow switching if not in active session
+          if (await isTimerRunning()) {
+            alert('Cannot switch projects during an active focus session.');
+            projectSelector.value = await getCurrentProjectIdFromStorage();
+            return;
+          }
+          
+          await setCurrentProject(projectSelector.value);
+          
+          // Reload goals and todos
+          if (window.reloadProjectData) {
+            window.reloadProjectData();
+          }
+        });
+        
+        projectSelector.hasChangeListener = true;
       }
+    }
+    
+    // Render the new theme-style dropdown
+    if (projectDropdownContent) {
+      // Clear content
+      projectDropdownContent.innerHTML = '';
       
-      // Create color dot
-      const colorDot = document.createElement('span');
-      colorDot.className = 'project-color-dot';
-      colorDot.style.backgroundColor = project.color || '#5D8AA8';
-      
-      // Create name span
-      const nameSpan = document.createElement('span');
-      nameSpan.textContent = project.name;
-      
-      // Add to option
-      option.appendChild(colorDot);
-      option.appendChild(nameSpan);
-      
-      // Add click handler
-      option.addEventListener('click', () => {
-        // Only allow switching if not in active session
-        if (isTimerRunning()) {
-          alert('Cannot switch projects during an active focus session.');
-          return;
+      // Add all projects as options
+      projects.forEach(project => {
+        const option = document.createElement('div');
+        option.className = 'project-option';
+        if (project.id === currentId) {
+          option.classList.add('active');
         }
         
-        setCurrentProject(project.id);
-        projectDropdown.classList.remove('active');
+        // Create color dot
+        const colorDot = document.createElement('span');
+        colorDot.className = 'project-color-dot';
+        colorDot.style.backgroundColor = project.color || '#5D8AA8';
         
-        // Update the old selector too
-        if (projectSelector) {
-          projectSelector.value = project.id;
-        }
+        // Create name span
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = project.name;
         
-        // Reload goals and todos
-        if (window.reloadProjectData) {
-          window.reloadProjectData();
-        }
+        // Add to option
+        option.appendChild(colorDot);
+        option.appendChild(nameSpan);
+        
+        // Add click handler
+        option.addEventListener('click', async () => {
+          // Only allow switching if not in active session
+          if (await isTimerRunning()) {
+            alert('Cannot switch projects during an active focus session.');
+            return;
+          }
+          
+          await setCurrentProject(project.id);
+          projectDropdown.classList.remove('active');
+          
+          // Update the old selector too
+          if (projectSelector) {
+            projectSelector.value = project.id;
+          }
+          
+          // Reload goals and todos
+          if (window.reloadProjectData) {
+            window.reloadProjectData();
+          }
+        });
+        
+        projectDropdownContent.appendChild(option);
       });
       
-      projectDropdownContent.appendChild(option);
-    });
-    
-    // Update the current selection display
-    const currentProject = projects.find(p => p.id === currentId);
-    if (currentProject) {
-      updateProjectDisplay(currentProject);
+      // Update the current selection display
+      const currentProject = projects.find(p => p.id === currentId);
+      if (currentProject) {
+        updateProjectDisplay(currentProject);
+      }
     }
+  } catch (error) {
+    console.error('Error rendering project selector:', error);
   }
 }
 
 // Check if timer is running
-export function isTimerRunning() {
-  const timerState = localStorage.getItem('timerState');
-  if (!timerState) return false;
-  
-  return JSON.parse(timerState).isRunning;
+export async function isTimerRunning() {
+  const timerState = await getTimerStateFromStorage();
+  return timerState ? timerState.isRunning : false;
 }
 
 // Get project stats for productivity chart
-export function getProjectStats() {
-  const history = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
-  const projects = getProjects();
-  
-  // Create a map of project IDs to their names and colors
-  const projectNames = {};
-  const projectColors = {};
-  
-  projects.forEach(project => {
-    projectNames[project.id] = project.name;
-    projectColors[project.id] = project.color || '#5D8AA8';
-  });
-  
-  // Add default project name for older sessions without projectId
-  projectNames['default'] = 'Unassigned';
-  projectColors['default'] = 'var(--accent)';
-  
-  return { history, projectNames, projectColors };
+export async function getProjectStats() {
+  try {
+    const history = await getSessionHistoryFromStorage();
+    const projects = await getProjects();
+    
+    // Create a map of project IDs to their names and colors
+    const projectNames = {};
+    const projectColors = {};
+    
+    projects.forEach(project => {
+      projectNames[project.id] = project.name;
+      projectColors[project.id] = project.color || '#5D8AA8';
+    });
+    
+    // Add default project name for older sessions without projectId
+    projectNames['default'] = 'Unassigned';
+    projectColors['default'] = 'var(--accent)';
+    
+    return { history, projectNames, projectColors };
+  } catch (error) {
+    console.error('Error getting project stats:', error);
+    return { history: [], projectNames: {}, projectColors: {} };
+  }
 }

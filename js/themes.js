@@ -1,7 +1,33 @@
 // Theme management for the Flow State app
+import storageService from './storage.js';
 
 // Theme elements
 let themeDropdown, themeDropdownBtn, themeOptions;
+
+// Storage keys
+const STORAGE_KEYS = {
+  SELECTED_THEME: 'selectedTheme'
+};
+
+// Storage utility functions
+async function getSelectedThemeFromStorage() {
+  try {
+    return await storageService.getItem(STORAGE_KEYS.SELECTED_THEME) || 'midnight';
+  } catch (error) {
+    console.error('Error getting selected theme from storage:', error);
+    return 'midnight'; // Default theme
+  }
+}
+
+async function saveSelectedThemeToStorage(theme) {
+  try {
+    await storageService.setItem(STORAGE_KEYS.SELECTED_THEME, theme);
+    return true;
+  } catch (error) {
+    console.error('Error saving selected theme to storage:', error);
+    return false;
+  }
+}
 
 // Initialize theme functionality
 export function initThemes() {
@@ -27,9 +53,9 @@ export function initThemes() {
   // Theme option click handlers - only on main page
   if (themeOptions && themeOptions.length > 0) {
     themeOptions.forEach(option => {
-      option.addEventListener('click', () => {
+      option.addEventListener('click', async () => {
         const selectedTheme = option.dataset.theme;
-        localStorage.setItem('selectedTheme', selectedTheme);
+        await saveSelectedThemeToStorage(selectedTheme);
         
         // Update active state
         themeOptions.forEach(opt => opt.classList.remove('active'));
@@ -57,27 +83,33 @@ export function initThemes() {
   loadTheme();
 }
 
-// Load saved theme from localStorage
-export function loadTheme() {
-  const savedTheme = localStorage.getItem('selectedTheme') || 'midnight';
-  
-  // Remove any existing theme classes
-  document.body.classList.remove('dark', 'nature', 'midnight', 'slate', 'carbon', 'mocha');
-  
-  // If the theme is not default, add the class
-  if (savedTheme !== 'default') {
-    document.body.classList.add(savedTheme);
+// Load saved theme from storage
+export async function loadTheme() {
+  try {
+    const savedTheme = await getSelectedThemeFromStorage();
+    
+    // Remove any existing theme classes
+    document.body.classList.remove('dark', 'nature', 'midnight', 'slate', 'carbon', 'mocha');
+    
+    // If the theme is not default, add the class
+    if (savedTheme !== 'default') {
+      document.body.classList.add(savedTheme);
+    }
+    
+    // Update the active state in dropdown (only on main page)
+    if (themeOptions) {
+      themeOptions.forEach(option => {
+        option.classList.toggle('active', option.dataset.theme === savedTheme);
+      });
+    }
+    
+    // Update dropdown button icon based on theme (only on main page)
+    updateThemeIcon(savedTheme);
+  } catch (error) {
+    console.error('Error loading theme:', error);
+    // Default to midnight theme if there's an error
+    document.body.classList.add('midnight');
   }
-  
-  // Update the active state in dropdown (only on main page)
-  if (themeOptions) {
-    themeOptions.forEach(option => {
-      option.classList.toggle('active', option.dataset.theme === savedTheme);
-    });
-  }
-  
-  // Update dropdown button icon based on theme (only on main page)
-  updateThemeIcon(savedTheme);
 }
 
 // Set theme icon based on current theme
@@ -125,7 +157,6 @@ function updateThemeIcon(theme) {
 
 // Helper function to handle fallbacks for unavailable Font Awesome icons
 function isFontAwesomeIconAvailable(iconClass) {
-  // This is a simple check - in production you might want a more robust solution
   const tempIcon = document.createElement('i');
   tempIcon.className = iconClass;
   document.body.appendChild(tempIcon);
