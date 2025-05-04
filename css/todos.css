@@ -66,10 +66,76 @@
   margin-right: 10px;
 }
 
+/* Todo status styles */
 #todoList li.completed .todo-text {
   text-decoration: line-through;
   color: var(--muted);
   font-style: italic;
+}
+
+#todoList li.status-not-started .todo-text {
+  /* Default style */
+  color: var(--fg);
+}
+
+#todoList li.status-in-progress .todo-text {
+  color: #3498db; /* Blue */
+  font-weight: 500;
+}
+
+#todoList li.status-blocked .todo-text {
+  color: #e74c3c; /* Red */
+  font-style: italic;
+}
+
+#todoList li.status-testing .todo-text {
+  color: #9b59b6; /* Purple */
+  font-weight: 500;
+}
+
+/* Todo status indicator */
+.todo-status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+.status-not-started .todo-status-indicator {
+  background-color: var(--muted);
+}
+
+.status-in-progress .todo-status-indicator {
+  background-color: #3498db;
+}
+
+.status-blocked .todo-status-indicator {
+  background-color: #e74c3c;
+}
+
+.status-completed .todo-status-indicator {
+  background-color: #2ecc71;
+}
+
+.status-testing .todo-status-indicator {
+  background-color: #9b59b6;
+}
+
+/* Todo status dropdown */
+.todo-status {
+  margin-right: 8px;
+  position: relative;
+}
+
+.todo-status-select {
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--muted);
+  background-color: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
 }
 
 /* Styling for the new todo buttons with FA icons */

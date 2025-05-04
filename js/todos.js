@@ -7,6 +7,15 @@ const STORAGE_KEYS = {
   OLD_TODOS: 'flowTodos'
 };
 
+// Todo status options
+const TODO_STATUSES = {
+  NOT_STARTED: 'Not Started',
+  IN_PROGRESS: 'In Progress',
+  BLOCKED: 'Blocked',
+  TESTING: 'Testing',
+  COMPLETED: 'Completed'
+};
+
 // Todo elements
 let todoInput, addTodoBtn, todoList;
 // Track dragged element and drop position
@@ -142,8 +151,35 @@ function clearDropTargetClasses() {
     });
 }
 
+// Helper to update todo item status and appearance
+function updateTodoStatus(li, status) {
+  // First, remove all status classes
+  li.classList.remove('status-not-started', 'status-in-progress', 'status-blocked', 'completed');
+  
+  // Convert status to kebab case for CSS class
+  const statusClass = 'status-' + status.toLowerCase().replace(/\s+/g, '-');
+  li.classList.add(statusClass);
+  
+  // Special case for completed status
+  if (status === TODO_STATUSES.COMPLETED) {
+    li.classList.add('completed');
+    li.querySelector('input[type="checkbox"]').checked = true;
+  } else {
+    li.querySelector('input[type="checkbox"]').checked = false;
+  }
+  
+  // Update the status select
+  const statusSelect = li.querySelector('.todo-status-select');
+  if (statusSelect) {
+    statusSelect.value = status;
+  }
+  
+  // Save todos after status change
+  saveTodos();
+}
+
 // Create a new todo item element
-function createTodoItem(text) {
+function createTodoItem(text, status = TODO_STATUSES.NOT_STARTED) {
   const li = document.createElement('li');
   
   // Make the li draggable
@@ -169,9 +205,39 @@ function createTodoItem(text) {
   const checkbox = document.createElement('input'); 
   checkbox.type = 'checkbox'; 
   checkbox.addEventListener('change', () => { 
-    li.classList.toggle('completed', checkbox.checked); 
-    saveTodos(); 
+    // When checkbox is checked, update status to Completed
+    // When unchecked, update status to Not Started
+    updateTodoStatus(li, checkbox.checked ? TODO_STATUSES.COMPLETED : TODO_STATUSES.NOT_STARTED);
   });
+  
+  // Create status indicator
+  const statusIndicator = document.createElement('span');
+  statusIndicator.className = 'todo-status-indicator';
+  
+  // Create status dropdown
+  const statusContainer = document.createElement('div');
+  statusContainer.className = 'todo-status';
+  
+  const statusSelect = document.createElement('select');
+  statusSelect.className = 'todo-status-select';
+  
+  // Add options to the select
+  Object.values(TODO_STATUSES).forEach(statusValue => {
+    const option = document.createElement('option');
+    option.value = statusValue;
+    option.textContent = statusValue;
+    statusSelect.appendChild(option);
+  });
+  
+  // Set initial selected status
+  statusSelect.value = status;
+  
+  // Add change event to the select
+  statusSelect.addEventListener('change', () => {
+    updateTodoStatus(li, statusSelect.value);
+  });
+  
+  statusContainer.appendChild(statusSelect);
   
   const span = document.createElement('span'); 
   span.className = 'todo-text'; 
@@ -216,16 +282,24 @@ function createTodoItem(text) {
   dragHandleBtn.className = 'todo-btn drag-handle';
   
   btnContainer.append(upBtn, downBtn, removeBtn, dragHandleBtn);
-  li.append(checkbox, span, btnContainer); 
+  li.append(checkbox, statusIndicator, statusContainer, span, btnContainer); 
+  
+  // Apply initial status class
+  updateTodoStatus(li, status);
+  
   return li;
 }
 
 // Save todos to the current project
 export async function saveTodos() { 
-  const items = Array.from(todoList.children).map(li => ({ 
-    text: li.querySelector('.todo-text').textContent, 
-    completed: li.querySelector('input').checked 
-  }));
+  const items = Array.from(todoList.children).map(li => {
+    const statusSelect = li.querySelector('.todo-status-select');
+    return { 
+      text: li.querySelector('.todo-text').textContent, 
+      completed: li.querySelector('input').checked,
+      status: statusSelect ? statusSelect.value : TODO_STATUSES.NOT_STARTED
+    };
+  });
   
   // Save to project system
   await saveProjectTodos(items);
@@ -240,11 +314,9 @@ export async function loadTodos() {
     const currentProject = await getCurrentProject();
     if (currentProject && currentProject.todos) {
       currentProject.todos.forEach(item => { 
-        const li = createTodoItem(item.text); 
-        if (item.completed) { 
-          li.classList.add('completed'); 
-          li.querySelector('input').checked = true; 
-        } 
+        // Handle old todo format that doesn't have status
+        const status = item.status || (item.completed ? TODO_STATUSES.COMPLETED : TODO_STATUSES.NOT_STARTED);
+        const li = createTodoItem(item.text, status); 
         todoList.append(li); 
       });
     }
@@ -255,10 +327,14 @@ export async function loadTodos() {
 
 // Get current todos
 export function getTodos() {
-  return Array.from(todoList.children).map(li => ({
-    text: li.querySelector('.todo-text').textContent,
-    completed: li.querySelector('input').checked
-  }));
+  return Array.from(todoList.children).map(li => {
+    const statusSelect = li.querySelector('.todo-status-select');
+    return {
+      text: li.querySelector('.todo-text').textContent,
+      completed: li.querySelector('input').checked,
+      status: statusSelect ? statusSelect.value : TODO_STATUSES.NOT_STARTED
+    };
+  });
 }
 
 // For legacy compatibility - migrate old todos to project system
@@ -266,7 +342,12 @@ export async function migrateTodosToProject() {
   try {
     const oldTodos = await getOldTodosFromStorage();
     if (oldTodos && Array.isArray(oldTodos)) {
-      await saveProjectTodos(oldTodos);
+      // Add status to old todos based on completed flag
+      const updatedTodos = oldTodos.map(todo => ({
+        ...todo,
+        status: todo.completed ? TODO_STATUSES.COMPLETED : TODO_STATUSES.NOT_STARTED
+      }));
+      await saveProjectTodos(updatedTodos);
       await removeOldTodosFromStorage();
     }
   } catch (error) {
