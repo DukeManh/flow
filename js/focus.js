@@ -103,7 +103,8 @@ function updateCircularProgress(state) {
     progressPercent = 100 * (state.workDuration - state.remainingTime) / state.workDuration;
   }
   
-  // Update circular progress indicator by setting the CSS variable
+  // Only set the CSS variable for the conic gradient, don't modify width
+  circularProgressEl.style.removeProperty('width'); // Remove any width that might have been set
   circularProgressEl.style.setProperty('--progress-percent', progressPercent);
   
   // Toggle the over-50 class when progress exceeds 50%

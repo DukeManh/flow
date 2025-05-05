@@ -68,7 +68,7 @@ body {
   border-radius: 50%;
   background: conic-gradient(
     var(--accent) 0deg, 
-    var(--accent-secondary, var(--accent)) calc(var(--progress-percent, 0) * 3.6deg), 
+    var(--accent) calc(var(--progress-percent, 0) * 3.6deg), 
     transparent calc(var(--progress-percent, 0) * 3.6deg)
   );
   z-index: 0;

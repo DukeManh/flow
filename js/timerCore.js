@@ -263,7 +263,12 @@ export class TimerCore {
     
     // Ensure percentage is a valid number between 0-100
     widthPercentage = isNaN(widthPercentage) ? 0 : Math.max(0, Math.min(100, widthPercentage));
-    this.elements.progress.style.width = widthPercentage + '%';
+    
+    // Only set width if not in focus mode (circular progress)
+    // In focus mode, we use the updateCircularProgress callback instead
+    if (!this.elements.progress.id || this.elements.progress.id !== 'circularProgress') {
+      this.elements.progress.style.width = widthPercentage + '%';
+    }
     
     // Update document title
     updateDocumentTitle({
