@@ -6,6 +6,14 @@
   <link rel="icon" href="./assets/images/favicon.ico" type="image/ico">
   <title>Flow - Focus Mode</title>
   
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#2979ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Flow">
+  <link rel="apple-touch-icon" href="./assets/images/icon-192.png">
+  <link rel="manifest" href="./manifest.json">
+  
   <!-- Open Graph / Social Media Meta Tags -->
   <meta property="og:title" content="Flow - Focus Mode">
   <meta property="og:description" content="Distraction-free focus mode using the 52/17 rule for maximum productivity.">
@@ -55,6 +63,9 @@
   <audio id="startSound" src="./assets/sounds/button.wav"></audio>
   <audio id="endSound" src="./assets/sounds/alarm-bell.wav"></audio>
   <audio id="pauseSound" src="./assets/sounds/button.wav"></audio>
+
+  <!-- PWA registration -->
+  <script src="./js/pwa.js"></script>
 
   <!-- YouTube mini player - positioned in bottom right corner -->
   <div class="youtube-mini-player">

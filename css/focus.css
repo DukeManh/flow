@@ -420,3 +420,59 @@ body.mint {
     opacity: 1;
   }
 }
+
+/* Apple theme specific styles for focus mode */
+body.apple .focus-container {
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  padding: 3.5rem;
+}
+
+body.apple .timer-ring::before {
+  border: 6px solid rgba(10, 132, 255, 0.12);
+}
+
+body.apple .timer-progress {
+  background: conic-gradient(
+    #0a84ff 0deg, 
+    #0a84ff calc(var(--progress-percent, 0) * 3.6deg), 
+    rgba(10, 132, 255, 0.1) calc(var(--progress-percent, 0) * 3.6deg)
+  );
+}
+
+body.apple .controls button {
+  border-radius: 980px;
+  font-weight: 500;
+  padding: 0.9rem 1.8rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: -0.01em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+body.apple .controls button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  background-color: #0A84FF;
+}
+
+body.apple #timerLabel {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+body.apple #timer {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  font-weight: 500;
+}
+
+body.apple .exit-button {
+  border-radius: 980px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+body.apple .exit-button:hover {
+  transform: translateY(-1px);
+  background-color: rgba(255, 255, 255, 0.15);
+}
