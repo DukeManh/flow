@@ -39,7 +39,8 @@ export class TimerCore {
       onBreakStart: options.onBreakStart || (() => {}),
       onBreakEnd: options.onBreakEnd || (() => {}),
       getTodos: options.getTodos || (() => []),
-      updateUI: options.updateUI || (() => {})
+      updateUI: options.updateUI || (() => {}),
+      onSessionStart: options.onSessionStart || (() => {}) // Add new callback for session start
     };
     
     // Initialize timer state
@@ -319,6 +320,11 @@ export class TimerCore {
     // Only reset startTime if explicitly told to do so (and not in break mode)
     if (resetStartTime && !this.state.onBreak) {
       this.state.startTime = Date.now();
+      
+      // Call the onSessionStart callback for new sessions only
+      if (this.callbacks.onSessionStart) {
+        this.callbacks.onSessionStart();
+      }
     }
     
     // Clear any existing interval

@@ -3,6 +3,7 @@ import { TIMER_PRESETS } from './constants.js';
 import { formatTime } from './utils.js';
 import { recordSession } from './history.js';
 import { TimerCore } from './timerCore.js';
+import { triggerFlowAnimation } from './animations.js';
 
 // Timer core instance
 let timerCore;
@@ -34,6 +35,11 @@ export function initTimer() {
     updateUI: (state) => {
       // Update the timer title when state changes
       updateTimerTitle(state.currentPreset);
+    },
+    // Add onSessionStart callback to trigger the Flow animation
+    onSessionStart: () => {
+      // Trigger the flow animation when a new session starts
+      triggerFlowAnimation(4000); // Animation will last for 4 seconds
     }
   });
   
