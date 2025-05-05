@@ -14,6 +14,20 @@ const STORAGE_KEYS = {
 let historyList;
 let currentVideoID;
 
+// Custom tooltip element
+let customTooltip;
+
+// Initialize custom tooltip
+function initCustomTooltip() {
+  // Create tooltip element if it doesn't exist yet
+  if (!customTooltip) {
+    customTooltip = document.createElement('div');
+    customTooltip.className = 'custom-tooltip';
+    customTooltip.style.display = 'none';
+    document.body.appendChild(customTooltip);
+  }
+}
+
 // Storage utility functions
 async function getSessionHistoryFromStorage() {
   try {
@@ -207,6 +221,9 @@ export async function renderProductivityChart() {
   
   chartContainer.innerHTML = '';
 
+  // Initialize custom tooltip
+  initCustomTooltip();
+
   // Get project stats and history
   const { history, projectNames, projectColors } = await getProjectStats();
   const now = new Date();
@@ -301,9 +318,25 @@ export async function renderProductivityChart() {
       // Use the project's color from projectColors
       segment.style.backgroundColor = projectColors[projectId] || 'var(--accent)';
       
-      // Add tooltip
+      // Store tooltip data (instead of using title attribute)
       const projectName = projectNames[projectId] || 'Unassigned';
-      segment.title = `${projectName}: ${minutes} minutes`;
+      segment.dataset.tooltip = `${projectName}: ${minutes} minutes`;
+      
+      // Add mouse events for custom tooltip
+      segment.addEventListener('mousemove', (e) => {
+        if (customTooltip) {
+          customTooltip.textContent = segment.dataset.tooltip;
+          customTooltip.style.display = 'block';
+          customTooltip.style.left = `${e.pageX + 10}px`;
+          customTooltip.style.top = `${e.pageY + 10}px`;
+        }
+      });
+      
+      segment.addEventListener('mouseleave', () => {
+        if (customTooltip) {
+          customTooltip.style.display = 'none';
+        }
+      });
       
       chartContainer.appendChild(segment);
       

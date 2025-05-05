@@ -203,3 +203,19 @@
   color: #888888;
   margin-left: 4px;
 }
+
+/* Custom tooltip for immediate feedback */
+.custom-tooltip {
+  position: absolute;
+  background: var(--bg-alt);
+  color: var(--fg);
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  border: 1px solid var(--muted);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  z-index: 1000;
+  max-width: 200px;
+  white-space: nowrap;
+}
