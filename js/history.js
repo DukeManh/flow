@@ -301,6 +301,17 @@ export async function renderProductivityChart() {
     // If no minutes for this day, skip bar creation
     if (day.totalMinutes === 0) return;
     
+    // Create a container for the entire day's bar stack
+    const barContainer = document.createElement('div');
+    barContainer.className = 'bar-container';
+    barContainer.style.left = `${(index * (100 / days.length)) + 2.5}%`;
+    barContainer.style.width = `${barWidth}%`;
+    chartContainer.appendChild(barContainer);
+    
+    // Total height for the entire bar
+    const totalBarHeight = (day.totalMinutes / maxMinutes) * chartHeight;
+    barContainer.style.height = `${totalBarHeight}px`;
+    
     // Create a bar segment for each project
     for (const [projectId, minutes] of Object.entries(day.projectMinutes)) {
       const segmentHeight = (minutes / maxMinutes) * chartHeight;
@@ -310,15 +321,14 @@ export async function renderProductivityChart() {
       
       const segment = document.createElement('div');
       segment.className = 'chart-bar-segment';
-      segment.style.left = `${(index * (100 / days.length)) + 2.5}%`;
-      segment.style.width = `${barWidth}%`;
+      segment.style.width = '100%';
       segment.style.height = `${segmentHeight}px`;
       segment.style.bottom = `${currentHeight}px`; // Stack from bottom
       
       // Use the project's color from projectColors
       segment.style.backgroundColor = projectColors[projectId] || 'var(--accent)';
       
-      // Store tooltip data (instead of using title attribute)
+      // Store tooltip data
       const projectName = projectNames[projectId] || 'Unassigned';
       segment.dataset.tooltip = `${projectName}: ${minutes} minutes`;
       
@@ -338,7 +348,7 @@ export async function renderProductivityChart() {
         }
       });
       
-      chartContainer.appendChild(segment);
+      barContainer.appendChild(segment);
       
       // Update current height for next segment
       currentHeight += segmentHeight;
@@ -347,6 +357,41 @@ export async function renderProductivityChart() {
   
   // Add legend for projects
   createChartLegend(chartContainer, projectNames, projectColors);
+
+  // Set up Intersection Observer to start animation when chart becomes visible
+  setupChartAnimationObserver(chartContainer);
+}
+
+// Set up an Intersection Observer to trigger animations when chart is visible
+function setupChartAnimationObserver(chartContainer) {
+  // First, make sure all bar containers are in their pre-animation state
+  const barContainers = chartContainer.querySelectorAll('.bar-container');
+  barContainers.forEach(container => {
+    container.classList.add('bar-container-paused');
+  });
+  
+  // Create the observer
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      // When chart container becomes visible
+      if (entry.isIntersecting) {
+        // Start animations by removing the paused class
+        barContainers.forEach(container => {
+          container.classList.remove('bar-container-paused');
+          container.classList.add('bar-container-animated');
+        });
+        
+        // Disconnect observer after animation is triggered
+        observer.disconnect();
+      }
+    });
+  }, {
+    // Start animation when at least 25% of the chart is visible
+    threshold: 0.25
+  });
+  
+  // Start observing the chart container
+  observer.observe(chartContainer);
 }
 
 // Create a legend for the chart
