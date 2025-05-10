@@ -355,78 +355,30 @@ function handleAppStartup() {
     (window.navigator.standalone) || 
     document.referrer.includes('android-app://');
   
-  if (isInStandaloneMode()) {
-    // Create and show splash effect when launched as an app
-    const splash = document.createElement('div');
-    splash.className = 'splash-screen';
-    splash.innerHTML = `
-      <div class="splash-logo">
-        <div class="splash-icon">
-          <img src="./assets/images/icon-192.png" alt="Flow">
-        </div>
-        <div class="splash-app-name">Flow</div>
-      </div>
-    `;
+  // Check if we've already shown the splash screen in this session
+  const hasShownSplash = sessionStorage.getItem('flowSplashShown');
+  
+  // Only show splash screen in standalone mode and if not already shown this session
+  if (isInStandaloneMode() && !hasShownSplash) {
+    // Mark that we've shown the splash screen for this session
+    sessionStorage.setItem('flowSplashShown', 'true');
     
-    document.body.appendChild(splash);
+    // Get the splash screen that was added in the HTML
+    const splash = document.getElementById('appSplashScreen');
     
-    // Add styles for the splash screen
-    const style = document.createElement('style');
-    style.textContent = `
-      .splash-screen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: var(--body-bg, #ffffff);
-        z-index: 10000;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        animation: fadeOut 0.5s ease-in-out 0.7s forwards;
-      }
-      .splash-logo {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        animation: scaleUp 0.7s ease-in-out;
-      }
-      .splash-icon {
-        width: 80px;
-        height: 80px;
-        margin-bottom: 20px;
-      }
-      .splash-icon img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-      }
-      .splash-app-name {
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 2em;
-        font-weight: 800;
-        font-style: italic;
-        letter-spacing: 0.05em;
-      }
-      @keyframes fadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; visibility: hidden; }
-      }
-      @keyframes scaleUp {
-        from { transform: scale(0.8); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-      }
-    `;
-    
-    document.head.appendChild(style);
-    
-    // Remove splash screen after animation completes
-    setTimeout(() => {
-      splash.remove();
-      style.remove();
-    }, 1500);
+    if (splash) {
+      // In standalone mode, keep the splash screen visible for a set duration
+      setTimeout(() => {
+        splash.style.opacity = '0';
+        document.body.classList.add('loaded');
+        document.body.classList.remove('loading');
+        
+        // Remove splash screen after animation completes
+        setTimeout(() => {
+          splash.remove();
+        }, 500);
+      }, 2000);
+    }
   }
 }
 

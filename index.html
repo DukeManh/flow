@@ -8,11 +8,11 @@
   <title>Flow - 52/17 Technique</title>
   
   <!-- PWA Meta Tags -->
-  <meta name="theme-color" content="#333333">
+  <meta name="theme-color" content="#1c2431">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Flow">
-  <link rel="apple-touch-icon" href="./assets/images/icon-192.png">
+  <link rel="apple-touch-icon" href="./assets/images/icon-square-192.png">
   <link rel="manifest" href="./manifest.json">
   
   <!-- Open Graph / Social Media Meta Tags -->
@@ -38,9 +38,105 @@
   <link rel="stylesheet" href="./css/responsive.css">
   <link rel="stylesheet" href="./css/animations.css">
   <link rel="stylesheet" href="./css/projects.css">
+  
+  <!-- Inline splash screen styles -->
+  <style>
+    .splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #1c2431; /* Slate theme background color */
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease-in-out;
+    }
+    .splash-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: scaleUp 0.8s ease-in-out;
+    }
+    .splash-icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+    }
+    .splash-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .splash-app-name {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 2em;
+      font-weight: 800;
+      font-style: italic;
+      letter-spacing: 0.05em;
+      color: #e9ecef; /* Slate theme text color */
+      text-shadow: 0 0 10px rgba(63, 128, 234, 0.4);
+    }
+    @keyframes scaleUp {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Hide app content until fully loaded in standalone mode */
+    body > div:not(.splash-screen) {
+      opacity: 1;
+      transition: opacity 0.5s ease-in-out;
+    }
+    body.loading > div:not(.splash-screen) {
+      opacity: 0;
+    }
+    body.loaded > div:not(.splash-screen) {
+      opacity: 1;
+    }
+  </style>
+  
+  <!-- Inline script to immediately handle splash screen in non-standalone mode -->
+  <script>
+    (function() {
+      // Check if we're in standalone mode
+      var isStandalone = 
+        (window.matchMedia('(display-mode: standalone)').matches) || 
+        (window.navigator.standalone) || 
+        document.referrer.includes('android-app://');
+      
+      // Check if splash screen has already been shown in this session
+      var hasShownSplash = sessionStorage.getItem('flowSplashShown');
+      
+      // Add appropriate class to body
+      document.documentElement.classList.add((isStandalone && !hasShownSplash) ? 'loading' : 'loaded');
+      
+      // If not in standalone mode or splash already shown, hide the splash screen
+      if (!isStandalone || hasShownSplash) {
+        document.addEventListener('DOMContentLoaded', function() {
+          var splash = document.getElementById('appSplashScreen');
+          if (splash) {
+            splash.style.display = 'none';
+          }
+        });
+      }
+    })();
+  </script>
 </head>
 
-<body>
+<body class="midnight">
+  <!-- Inline splash screen that shows only in standalone mode -->
+  <div id="appSplashScreen" class="splash-screen">
+    <div class="splash-logo">
+      <div class="splash-icon">
+        <img src="./assets/images/icon-192.png" alt="Flow">
+      </div>
+      <div class="splash-app-name">Flow App</div>
+    </div>
+  </div>
+
   <div class="header">
     <h1 style="display: flex; align-items: center; font-family: 'Courier New', Courier, monospace; font-size: 2em; font-weight:800; letter-spacing: 0.05em;">
       <span class="flow-logo" style="font-style: italic">

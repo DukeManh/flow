@@ -1,5 +1,5 @@
 // Service Worker for Flow PWA
-const CACHE_NAME = 'flow-cache-v1';
+const CACHE_NAME = 'flow-cache-v1.1';
 const urlsToCache = [
   './',
   './index.html',

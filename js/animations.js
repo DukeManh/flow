@@ -2,36 +2,46 @@
 
 // Initialize animations
 export function initAnimations() {
+  // Check if we're in standalone mode
+  const isInStandaloneMode = 
+    (window.matchMedia('(display-mode: standalone)').matches) || 
+    (window.navigator.standalone) || 
+    document.referrer.includes('android-app://');
+  
+  // Check if splash has been shown in this session
+  const hasShownSplash = sessionStorage.getItem('flowSplashShown');
+  
+  // Track if we should skip staggered animations
+  const skipStaggered = isInStandaloneMode && !hasShownSplash;
+  
+  // Set a flag for other parts of the app to check
+  window.flowAppHasShownSplash = skipStaggered;
+  
+  // For cases with a splash screen, we need to wait for it to disappear
+  // For cases without a splash screen, we need to wait for the theme to load
+  if (!skipStaggered) {
+    setTimeout(() => applyEntranceAnimations(false), 100);
+  }
+}
+
+// Function to apply entrance animations
+function applyEntranceAnimations(skipStaggered) {
   // Get all cards to animate
   const cards = document.querySelectorAll('.card');
   
-  // Apply staggered animations to cards
+  // Apply animations to cards
   cards.forEach((card, index) => {
-    // Apply different animation styles to alternate cards for more dynamic effect
-    if (index % 2 === 0) {
-      card.classList.add('animate-fade-in-down');
-    } else {
-      card.classList.add('animate-fade-in-up');
-    }
+    // Apply the same animation to all cards
+    card.classList.add('animate-slide-up');
     
-    // Add staggered delay based on index
-    card.classList.add(`delay-${(index + 1) * 100}`);
+    // Only add staggered delays if we're not skipping them
+    if (!skipStaggered) {
+      // Add progressive delays
+      const delayIndex = Math.min(index, 7);
+      card.classList.add(`delay-${delayIndex}`);
+    }
   });
   
-  // Animate header with a different effect
-  const header = document.querySelector('.header');
-  if (header) {
-    header.classList.add('animate-fade-in-down');
-    header.classList.add('delay-100');
-  }
-  
-  // Animate specific elements on focus mode page
-  const focusContainer = document.querySelector('.focus-container');
-  if (focusContainer) {
-    focusContainer.classList.add('animate-scale-in');
-    focusContainer.classList.add('delay-200');
-  }
-
   // Initialize wave animation for Flow logo
   initLogoWaveAnimation();
 }
@@ -41,7 +51,7 @@ export function cleanupAnimations() {
   // Wait for animations to complete
   setTimeout(() => {
     const animatedElements = document.querySelectorAll(
-      '.animate-fade-in-down, .animate-fade-in-up, .animate-scale-in'
+      '.animate-fade-in-down, .animate-fade-in-up, .animate-scale-in, .animate-slide-up'
     );
     
     // Remove animation classes to prevent issues with other transitions
@@ -54,6 +64,7 @@ export function cleanupAnimations() {
         'animate-fade-in-down', 
         'animate-fade-in-up', 
         'animate-scale-in',
+        'animate-slide-up',
         'delay-100', 'delay-200', 'delay-300', 
         'delay-400', 'delay-500', 'delay-600',
         'delay-700', 'delay-800'
