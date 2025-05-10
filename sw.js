@@ -38,8 +38,8 @@ const urlsToCache = [
   './assets/sounds/button.wav',
   './assets/sounds/alarm-bell.wav',
   './assets/images/favicon.ico',
-  './assets/images/icon-192.png',
-  './assets/images/icon-512.png'
+  './assets/images/icon-square-192.png',
+  './assets/images/icon-square-512.png'
 ];
 
 // Install event - cache app shell resources

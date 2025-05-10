@@ -105,11 +105,59 @@ export async function loadTheme() {
     
     // Update dropdown button icon based on theme (only on main page)
     updateThemeIcon(savedTheme);
+    
+    // Update theme-color meta tag to match current theme
+    updateThemeColorMetaTag(savedTheme);
   } catch (error) {
     console.error('Error loading theme:', error);
     // Default to midnight theme if there's an error
     document.body.classList.add('midnight');
+    updateThemeColorMetaTag('midnight');
   }
+}
+
+// Function to update theme-color meta tag based on current theme
+function updateThemeColorMetaTag(theme) {
+  // Get the theme-color meta tag
+  let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  
+  // If it doesn't exist, create it
+  if (!metaThemeColor) {
+    metaThemeColor = document.createElement('meta');
+    metaThemeColor.name = 'theme-color';
+    document.head.appendChild(metaThemeColor);
+  }
+  
+  // Set the content based on the current theme
+  let themeColor;
+  
+  switch (theme) {
+    case 'default':
+      themeColor = '#ffffff'; // Light theme
+      break;
+    case 'dark':
+      themeColor = '#1e1e1e';
+      break;
+    case 'nature':
+      themeColor = '#f5f7ed';
+      break;
+    case 'midnight':
+      themeColor = '#0f1729';
+      break;
+    case 'slate':
+      themeColor = '#1c2431';
+      break;
+    case 'carbon':
+      themeColor = '#121212';
+      break;
+    case 'mocha':
+      themeColor = '#272220';
+      break;
+    default:
+      themeColor = '#ffffff';
+  }
+  
+  metaThemeColor.content = themeColor;
 }
 
 // Set theme icon based on current theme

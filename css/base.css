@@ -3,6 +3,7 @@
 :root {
   --bg: #ffffff;
   --bg-alt: #f8f8f8;
+  --card-bg: #ffffff;
   --fg: #1a1a1a;
   --muted: #6e6e6e;
   --accent: #2979ff;
@@ -15,6 +16,7 @@
 body.dark {
   --bg: #1e1e1e;
   --bg-alt: #2a2a2a;
+  --card-bg: #2a2a2a;
   --fg: #e0e0e0;
   --muted: #a0a0a0;
 }
@@ -23,6 +25,7 @@ body.dark {
 body.nature {
   --bg: #f5f7ed;
   --bg-alt: #e8eadc;
+  --card-bg: #ffffff;
   --fg: #2c3e2e;
   --muted: #6b8069;
   --accent: #4a7c59;
@@ -33,6 +36,7 @@ body.nature {
 body.midnight {
   --bg: #0f1729;
   --bg-alt: #1a2238;
+  --card-bg: #1a2238;
   --fg: #e1e6fa;
   --muted: #9ca8d3;
   --accent: #5d5fef;
@@ -43,6 +47,7 @@ body.midnight {
 body.slate {
   --bg: #1c2431;
   --bg-alt: #2c3347;
+  --card-bg: #2c3347;
   --fg: #e9ecef;
   --muted: #9299a8;
   --accent: #3f80ea;
@@ -53,6 +58,7 @@ body.slate {
 body.carbon {
   --bg: #121212;
   --bg-alt: #222222;
+  --card-bg: #222222;
   --fg: #fafafa;
   --muted: #a0a0a0;
   --accent: #4fb8ff;
@@ -63,6 +69,7 @@ body.carbon {
 body.mocha {
   --bg: #272220;
   --bg-alt: #352f2d;
+  --card-bg: #352f2d;
   --fg: #e8e1df;
   --muted: #b3a8a4;
   --accent: #d28470;

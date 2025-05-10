@@ -3,12 +3,12 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="icon" href="./assets/images/favicon.ico" type="image/ico">
   <title>Flow - 52/17 Technique</title>
   
   <!-- PWA Meta Tags -->
-  <meta name="theme-color" content="#2979ff">
+  <meta name="theme-color" content="#333333">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Flow">
@@ -136,11 +136,6 @@
       </div>
       <ul id="todoList"></ul>
     </div>
-    <div class="card" id="insightsCard">
-      <h2><i class="fas fa-chart-bar"></i> Productivity Insights</h2>
-      <div class="chart-title">Focus Time by Project - Last 7 Days</div>
-      <div id="chartContainer"></div>
-    </div>
     <div class="card" id="musicCard">
       <h2><i class="fas fa-music"></i> Tunes</h2>
       <iframe id="ytPlayer" src="https://www.youtube.com/embed/wL8DVHuWI7Y?autoplay=1&loop=1&playlist=wL8DVHuWI7Y"
@@ -155,11 +150,36 @@
         <button id="loadBtn">Load</button>
       </div>
     </div>
+    <div class="card" id="insightsCard">
+      <h2><i class="fas fa-chart-bar"></i> Productivity Insights</h2>
+      <div class="chart-title">Focus Time by Project - Last 7 Days</div>
+      <div id="chartContainer"></div>
+    </div>
     <div class="card" id="historyCard">
       <h2><i class="fas fa-history"></i> Session History</h2>
       <ul id="historyList"></ul>
     </div>
   </div>
+
+  <!-- Mobile Navigation Bar -->
+  <nav class="mobile-nav">
+    <div class="mobile-nav-item active" data-section="timer">
+      <i class="fas fa-stopwatch"></i>
+      <span>Timer</span>
+    </div>
+    <div class="mobile-nav-item" data-section="tasks">
+      <i class="fas fa-tasks"></i>
+      <span>Tasks</span>
+    </div>
+    <div class="mobile-nav-item" data-section="music">
+      <i class="fas fa-music"></i>
+      <span>Tunes</span>
+    </div>
+    <div class="mobile-nav-item" data-section="stats">
+      <i class="fas fa-chart-bar"></i>
+      <span>Stats</span>
+    </div>
+  </nav>
 
   <!-- Project Dialog Modal -->
   <div id="projectModal" class="modal">
