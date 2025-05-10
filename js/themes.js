@@ -9,6 +9,80 @@ const STORAGE_KEYS = {
   SELECTED_THEME: 'selectedTheme'
 };
 
+// Function to check if service worker is available
+function isServiceWorkerAvailable() {
+  return 'serviceWorker' in navigator && navigator.serviceWorker.controller;
+}
+
+// Function to update theme in service worker
+async function updateServiceWorkerTheme(theme) {
+  if (!isServiceWorkerAvailable()) {
+    console.log('Service worker not available for theme update');
+    // Wait for service worker to be ready
+    try {
+      await waitForServiceWorker();
+    } catch (error) {
+      console.error('Service worker never became ready:', error);
+      return false;
+    }
+  }
+  
+  try {
+    // Create a message channel for response
+    const messageChannel = new MessageChannel();
+    
+    // Create a promise that resolves when we get a response
+    const responsePromise = new Promise((resolve) => {
+      messageChannel.port1.onmessage = (event) => {
+        resolve(event.data);
+      };
+    });
+    
+    // Send the message to the service worker
+    navigator.serviceWorker.controller.postMessage({
+      type: 'SET_THEME',
+      theme: theme
+    }, [messageChannel.port2]);
+    
+    // Wait for the response
+    const response = await responsePromise;
+    console.log('Theme update response from SW:', response);
+    return response.success;
+  } catch (error) {
+    console.error('Error updating service worker theme:', error);
+    return false;
+  }
+}
+
+// Function to wait for service worker to be ready
+function waitForServiceWorker(timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    // If service worker is already controlling the page, resolve immediately
+    if (navigator.serviceWorker.controller) {
+      return resolve();
+    }
+    
+    // Set a timeout to reject the promise
+    const timeoutId = setTimeout(() => {
+      reject(new Error('Service worker registration timed out'));
+    }, timeout);
+    
+    // Listen for controllerchange event
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      clearTimeout(timeoutId);
+      resolve();
+    });
+    
+    // Also check if we have a pending installation
+    navigator.serviceWorker.ready.then(() => {
+      if (navigator.serviceWorker.controller) {
+        clearTimeout(timeoutId);
+        resolve();
+      }
+    });
+  });
+}
+
 // Storage utility functions
 async function getSelectedThemeFromStorage() {
   try {
@@ -25,6 +99,47 @@ async function saveSelectedThemeToStorage(theme) {
     return true;
   } catch (error) {
     console.error('Error saving selected theme to storage:', error);
+    return false;
+  }
+}
+
+// Function to directly load theme CSS without service worker
+async function loadThemeCssDirectly(theme) {
+  try {
+    // Get the theme path from the themes.json file
+    const themesConfigResponse = await fetch('./themes.json');
+    const themesConfig = await themesConfigResponse.json();
+    
+    // Get the path for the requested theme
+    const themePath = themesConfig.themes[theme] || themesConfig.themes[themesConfig.defaultTheme];
+    
+    // Check if we already have this theme CSS loaded
+    const existingThemeLink = document.getElementById('dynamic-theme-css');
+    
+    if (existingThemeLink) {
+      // Update the existing link element
+      existingThemeLink.href = themePath;
+    } else {
+      // Create a new link element for the theme CSS
+      const themeLink = document.createElement('link');
+      themeLink.id = 'dynamic-theme-css';
+      themeLink.rel = 'stylesheet';
+      themeLink.href = themePath;
+      
+      // Remove the default theme.css which might be importing the wrong theme
+      const defaultThemeLink = document.querySelector('link[href*="theme.css"]');
+      if (defaultThemeLink) {
+        defaultThemeLink.remove();
+      }
+      
+      // Add the new theme link to the head
+      document.head.appendChild(themeLink);
+    }
+    
+    console.log('Theme CSS loaded directly:', themePath);
+    return true;
+  } catch (error) {
+    console.error('Error loading theme CSS directly:', error);
     return false;
   }
 }
@@ -61,7 +176,8 @@ export function initThemes() {
         themeOptions.forEach(opt => opt.classList.remove('active'));
         option.classList.add('active');
         
-        loadTheme();
+        // Load theme with force reload to ensure theme changes are applied
+        loadTheme(true);
         
         // Close dropdown
         if (themeDropdown) {
@@ -84,7 +200,7 @@ export function initThemes() {
 }
 
 // Load saved theme from storage
-export async function loadTheme() {
+export async function loadTheme(forceReload = false) {
   try {
     const savedTheme = await getSelectedThemeFromStorage();
     
@@ -108,11 +224,49 @@ export async function loadTheme() {
     
     // Update theme-color meta tag to match current theme
     updateThemeColorMetaTag(savedTheme);
+    
+    // First, check if service worker is available
+    if (isServiceWorkerAvailable()) {
+      // Try to update the theme using the service worker approach
+      const success = await updateServiceWorkerTheme(savedTheme);
+      
+      // If forceReload is true and service worker theme was updated successfully,
+      // reload the page to apply the theme change
+      if (forceReload && success) {
+        console.log('Reloading page to apply theme change...');
+        window.location.reload();
+        return;
+      }
+      
+      // If service worker update failed, fall back to direct CSS loading
+      if (!success) {
+        console.log('Service worker theme update failed, using fallback...');
+        await loadThemeCssDirectly(savedTheme);
+      }
+    } else {
+      // No service worker available, use fallback directly
+      console.log('No service worker available, using CSS fallback for theme...');
+      await loadThemeCssDirectly(savedTheme);
+      
+      // If force reload was requested, we'll need to reload the page
+      // since we've changed the CSS directly
+      if (forceReload) {
+        console.log('Reloading page to apply theme change...');
+        window.location.reload();
+      }
+    }
   } catch (error) {
     console.error('Error loading theme:', error);
     // Default to midnight theme if there's an error
     document.body.classList.add('midnight');
     updateThemeColorMetaTag('midnight');
+    
+    // Try direct fallback as last resort
+    try {
+      await loadThemeCssDirectly('midnight');
+    } catch (fallbackError) {
+      console.error('Fallback theme loading also failed:', fallbackError);
+    }
   }
 }
 

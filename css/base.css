@@ -1,79 +1,9 @@
 /* Base styles and theme variables */
 
 :root {
-  --bg: #ffffff;
-  --bg-alt: #f8f8f8;
-  --card-bg: #ffffff;
-  --fg: #1a1a1a;
-  --muted: #6e6e6e;
-  --accent: #2979ff;
-  --shadow: rgba(0, 0, 0, 0.1);
+  /* Set common defaults without theme-specific colors */
   --radius: 8px;
   --transition: 0.2s ease;
-}
-
-/* Dark theme */
-body.dark {
-  --bg: #1e1e1e;
-  --bg-alt: #2a2a2a;
-  --card-bg: #2a2a2a;
-  --fg: #e0e0e0;
-  --muted: #a0a0a0;
-}
-
-/* Nature theme */
-body.nature {
-  --bg: #f5f7ed;
-  --bg-alt: #e8eadc;
-  --card-bg: #ffffff;
-  --fg: #2c3e2e;
-  --muted: #6b8069;
-  --accent: #4a7c59;
-  --shadow: rgba(74, 124, 89, 0.1);
-}
-
-/* Midnight theme */
-body.midnight {
-  --bg: #0f1729;
-  --bg-alt: #1a2238;
-  --card-bg: #1a2238;
-  --fg: #e1e6fa;
-  --muted: #9ca8d3;
-  --accent: #5d5fef;
-  --shadow: rgba(93, 95, 239, 0.1);
-}
-
-/* Slate theme - professional dark blue-gray */
-body.slate {
-  --bg: #1c2431;
-  --bg-alt: #2c3347;
-  --card-bg: #2c3347;
-  --fg: #e9ecef;
-  --muted: #9299a8;
-  --accent: #3f80ea;
-  --shadow: rgba(63, 128, 234, 0.1);
-}
-
-/* Carbon theme - dark with subtle blue accents */
-body.carbon {
-  --bg: #121212;
-  --bg-alt: #222222;
-  --card-bg: #222222;
-  --fg: #fafafa;
-  --muted: #a0a0a0;
-  --accent: #4fb8ff;
-  --shadow: rgba(79, 184, 255, 0.1);
-}
-
-/* Mocha theme - warm dark tones */
-body.mocha {
-  --bg: #272220;
-  --bg-alt: #352f2d;
-  --card-bg: #352f2d;
-  --fg: #e8e1df;
-  --muted: #b3a8a4;
-  --accent: #d28470;
-  --shadow: rgba(210, 132, 112, 0.1);
 }
 
 /* Base element styles */
@@ -83,13 +13,19 @@ body.mocha {
   box-sizing: border-box;
 }
 
+/* Body styles (now using theme-specific variables) */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--fg);
-  padding: 24px;
-  transition: background var(--transition), color var(--transition);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 16px);
+  transition: background-color var(--transition), color var(--transition);
+  min-height: 100vh;
+  padding: 16px 16px 80px; 
 }
+
+
 
 /* Icon spacing - only adds space for icons in card headers */
 .card h2 i.fas, 
@@ -117,13 +53,28 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Focus button styling */
+/* Button states for all buttons */
+button:hover {
+  opacity: 0.9;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Focus mode toggle */
 .focus-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: transparent;
-  color: var(--fg);
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
   border: 1px solid var(--accent);
   transition: all var(--transition);
 }
@@ -220,34 +171,29 @@ body.distraction #insightsCard {
   align-items: center;
 }
 
-/* Active class for modal */
 .modal.active {
-  /* Ensure the modal is visible in all browsers */
-  display: flex !important;
+  display: flex;
 }
 
 .modal-content {
-  background-color: var(--bg);
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  background-color: var(--bg-alt);
+  padding: 20px;
+  border-radius: var(--radius);
+  min-width: 300px;
+  max-width: 500px;
+  max-height: 90vh;
   position: relative;
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  /* Only the modal content should be scrollable */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   overflow-y: auto;
-  /* Fallback positioning in case flexbox centering fails */
-  margin: 10vh auto;
 }
 
 .close-modal {
   position: absolute;
-  right: 20px;
-  top: 15px;
-  font-size: 24px;
-  color: var(--muted);
+  right: 16px;
+  top: 16px;
+  font-size: 1.5rem;
   cursor: pointer;
+  color: var(--muted);
   transition: color var(--transition);
 }
 
@@ -255,20 +201,104 @@ body.distraction #insightsCard {
   color: var(--accent);
 }
 
-.modal-form {
-  margin-top: 20px;
-  flex: 1;
+.modal h2 {
+  margin-bottom: 16px;
+  padding-right: 30px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--fg);
+}
+
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--muted);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.form-group input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.color-option {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform var(--transition), border-color var(--transition);
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.selected {
+  border-color: var(--fg);
+  transform: scale(1.1);
 }
 
 .modal-save-btn {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  font-weight: 500;
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  cursor: pointer;
   font-size: 1rem;
+  width: 100%;
+  margin-top: 16px;
+  transition: background-color var(--transition);
 }
 
-/* Make sure form groups have proper spacing */
-.form-group {
-  margin-bottom: 20px;
+.modal-save-btn:hover {
+  background-color: var(--accent-secondary);
+}
+
+/* Make the main container animated on load */
+.container {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Splash screen for mobile */
+.splash-screen {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  animation: fadeOut 0.5s ease-in-out 1.5s forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; visibility: hidden; }
 }

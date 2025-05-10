@@ -26,8 +26,12 @@
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <!-- Initial theme loader - must be loaded before other CSS to prevent FART -->
+  <script src="./js/theme-loader.js"></script>
+  
   <!-- Modular CSS files -->
   <link rel="stylesheet" href="./css/base.css">
+  <!-- theme.css is now dynamically loaded -->
   <link rel="stylesheet" href="./css/layout.css">
   <link rel="stylesheet" href="./css/header.css">
   <link rel="stylesheet" href="./css/timer.css">
@@ -126,7 +130,7 @@
   </script>
 </head>
 
-<body class="midnight">
+<body>
   <!-- Inline splash screen that shows only in standalone mode -->
   <div id="appSplashScreen" class="splash-screen">
     <div class="splash-logo">

@@ -25,14 +25,18 @@
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <!-- Initial theme loader - must be loaded before other CSS to prevent FART -->
+  <script src="./js/theme-loader.js"></script>
+  
   <!-- Modular CSS files - import only what's needed -->
   <link rel="stylesheet" href="./css/base.css">
+  <!-- theme.css is now dynamically loaded -->
   <link rel="stylesheet" href="./css/timer.css">
   <link rel="stylesheet" href="./css/focus.css">
   <link rel="stylesheet" href="./css/animations.css">
 </head>
 
-<body class="midnight">
+<body>
   <div class="focus-container">
     <div class="timer-section">
       <div id="timerLabel">Focus Time</div>

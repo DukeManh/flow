@@ -1,10 +1,11 @@
 // Service Worker for Flow PWA
-const CACHE_NAME = 'flow-cache-v1.1';
+const CACHE_NAME = 'flow-cache-v1.2';
 const urlsToCache = [
   './',
   './index.html',
   './focus.html',
   './manifest.json',
+  './themes.json',
   './css/base.css',
   './css/layout.css',
   './css/header.css',
@@ -17,6 +18,14 @@ const urlsToCache = [
   './css/animations.css',
   './css/projects.css',
   './css/focus.css',
+  './css/theme.css',
+  './css/themes/theme-light.css',
+  './css/themes/theme-dark.css',
+  './css/themes/theme-nature.css',
+  './css/themes/theme-midnight.css',
+  './css/themes/theme-slate.css',
+  './css/themes/theme-carbon.css',
+  './css/themes/theme-mocha.css',
   './js/app.js',
   './js/global.js',
   './js/timer.js',
@@ -41,6 +50,35 @@ const urlsToCache = [
   './assets/images/icon-square-192.png',
   './assets/images/icon-square-512.png'
 ];
+
+// Variable to store themes configuration
+let themesConfig = null;
+let currentTheme = 'midnight'; // Default theme
+
+// Function to load themes configuration
+async function loadThemesConfig() {
+  if (themesConfig !== null) return themesConfig;
+  
+  try {
+    const response = await fetch('./themes.json');
+    themesConfig = await response.json();
+    return themesConfig;
+  } catch (error) {
+    console.error('Error loading themes config:', error);
+    return {
+      themes: {
+        'midnight': './css/themes/theme-midnight.css'
+      },
+      defaultTheme: 'midnight'
+    };
+  }
+}
+
+// Helper function to get theme CSS path
+async function getThemeCssPath(theme) {
+  const config = await loadThemesConfig();
+  return config.themes[theme] || config.themes[config.defaultTheme];
+}
 
 // Install event - cache app shell resources
 self.addEventListener('install', event => {
@@ -69,8 +107,72 @@ self.addEventListener('activate', event => {
   );
 });
 
+// Listen for messages from the main thread
+self.addEventListener('message', async (event) => {
+  if (event.data && event.data.type === 'SET_THEME') {
+    console.log('Service Worker: Setting theme to', event.data.theme);
+    currentTheme = event.data.theme;
+    
+    try {
+      // Clear the theme CSS from cache to ensure we serve the new one
+      const cache = await caches.open(CACHE_NAME);
+      const requests = await cache.keys();
+      
+      // Find all theme-related requests
+      const themeRequests = requests.filter(request => 
+        request.url.endsWith('/css/theme.css') || 
+        request.url.includes('/css/themes/theme-')
+      );
+      
+      // Delete them all to ensure clean slate
+      await Promise.all(themeRequests.map(request => cache.delete(request)));
+      
+      // Pre-cache the new theme file to speed up subsequent loads
+      const themePath = await getThemeCssPath(currentTheme);
+      await cache.add(new Request(themePath));
+      
+      console.log('Service Worker: Theme cache updated for', currentTheme);
+      
+      // Respond to confirm theme change
+      if (event.ports && event.ports[0]) {
+        event.ports[0].postMessage({ 
+          success: true, 
+          theme: currentTheme,
+          message: 'Theme updated and cache cleared'
+        });
+      }
+    } catch (error) {
+      console.error('Service Worker: Error updating theme cache:', error);
+      
+      // Respond with error
+      if (event.ports && event.ports[0]) {
+        event.ports[0].postMessage({ 
+          success: false, 
+          theme: currentTheme,
+          error: error.message
+        });
+      }
+    }
+  }
+});
+
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  
+  // Skip chrome-extension:// URLs which can't be cached
+  if (url.protocol === 'chrome-extension:') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
+  // Special handling for theme.css
+  if (url.pathname.endsWith('/css/theme.css')) {
+    event.respondWith(handleThemeRequest(event.request));
+    return;
+  }
+  
+  // Default handling for other requests
   event.respondWith(
     caches.match(event.request)
       .then(response => {
@@ -78,6 +180,7 @@ self.addEventListener('fetch', event => {
         if (response) {
           return response;
         }
+        
         return fetch(event.request).then(
           response => {
             // Return the response as-is for non-GET requests or if status is not 200
@@ -85,12 +188,17 @@ self.addEventListener('fetch', event => {
               return response;
             }
 
+      cache.put(event.request, responseToCache);
+
             // Clone the response since it can only be consumed once
             const responseToCache = response.clone();
 
             caches.open(CACHE_NAME)
               .then(cache => {
                 cache.put(event.request, responseToCache);
+              })
+              .catch(error => {
+                console.error('Cache put error:', error);
               });
 
             return response;
@@ -99,3 +207,27 @@ self.addEventListener('fetch', event => {
       })
   );
 });
+
+// Function to handle theme.css requests
+async function handleThemeRequest(request) {
+  try {
+    // Get the theme CSS file path based on current theme
+    const themePath = await getThemeCssPath(currentTheme);
+    
+    // Fetch the theme CSS content
+    const themeResponse = await fetch(new Request(themePath));
+    
+    // Create a new response with the theme CSS content
+    return new Response(await themeResponse.text(), {
+      headers: {
+        'Content-Type': 'text/css',
+        'Cache-Control': 'no-cache'
+      }
+    });
+  } catch (error) {
+    console.error('Error handling theme request:', error);
+    
+    // Fallback to default theme if there's an error
+    return fetch('./css/themes/theme-midnight.css');
+  }
+}
