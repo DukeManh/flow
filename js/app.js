@@ -239,11 +239,11 @@ function initMobileNavigation() {
     }, 100);
   }, { passive: true });
   
-  // Restore last selected section or default to timer with a longer delay to avoid animation conflicts
-  const savedSection = localStorage.getItem('flowCurrentSection') || 'timer';
-  setTimeout(() => {
-    scrollToSection(savedSection);
-  }, 1200); // Increased delay to allow entrance animations to complete first
+  // // Restore last selected section or default to timer with a longer delay to avoid animation conflicts
+  // const savedSection = localStorage.getItem('flowCurrentSection') || 'timer';
+  // setTimeout(() => {
+  //   scrollToSection(savedSection);
+  // }, 1200); // Increased delay to allow entrance animations to complete first
   
   // Add swipe gestures for section navigation
   let touchStartX = 0;

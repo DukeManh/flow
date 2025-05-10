@@ -1,5 +1,6 @@
 // Service Worker for Flow PWA
-const CACHE_NAME = 'flow-cache-v1.2';
+const CACHE_NAME = 'flow-cache-v1.4'; // Incremented version to force update
+const SW_VERSION = '2025-05-10-1'; // Version identifier with date
 const urlsToCache = [
   './',
   './index.html',
@@ -82,6 +83,10 @@ async function getThemeCssPath(theme) {
 
 // Install event - cache app shell resources
 self.addEventListener('install', event => {
+  console.log(`[SW] Installing new service worker version ${SW_VERSION}`);
+  // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
+  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -93,18 +98,38 @@ self.addEventListener('install', event => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
+  console.log(`[SW] Activating new service worker version ${SW_VERSION}`);
   const cacheWhitelist = [CACHE_NAME];
+  
+  // Take control of all clients immediately
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    Promise.all([
+      // Claim clients so the page is controlled immediately
+      self.clients.claim(),
+      
+      // Clean up old caches
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            if (cacheWhitelist.indexOf(cacheName) === -1) {
+              console.log(`[SW] Deleting old cache: ${cacheName}`);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+    ])
   );
+  
+  // Notify all clients that the SW has been updated
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'SW_UPDATED',
+        version: SW_VERSION
+      });
+    });
+  });
 });
 
 // Listen for messages from the main thread
@@ -160,8 +185,10 @@ self.addEventListener('message', async (event) => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
-  // Skip chrome-extension:// URLs which can't be cached
-  if (url.protocol === 'chrome-extension:') {
+  // Skip extension protocol URLs which can't be cached
+  if (url.protocol === 'chrome-extension:' || 
+      url.protocol === 'moz-extension:' || 
+      url.protocol === 'about:') {
     event.respondWith(fetch(event.request));
     return;
   }
@@ -181,6 +208,7 @@ self.addEventListener('fetch', event => {
           return response;
         }
         
+        // No cache match - fetch from network
         return fetch(event.request).then(
           response => {
             // Return the response as-is for non-GET requests or if status is not 200
@@ -188,11 +216,10 @@ self.addEventListener('fetch', event => {
               return response;
             }
 
-      cache.put(event.request, responseToCache);
-
             // Clone the response since it can only be consumed once
             const responseToCache = response.clone();
 
+            // Cache the fetched response
             caches.open(CACHE_NAME)
               .then(cache => {
                 cache.put(event.request, responseToCache);
@@ -203,7 +230,15 @@ self.addEventListener('fetch', event => {
 
             return response;
           }
-        );
+        ).catch(error => {
+          console.error('Fetch failed:', error);
+          // For HTML requests, try to return the index page as fallback
+          if (event.request.headers.get('Accept') && 
+              event.request.headers.get('Accept').includes('text/html')) {
+            return caches.match('./index.html');
+          }
+          throw error;
+        });
       })
   );
 });
