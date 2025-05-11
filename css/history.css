@@ -206,6 +206,9 @@ body.chart-highlight-active {
   margin-bottom: 14px;
   text-align: center;
   line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
 }
 
 #chartContainer::before {
@@ -224,7 +227,6 @@ body.chart-highlight-active {
   font-size: 0.8rem;
   padding: 3px 6px;
   border-radius: 4px;
-  margin-left: 6px;
   font-weight: 400;
 }
 
@@ -393,7 +395,7 @@ body.chart-highlight-active {
 
 .custom-tooltip.project-summary .stat-trend {
   display: inline-block;
-  padding: 1px 4px;
+  padding: 4px;
   border-radius: 3px;
   margin-left: 4px;
   font-size: 0.75rem;
@@ -539,14 +541,16 @@ body.chart-highlight-active {
 
 /* For smaller screens */
 @media (max-width: 600px) {
-  .chart-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+
   
   .view-controls {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

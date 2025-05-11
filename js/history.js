@@ -444,13 +444,6 @@ export async function renderProductivityChart() {
   
   // Create a base date accounting for periodOffset
   const now = new Date();
-  // Apply period offset to the start date
-  const offsetDays = currentViewMode === 'weekly' ? (currentPeriodOffset * 7) : (currentPeriodOffset * 30);
-  // Adjust the current date based on period offset
-  now.setDate(now.getDate() - offsetDays);
-
-  // Create objects for the days based on view mode
-  const days = [];
   
   // Update next period button state
   const nextPeriodBtn = document.getElementById('nextPeriodBtn');
@@ -470,20 +463,35 @@ export async function renderProductivityChart() {
   let prevWeekDays = [];
   let prevMonthDays = [];
   
+  // Create objects for the days based on view mode
+  const days = [];
+  
   if (currentViewMode === 'weekly') {
-    // Weekly view - 7 days starting from offset date
-    const startDate = new Date(now);
-    startDate.setDate(startDate.getDate() - 6); // Start from 6 days before 'now'
+    // Weekly view - show the current calendar week
     
-    // Calculate period start and end dates for title
-    const periodStart = new Date(startDate);
-    const periodEnd = new Date(now);
+    // Calculate the start and end of the current week (Sunday to Saturday) with offset
+    const startOfWeek = new Date(now);
+    
+    // Apply period offset (in weeks)
+    startOfWeek.setDate(startOfWeek.getDate() - (7 * currentPeriodOffset));
+    
+    // Go to start of this week (Sunday)
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    // Set to beginning of the day
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    // Calculate end of the week (Saturday)
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    // Set to end of the day
+    endOfWeek.setHours(23, 59, 59, 999);
     
     // Format date range for title (May 1 - May 7, 2023)
-    const dateRangeText = `${periodStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${periodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    const dateRangeText = `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     
+    // Create day objects for the current week
     for (let i = 0; i < 7; i++) {
-      const date = new Date(startDate);
+      const date = new Date(startOfWeek);
       date.setDate(date.getDate() + i);
       days.push({
         date,
@@ -493,10 +501,14 @@ export async function renderProductivityChart() {
       });
     }
     
-    // Previous period (for comparison) - week before current period
+    // Calculate the previous week for comparison
+    const startOfPrevWeek = new Date(startOfWeek);
+    startOfPrevWeek.setDate(startOfPrevWeek.getDate() - 7);
+    
+    // Create day objects for the previous week
     for (let i = 0; i < 7; i++) {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() - 7 + i); // 7 days before the start date
+      const date = new Date(startOfPrevWeek);
+      date.setDate(date.getDate() + i);
       prevWeekDays.push({
         date,
         totalMinutes: 0,
@@ -507,45 +519,52 @@ export async function renderProductivityChart() {
     // Populate current week data
     history.forEach(session => {
       const sessionDate = new Date(session.start);
-      for (let day of days) {
-        if (sessionDate.getDate() === day.date.getDate() &&
-            sessionDate.getMonth() === day.date.getMonth() &&
-            sessionDate.getFullYear() === day.date.getFullYear()) {
-          
-          // Add to total minutes
-          day.totalMinutes += session.duration;
-          
-          // Add to project-specific minutes
-          const projectId = session.projectId || 'default';
-          if (!day.projectMinutes[projectId]) {
-            day.projectMinutes[projectId] = 0;
+      
+      // Check if session is within current week range
+      if (sessionDate >= startOfWeek && sessionDate <= endOfWeek) {
+        for (let day of days) {
+          if (sessionDate.getDate() === day.date.getDate() &&
+              sessionDate.getMonth() === day.date.getMonth() &&
+              sessionDate.getFullYear() === day.date.getFullYear()) {
+            
+            // Add to total minutes
+            day.totalMinutes += session.duration;
+            
+            // Add to project-specific minutes
+            const projectId = session.projectId || 'default';
+            if (!day.projectMinutes[projectId]) {
+              day.projectMinutes[projectId] = 0;
+            }
+            day.projectMinutes[projectId] += session.duration;
+            
+            break;
           }
-          day.projectMinutes[projectId] += session.duration;
-          
-          break;
         }
       }
-    });
-    
-    // Populate previous week data
-    history.forEach(session => {
-      const sessionDate = new Date(session.start);
-      for (let day of prevWeekDays) {
-        if (sessionDate.getDate() === day.date.getDate() &&
-            sessionDate.getMonth() === day.date.getMonth() &&
-            sessionDate.getFullYear() === day.date.getFullYear()) {
-          
-          // Add to total minutes
-          day.totalMinutes += session.duration;
-          
-          // Add to project-specific minutes
-          const projectId = session.projectId || 'default';
-          if (!day.projectMinutes[projectId]) {
-            day.projectMinutes[projectId] = 0;
+      
+      // Check if session is within previous week range
+      const startOfPrevWeekTime = startOfPrevWeek.getTime();
+      const endOfPrevWeekTime = startOfWeek.getTime() - 1; // Just before current week starts
+      const sessionTime = sessionDate.getTime();
+      
+      if (sessionTime >= startOfPrevWeekTime && sessionTime <= endOfPrevWeekTime) {
+        for (let day of prevWeekDays) {
+          if (sessionDate.getDate() === day.date.getDate() &&
+              sessionDate.getMonth() === day.date.getMonth() &&
+              sessionDate.getFullYear() === day.date.getFullYear()) {
+            
+            // Add to total minutes
+            day.totalMinutes += session.duration;
+            
+            // Add to project-specific minutes
+            const projectId = session.projectId || 'default';
+            if (!day.projectMinutes[projectId]) {
+              day.projectMinutes[projectId] = 0;
+            }
+            day.projectMinutes[projectId] += session.duration;
+            
+            break;
           }
-          day.projectMinutes[projectId] += session.duration;
-          
-          break;
         }
       }
     });
@@ -567,27 +586,47 @@ export async function renderProductivityChart() {
           : `▼ ${Math.abs(weeklyPercentChange)}% from previous week`;
           
       const avgDailyMinutes = Math.round(currentWeekTotal / 7);
-      chartTitle.innerHTML = `Focus Time by Project - ${dateRangeText} <span class="chart-comparison ${weeklyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
+      
+      // Show "This Week" for current week, otherwise show date range
+      const titleText = currentPeriodOffset === 0 
+        ? `Focus Time by Project - This Week` 
+        : `Focus Time by Project - ${dateRangeText}`;
+      
+      chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${weeklyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
     }
   } else {
-    // Monthly view - last ~30 days with offset
-    const daysToShow = 30;
+    // Monthly view - show the current calendar month
     
-    // Calculate period start and end dates for title
-    const periodStart = new Date(now);
-    periodStart.setDate(periodStart.getDate() - (daysToShow - 1)); // Start from 29 days before 'now'
-    const periodEnd = new Date(now);
+    // Calculate start of the month (1st day) with offset
+    const startOfMonth = new Date(now);
     
-    // Format date range for title (May 1 - May 30, 2023)
-    const dateRangeText = `${periodStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${periodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    // Apply period offset (in months)
+    startOfMonth.setMonth(startOfMonth.getMonth() - currentPeriodOffset);
     
-    for (let i = daysToShow - 1; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
+    // Set to 1st day of the month
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    
+    // Calculate end of the month (last day)
+    const endOfMonth = new Date(startOfMonth);
+    endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+    endOfMonth.setDate(0); // Last day of current month
+    endOfMonth.setHours(23, 59, 59, 999);
+    
+    // Get number of days in the month
+    const daysInMonth = endOfMonth.getDate();
+    
+    // Format date range for title (May 2023)
+    const monthYearText = startOfMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    
+    // Create day objects for each day in the month
+    for (let i = 0; i < daysInMonth; i++) {
+      const date = new Date(startOfMonth);
+      date.setDate(i + 1);
       
-      // For monthly view, only show labels for first day of week (Sunday)
+      // For monthly view, only show labels for first day of week (Sunday) or 1st of month
       let label = '';
-      if (date.getDay() === 0) { // Sunday (start of week)
+      if (date.getDay() === 0 || date.getDate() === 1) { // Sunday or 1st day
         label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       }
       
@@ -599,11 +638,20 @@ export async function renderProductivityChart() {
       });
     }
     
-    // Previous period (for comparison) - the 30 days before the current period
-    for (let i = 0; i < daysToShow; i++) {
-      const date = new Date(periodStart);
-      date.setDate(date.getDate() - i - 1); // Days before the start date
-      
+    // Calculate the previous month for comparison
+    const startOfPrevMonth = new Date(startOfMonth);
+    startOfPrevMonth.setMonth(startOfPrevMonth.getMonth() - 1);
+    
+    const endOfPrevMonth = new Date(startOfMonth);
+    endOfPrevMonth.setDate(0); // Last day of previous month
+    endOfPrevMonth.setHours(23, 59, 59, 999);
+    
+    const daysInPrevMonth = endOfPrevMonth.getDate();
+    
+    // Create day objects for each day in the previous month
+    for (let i = 0; i < daysInPrevMonth; i++) {
+      const date = new Date(startOfPrevMonth);
+      date.setDate(i + 1);
       prevMonthDays.push({
         date,
         totalMinutes: 0,
@@ -614,45 +662,52 @@ export async function renderProductivityChart() {
     // Populate current month data
     history.forEach(session => {
       const sessionDate = new Date(session.start);
-      for (let day of days) {
-        if (sessionDate.getDate() === day.date.getDate() &&
-            sessionDate.getMonth() === day.date.getMonth() &&
-            sessionDate.getFullYear() === day.date.getFullYear()) {
-          
-          // Add to total minutes
-          day.totalMinutes += session.duration;
-          
-          // Add to project-specific minutes
-          const projectId = session.projectId || 'default';
-          if (!day.projectMinutes[projectId]) {
-            day.projectMinutes[projectId] = 0;
+      
+      // Check if session is within current month range
+      if (sessionDate >= startOfMonth && sessionDate <= endOfMonth) {
+        for (let day of days) {
+          if (sessionDate.getDate() === day.date.getDate() &&
+              sessionDate.getMonth() === day.date.getMonth() &&
+              sessionDate.getFullYear() === day.date.getFullYear()) {
+            
+            // Add to total minutes
+            day.totalMinutes += session.duration;
+            
+            // Add to project-specific minutes
+            const projectId = session.projectId || 'default';
+            if (!day.projectMinutes[projectId]) {
+              day.projectMinutes[projectId] = 0;
+            }
+            day.projectMinutes[projectId] += session.duration;
+            
+            break;
           }
-          day.projectMinutes[projectId] += session.duration;
-          
-          break;
         }
       }
-    });
-    
-    // Populate previous month data
-    history.forEach(session => {
-      const sessionDate = new Date(session.start);
-      for (let day of prevMonthDays) {
-        if (sessionDate.getDate() === day.date.getDate() &&
-            sessionDate.getMonth() === day.date.getMonth() &&
-            sessionDate.getFullYear() === day.date.getFullYear()) {
-          
-          // Add to total minutes
-          day.totalMinutes += session.duration;
-          
-          // Add to project-specific minutes
-          const projectId = session.projectId || 'default';
-          if (!day.projectMinutes[projectId]) {
-            day.projectMinutes[projectId] = 0;
+      
+      // Check if session is within previous month range
+      const startOfPrevMonthTime = startOfPrevMonth.getTime();
+      const endOfPrevMonthTime = endOfPrevMonth.getTime();
+      const sessionTime = sessionDate.getTime();
+      
+      if (sessionTime >= startOfPrevMonthTime && sessionTime <= endOfPrevMonthTime) {
+        for (let day of prevMonthDays) {
+          if (sessionDate.getDate() === day.date.getDate() &&
+              sessionDate.getMonth() === day.date.getMonth() &&
+              sessionDate.getFullYear() === day.date.getFullYear()) {
+            
+            // Add to total minutes
+            day.totalMinutes += session.duration;
+            
+            // Add to project-specific minutes
+            const projectId = session.projectId || 'default';
+            if (!day.projectMinutes[projectId]) {
+              day.projectMinutes[projectId] = 0;
+            }
+            day.projectMinutes[projectId] += session.duration;
+            
+            break;
           }
-          day.projectMinutes[projectId] += session.duration;
-          
-          break;
         }
       }
     });
@@ -665,14 +720,20 @@ export async function renderProductivityChart() {
       ? Math.round((monthlyDiff / prevMonthTotal) * 100) 
       : currentMonthTotal > 0 ? 100 : 0;
       
-    // Update chart title with comparison and date range
+    // Update chart title with comparison and month/year
     if (chartTitle) {
       const changeText = monthlyDiff >= 0 
           ? `▲ ${monthlyPercentChange}% from previous month`
           : `▼ ${Math.abs(monthlyPercentChange)}% from previous month`;
           
-      const avgDailyMinutes = Math.round(currentMonthTotal / 30);
-      chartTitle.innerHTML = `Focus Time by Project - ${dateRangeText} <span class="chart-comparison ${monthlyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
+      const avgDailyMinutes = Math.round(currentMonthTotal / daysInMonth);
+      
+      // Show "This Month" for current month, otherwise show month and year
+      const titleText = currentPeriodOffset === 0 
+        ? `Focus Time by Project - This Month` 
+        : `Focus Time by Project - ${monthYearText}`;
+      
+      chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${monthlyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
     }
   }
   
@@ -950,96 +1011,89 @@ async function createChartLegend(container, projectNames, projectColors) {
   // Find projects that have data in the relevant time range
   const projectsWithData = new Set();
   
-  // Set time range based on view mode
-  const daysToLookBack = currentViewMode === 'weekly' ? 7 : 30;
+  // Calculate start of the current period based on view mode and offset
+  let startOfPeriod;
+  let endOfPeriod;
   
-  // Track project-specific data for the current period (needed for tooltips)
+  if (currentViewMode === 'weekly') {
+    // Weekly view - current calendar week with offset
+    startOfPeriod = new Date(now);
+    
+    // Apply period offset (in weeks)
+    startOfPeriod.setDate(startOfPeriod.getDate() - (7 * currentPeriodOffset));
+    
+    // Go to start of this week (Sunday)
+    startOfPeriod.setDate(startOfPeriod.getDate() - startOfPeriod.getDay());
+    // Set to beginning of the day
+    startOfPeriod.setHours(0, 0, 0, 0);
+    
+    // Calculate end of the week (Saturday)
+    endOfPeriod = new Date(startOfPeriod);
+    endOfPeriod.setDate(endOfPeriod.getDate() + 6);
+    // Set to end of the day
+    endOfPeriod.setHours(23, 59, 59, 999);
+  } else {
+    // Monthly view - current calendar month with offset
+    startOfPeriod = new Date(now);
+    
+    // Apply period offset (in months)
+    startOfPeriod.setMonth(startOfPeriod.getMonth() - currentPeriodOffset);
+    
+    // Set to 1st day of the month
+    startOfPeriod.setDate(1);
+    startOfPeriod.setHours(0, 0, 0, 0);
+    
+    // Calculate end of the month (last day)
+    endOfPeriod = new Date(startOfPeriod);
+    endOfPeriod.setMonth(endOfPeriod.getMonth() + 1);
+    endOfPeriod.setDate(0); // Last day of current month
+    endOfPeriod.setHours(23, 59, 59, 999);
+  }
+  
+  // Track project totals for the current and previous periods
   const projectTotals = {};
   const prevPeriodProjectTotals = {};
   
-  // Populate project totals for current and previous periods
-  const days = [];
-  const prevDays = [];
+  // Calculate start of the previous period
+  let startOfPrevPeriod;
+  let endOfPrevPeriod;
   
-  // Apply period offset to current date
-  const offsetNow = new Date();
-  const offsetDays = currentViewMode === 'weekly' ? (currentPeriodOffset * 7) : (currentPeriodOffset * 30);
-  offsetNow.setDate(offsetNow.getDate() - offsetDays);
-  
-  // Create day objects for current period
-  for (let i = daysToLookBack - 1; i >= 0; i--) {
-    const date = new Date(offsetNow);
-    date.setDate(date.getDate() - i);
-    days.push({
-      date,
-      projectMinutes: {}
-    });
+  if (currentViewMode === 'weekly') {
+    // Previous week
+    startOfPrevPeriod = new Date(startOfPeriod);
+    startOfPrevPeriod.setDate(startOfPrevPeriod.getDate() - 7);
+    
+    endOfPrevPeriod = new Date(startOfPrevPeriod);
+    endOfPrevPeriod.setDate(endOfPrevPeriod.getDate() + 6);
+    endOfPrevPeriod.setHours(23, 59, 59, 999);
+  } else {
+    // Previous month
+    startOfPrevPeriod = new Date(startOfPeriod);
+    startOfPrevPeriod.setMonth(startOfPrevPeriod.getMonth() - 1);
+    
+    endOfPrevPeriod = new Date(startOfPeriod);
+    endOfPrevPeriod.setDate(0); // Last day of previous month
+    endOfPrevPeriod.setHours(23, 59, 59, 999);
   }
   
-  // Create day objects for previous period
-  for (let i = daysToLookBack * 2 - 1; i >= daysToLookBack; i--) {
-    const date = new Date(offsetNow);
-    date.setDate(date.getDate() - i);
-    prevDays.push({
-      date,
-      projectMinutes: {}
-    });
-  }
-  
-  // Populate current period data
+  // Process all history entries
   history.forEach(session => {
     const sessionDate = new Date(session.start);
-    const daysDiff = Math.floor((offsetNow - sessionDate) / (1000 * 60 * 60 * 24));
+    const projectId = session.projectId || 'default';
     
-    // Add project to active set if in the current period
-    if (daysDiff < daysToLookBack) {
-      const projectId = session.projectId || 'default';
+    // Check if session is in the current period
+    if (sessionDate >= startOfPeriod && sessionDate <= endOfPeriod) {
       projectsWithData.add(projectId);
+      
+      // Add to project totals for current period
+      projectTotals[projectId] = (projectTotals[projectId] || 0) + session.duration;
     }
     
-    // Populate current period totals
-    for (let day of days) {
-      if (sessionDate.getDate() === day.date.getDate() &&
-          sessionDate.getMonth() === day.date.getMonth() &&
-          sessionDate.getFullYear() === day.date.getFullYear()) {
-        
-        const projectId = session.projectId || 'default';
-        if (!day.projectMinutes[projectId]) {
-          day.projectMinutes[projectId] = 0;
-        }
-        day.projectMinutes[projectId] += session.duration;
-        break;
-      }
+    // Check if session is in the previous period
+    if (sessionDate >= startOfPrevPeriod && sessionDate <= endOfPrevPeriod) {
+      // Add to project totals for previous period
+      prevPeriodProjectTotals[projectId] = (prevPeriodProjectTotals[projectId] || 0) + session.duration;
     }
-    
-    // Populate previous period totals
-    for (let day of prevDays) {
-      if (sessionDate.getDate() === day.date.getDate() &&
-          sessionDate.getMonth() === day.date.getMonth() &&
-          sessionDate.getFullYear() === day.date.getFullYear()) {
-        
-        const projectId = session.projectId || 'default';
-        if (!day.projectMinutes[projectId]) {
-          day.projectMinutes[projectId] = 0;
-        }
-        day.projectMinutes[projectId] += session.duration;
-        break;
-      }
-    }
-  });
-  
-  // Calculate project totals for current period
-  days.forEach(day => {
-    Object.entries(day.projectMinutes).forEach(([projectId, minutes]) => {
-      projectTotals[projectId] = (projectTotals[projectId] || 0) + minutes;
-    });
-  });
-  
-  // Calculate project totals for previous period
-  prevDays.forEach(day => {
-    Object.entries(day.projectMinutes).forEach(([projectId, minutes]) => {
-      prevPeriodProjectTotals[projectId] = (prevPeriodProjectTotals[projectId] || 0) + minutes;
-    });
   });
   
   // Don't show legend if no project has data
