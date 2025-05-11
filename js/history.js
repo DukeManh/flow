@@ -365,9 +365,26 @@ function showProjectSummaryTooltip(projectName, projectId, totalMinutes, prevPer
     ? Math.round((diff / prevPeriodMinutes) * 100)
     : totalMinutes > 0 ? 100 : 0;
   
-  // Calculate daily average
-  const daysInPeriod = viewMode === 'weekly' ? 7 : 30;
-  const avgMinutesPerDay = Math.round(totalMinutes / daysInPeriod);
+  // Calculate the number of days that have elapsed
+  const today = new Date();
+  let daysInPeriod;
+  
+  if (currentPeriodOffset === 0) {
+    // For current week/month, use only elapsed days
+    if (viewMode === 'weekly') {
+      // For current week: days elapsed so far (Sun = 0, Mon = 1, etc.)
+      daysInPeriod = today.getDay() + 1;  // +1 to include today
+    } else {
+      // For current month: current day of month
+      daysInPeriod = today.getDate();
+    }
+  } else {
+    // For past periods, use all days
+    daysInPeriod = viewMode === 'weekly' ? 7 : 30;
+  }
+  
+  // Calculate daily average using elapsed days
+  const avgMinutesPerDay = daysInPeriod > 0 ? Math.round(totalMinutes / daysInPeriod) : 0;
   
   // Get period text based on offset
   const periodText = currentPeriodOffset === 0 
@@ -579,20 +596,42 @@ export async function renderProductivityChart() {
       
     // Update chart title with comparison and date range
     if (chartTitle) {
-      const changeText = weeklyDiff === 0 
+      // Calculate the number of days that have passed so far in the current week
+      const today = new Date();
+      let daysElapsed;
+      
+      if (currentPeriodOffset === 0) {
+        // For current week, count days elapsed so far (including today)
+        const startOfCurrentWeek = new Date(today);
+        startOfCurrentWeek.setDate(startOfCurrentWeek.getDate() - startOfCurrentWeek.getDay()); // Go to Sunday
+        startOfCurrentWeek.setHours(0, 0, 0, 0);
+        
+        // Calculate days elapsed including today (add 1 since getDay() is 0-indexed)
+        daysElapsed = today.getDay() + 1;
+      } else {
+        // For past weeks, use all 7 days
+        daysElapsed = 7;
+      }
+      
+      // Show "This Week" for current week, otherwise show date range
+      const titlePrefix = currentPeriodOffset === 0 
+        ? `This Week` 
+        : `${dateRangeText}`;
+      
+      // Calculate average using only elapsed days
+      const avgDailyMinutes = daysElapsed > 0 ? Math.round(currentWeekTotal / daysElapsed) : 0;
+      
+      // Format the title with combined average - no brackets around date
+      const titleText = `Average ${titlePrefix}: ${formatDuration(avgDailyMinutes, true)}/day`;
+      
+      // Add comparison as a separate element
+      const comparisonText = weeklyDiff === 0 
         ? 'No change from previous week'
         : weeklyDiff > 0 
           ? `▲ ${weeklyPercentChange}% from previous week`
           : `▼ ${Math.abs(weeklyPercentChange)}% from previous week`;
-          
-      const avgDailyMinutes = Math.round(currentWeekTotal / 7);
       
-      // Show "This Week" for current week, otherwise show date range
-      const titleText = currentPeriodOffset === 0 
-        ? `Focus Time by Project - This Week` 
-        : `Focus Time by Project - ${dateRangeText}`;
-      
-      chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${weeklyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
+      chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${weeklyDiff >= 0 ? 'positive' : 'negative'}">${comparisonText}</span>`;
     }
   } else {
     // Monthly view - show the current calendar month
@@ -722,18 +761,36 @@ export async function renderProductivityChart() {
       
     // Update chart title with comparison and month/year
     if (chartTitle) {
-      const changeText = monthlyDiff >= 0 
-          ? `▲ ${monthlyPercentChange}% from previous month`
-          : `▼ ${Math.abs(monthlyPercentChange)}% from previous month`;
-          
-      const avgDailyMinutes = Math.round(currentMonthTotal / daysInMonth);
+      // Calculate the number of days that have passed so far in the current month
+      const today = new Date();
+      let daysElapsed;
+      
+      if (currentPeriodOffset === 0) {
+        // For current month, count days elapsed so far (including today)
+        // We can just use the current day of the month since we've already verified we're in the current month
+        daysElapsed = today.getDate();
+      } else {
+        // For past months, use all days in the month
+        daysElapsed = daysInMonth;
+      }
+      
+      // Calculate average using only elapsed days
+      const avgDailyMinutes = daysElapsed > 0 ? Math.round(currentMonthTotal / daysElapsed) : 0;
       
       // Show "This Month" for current month, otherwise show month and year
-      const titleText = currentPeriodOffset === 0 
-        ? `Focus Time by Project - This Month` 
-        : `Focus Time by Project - ${monthYearText}`;
+      const titlePrefix = currentPeriodOffset === 0 
+        ? `This Month` 
+        : `${monthYearText}`;
       
-      chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${monthlyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
+      // Format the title with combined average - no brackets around date
+      const titleText = `Average ${titlePrefix}: ${formatDuration(avgDailyMinutes, true)}/day`;
+      
+      // Add comparison as a separate element
+      const comparisonText = monthlyDiff >= 0 
+          ? `▲ ${monthlyPercentChange}% from previous month`
+          : `▼ ${Math.abs(monthlyPercentChange)}% from previous month`;
+      
+      chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${monthlyDiff >= 0 ? 'positive' : 'negative'}">${comparisonText}</span>`;
     }
   }
   

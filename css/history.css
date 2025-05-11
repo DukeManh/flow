@@ -211,6 +211,17 @@ body.chart-highlight-active {
   align-items: start;
 }
 
+.chart-avg-duration {
+  display: inline-block;
+  font-size: 0.8rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-left: 6px;
+  font-weight: 500;
+  background-color: var(--bg-alt);
+  color: var(--fg);
+}
+
 #chartContainer::before {
   content: '';
   position: absolute;
@@ -227,6 +238,7 @@ body.chart-highlight-active {
   font-size: 0.8rem;
   padding: 3px 6px;
   border-radius: 4px;
+  margin-left: 6px;
   font-weight: 400;
 }
 

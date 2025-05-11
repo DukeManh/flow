@@ -275,7 +275,7 @@ function generateSimulatedHistory(days = 30) {
 }
 
 // Generate and store simulated history data
-const simulatedData = generateSimulatedHistory(30);
+const simulatedData = generateSimulatedHistory(70);
 localStorage.setItem('sessionHistory', JSON.stringify(simulatedData));
 
 console.log('Simulated data has been loaded!');
