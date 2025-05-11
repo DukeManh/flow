@@ -1,9 +1,16 @@
 /* Responsive styles for the Flow State app */
 
-/* Tablet layout */
+/* Standard tablet breakpoint */
 @media (max-width: 800px) {
   .container {
     grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 0 16px;
+  }
+  
+  /* All cards take full width on tablet and below */
+  .card {
+    grid-column: 1 / -1;
   }
 }
 
@@ -21,7 +28,9 @@
     padding: 0 12px;
     padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
     margin-bottom: env(safe-area-inset-bottom, 20px);
+    gap: 16px;
   }
+
 
   /* Hide scroll bars on mobile for app-like feel */
   ::-webkit-scrollbar {

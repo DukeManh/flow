@@ -1,10 +1,12 @@
 /* Layout styles for the Flow State app */
 
-/* Main container grid layout */
+/* Main container grid layout with equal columns */
 .container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Card styles */
@@ -14,6 +16,10 @@
   padding: 20px;
   box-shadow: 0 1px 3px var(--shadow);
   transition: box-shadow var(--transition);
+  min-width: 0; /* Prevent content from causing overflow */
+  width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word; /* Ensure content wraps within card */
 }
 
 .card:hover {
