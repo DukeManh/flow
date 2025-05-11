@@ -15,6 +15,7 @@ const STORAGE_KEYS = {
 let historyList;
 let currentVideoID;
 let currentViewMode = 'weekly'; // Default to weekly view
+let currentPeriodOffset = 0; // Track how many periods (weeks/months) back we're viewing
 
 // Custom tooltip element
 let customTooltip;
@@ -100,6 +101,9 @@ export function initHistory(videoID) {
   // Set up view mode controls
   const weeklyViewBtn = document.getElementById('weeklyViewBtn');
   const monthlyViewBtn = document.getElementById('monthlyViewBtn');
+  const prevPeriodBtn = document.getElementById('prevPeriodBtn');
+  const nextPeriodBtn = document.getElementById('nextPeriodBtn');
+  const currentPeriodBtn = document.getElementById('currentPeriodBtn');
   
   if (weeklyViewBtn && monthlyViewBtn) {
     // Load saved view preference
@@ -125,6 +129,7 @@ export function initHistory(videoID) {
     weeklyViewBtn.addEventListener('click', () => {
       if (currentViewMode !== 'weekly') {
         currentViewMode = 'weekly';
+        currentPeriodOffset = 0; // Reset offset when changing view mode
         weeklyViewBtn.classList.add('active');
         monthlyViewBtn.classList.remove('active');
         storageService.setItem(STORAGE_KEYS.VIEW_MODE, currentViewMode);
@@ -135,11 +140,30 @@ export function initHistory(videoID) {
     monthlyViewBtn.addEventListener('click', () => {
       if (currentViewMode !== 'monthly') {
         currentViewMode = 'monthly';
+        currentPeriodOffset = 0; // Reset offset when changing view mode
         monthlyViewBtn.classList.add('active');
         weeklyViewBtn.classList.remove('active');
         storageService.setItem(STORAGE_KEYS.VIEW_MODE, currentViewMode);
         renderProductivityChart();
       }
+    });
+    
+    // Add event listeners for period navigation
+    prevPeriodBtn.addEventListener('click', () => {
+      currentPeriodOffset++;
+      renderProductivityChart();
+    });
+    
+    nextPeriodBtn.addEventListener('click', () => {
+      if (currentPeriodOffset > 0) {
+        currentPeriodOffset--;
+        renderProductivityChart();
+      }
+    });
+    
+    currentPeriodBtn.addEventListener('click', () => {
+      currentPeriodOffset = 0;
+      renderProductivityChart();
     });
   }
   
@@ -330,6 +354,80 @@ function formatDuration(minutes, compact = true) {
   }
 }
 
+// Display project summary tooltip with comparison to previous period
+function showProjectSummaryTooltip(projectName, projectId, totalMinutes, prevPeriodMinutes, viewMode, x, y) {
+  if (!customTooltip) return;
+  
+  // Create tooltip HTML content with rich formatting
+  const periodName = viewMode === 'weekly' ? 'week' : 'month';
+  const diff = totalMinutes - prevPeriodMinutes;
+  const percentChange = prevPeriodMinutes > 0 
+    ? Math.round((diff / prevPeriodMinutes) * 100)
+    : totalMinutes > 0 ? 100 : 0;
+  
+  // Calculate daily average
+  const daysInPeriod = viewMode === 'weekly' ? 7 : 30;
+  const avgMinutesPerDay = Math.round(totalMinutes / daysInPeriod);
+  
+  // Get period text based on offset
+  const periodText = currentPeriodOffset === 0 
+    ? `this ${periodName}` 
+    : currentPeriodOffset === 1 
+      ? `last ${periodName}` 
+      : `${currentPeriodOffset} ${periodName}s ago`;
+  
+  // Create tooltip content with HTML
+  let tooltipContent = `<span class="project-title">${projectName}</span>`;
+  tooltipContent += `Total: ${formatDuration(totalMinutes, true)} ${periodText}`;
+  
+  if (avgMinutesPerDay > 0) {
+    tooltipContent += `<span class="project-stat">Average: ${formatDuration(avgMinutesPerDay, true)}/day</span>`;
+  }
+  
+  // Add comparison to previous period if we have data
+  if (prevPeriodMinutes > 0 || totalMinutes > 0) {
+    const changeText = diff === 0 
+      ? 'No change'
+      : diff > 0 
+        ? `▲ ${percentChange}%`
+        : `▼ ${Math.abs(percentChange)}%`;
+    
+    const comparisonPeriodText = currentPeriodOffset === 0 
+      ? `Previous ${periodName}` 
+      : currentPeriodOffset === 1 
+        ? `${periodName} before last` 
+        : `${currentPeriodOffset + 1} ${periodName}s ago`;
+        
+    tooltipContent += `<span class="project-stat">vs ${comparisonPeriodText}: <span class="stat-trend ${diff >= 0 ? 'positive' : 'negative'}">${changeText}</span></span>`;
+  }
+  
+  // Update tooltip
+  customTooltip.innerHTML = tooltipContent;
+  customTooltip.classList.remove('day-summary');
+  customTooltip.classList.add('project-summary', 'tooltip-show');
+  customTooltip.style.display = 'block';
+  
+  // Position tooltip near the cursor
+  customTooltip.style.left = `${x + 15}px`;
+  customTooltip.style.top = `${y - 40}px`;
+  
+  // Ensure tooltip stays within viewport
+  setTimeout(() => {
+    const tooltipRect = customTooltip.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    
+    // Adjust horizontal position if needed
+    if (tooltipRect.right > viewportWidth - 10) {
+      customTooltip.style.left = `${x - tooltipRect.width - 15}px`;
+    }
+    
+    // Adjust vertical position if needed
+    if (tooltipRect.top < 10) {
+      customTooltip.style.top = `${y + 15}px`;
+    }
+  }, 10);
+}
+
 // Render productivity chart with stacked bars by project
 export async function renderProductivityChart() {
   const chartContainer = document.getElementById('chartContainer');
@@ -343,20 +441,50 @@ export async function renderProductivityChart() {
 
   // Get project stats and history
   const { history, projectNames, projectColors } = await getProjectStats();
+  
+  // Create a base date accounting for periodOffset
   const now = new Date();
+  // Apply period offset to the start date
+  const offsetDays = currentViewMode === 'weekly' ? (currentPeriodOffset * 7) : (currentPeriodOffset * 30);
+  // Adjust the current date based on period offset
+  now.setDate(now.getDate() - offsetDays);
 
   // Create objects for the days based on view mode
   const days = [];
+  
+  // Update next period button state
+  const nextPeriodBtn = document.getElementById('nextPeriodBtn');
+  if (nextPeriodBtn) {
+    nextPeriodBtn.disabled = currentPeriodOffset === 0;
+    nextPeriodBtn.style.opacity = currentPeriodOffset === 0 ? '0.5' : '1';
+  }
+  
+  // Update current period button text
+  const currentPeriodBtn = document.getElementById('currentPeriodBtn');
+  if (currentPeriodBtn) {
+    currentPeriodBtn.textContent = currentPeriodOffset === 0 ? 'Today' : 'Current';
+    currentPeriodBtn.style.display = currentPeriodOffset === 0 ? 'none' : 'inline-block';
+  }
   
   // Declare variables for previous periods outside the conditional blocks
   let prevWeekDays = [];
   let prevMonthDays = [];
   
   if (currentViewMode === 'weekly') {
-    // Weekly view - last 7 days
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
+    // Weekly view - 7 days starting from offset date
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - 6); // Start from 6 days before 'now'
+    
+    // Calculate period start and end dates for title
+    const periodStart = new Date(startDate);
+    const periodEnd = new Date(now);
+    
+    // Format date range for title (May 1 - May 7, 2023)
+    const dateRangeText = `${periodStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${periodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
       days.push({
         date,
         label: date.toLocaleDateString('en-US', { weekday: 'short' }),
@@ -365,10 +493,10 @@ export async function renderProductivityChart() {
       });
     }
     
-    // Previous period (for comparison)
-    for (let i = 13; i >= 7; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
+    // Previous period (for comparison) - week before current period
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() - 7 + i); // 7 days before the start date
       prevWeekDays.push({
         date,
         totalMinutes: 0,
@@ -430,20 +558,28 @@ export async function renderProductivityChart() {
       ? Math.round((weeklyDiff / prevWeekTotal) * 100) 
       : currentWeekTotal > 0 ? 100 : 0;
       
-    // Update chart title with comparison
+    // Update chart title with comparison and date range
     if (chartTitle) {
       const changeText = weeklyDiff === 0 
-        ? 'No change from last week'
+        ? 'No change from previous week'
         : weeklyDiff > 0 
-          ? `▲ ${weeklyPercentChange}% from last week`
-          : `▼ ${Math.abs(weeklyPercentChange)}% from last week`;
+          ? `▲ ${weeklyPercentChange}% from previous week`
+          : `▼ ${Math.abs(weeklyPercentChange)}% from previous week`;
           
       const avgDailyMinutes = Math.round(currentWeekTotal / 7);
-      chartTitle.innerHTML = `Focus Time by Project - Last 7 Days <span class="chart-comparison ${weeklyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
+      chartTitle.innerHTML = `Focus Time by Project - ${dateRangeText} <span class="chart-comparison ${weeklyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
     }
   } else {
-    // Monthly view - last ~30 days
+    // Monthly view - last ~30 days with offset
     const daysToShow = 30;
+    
+    // Calculate period start and end dates for title
+    const periodStart = new Date(now);
+    periodStart.setDate(periodStart.getDate() - (daysToShow - 1)); // Start from 29 days before 'now'
+    const periodEnd = new Date(now);
+    
+    // Format date range for title (May 1 - May 30, 2023)
+    const dateRangeText = `${periodStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${periodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     
     for (let i = daysToShow - 1; i >= 0; i--) {
       const date = new Date(now);
@@ -463,10 +599,10 @@ export async function renderProductivityChart() {
       });
     }
     
-    // Previous period (for comparison)
-    for (let i = daysToShow * 2 - 1; i >= daysToShow; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
+    // Previous period (for comparison) - the 30 days before the current period
+    for (let i = 0; i < daysToShow; i++) {
+      const date = new Date(periodStart);
+      date.setDate(date.getDate() - i - 1); // Days before the start date
       
       prevMonthDays.push({
         date,
@@ -529,17 +665,17 @@ export async function renderProductivityChart() {
       ? Math.round((monthlyDiff / prevMonthTotal) * 100) 
       : currentMonthTotal > 0 ? 100 : 0;
       
-    // Update chart title with comparison
+    // Update chart title with comparison and date range
     if (chartTitle) {
       const changeText = monthlyDiff >= 0 
           ? `▲ ${monthlyPercentChange}% from previous month`
           : `▼ ${Math.abs(monthlyPercentChange)}% from previous month`;
           
       const avgDailyMinutes = Math.round(currentMonthTotal / 30);
-      chartTitle.innerHTML = `Focus Time by Project - Last 30 Days <span class="chart-comparison ${monthlyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
+      chartTitle.innerHTML = `Focus Time by Project - ${dateRangeText} <span class="chart-comparison ${monthlyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
     }
   }
-
+  
   // Find the maximum minutes for scaling
   const maxMinutes = Math.max(...days.map(d => d.totalMinutes)) || 60;
   const chartHeight = 220; // Increased height
@@ -825,9 +961,14 @@ async function createChartLegend(container, projectNames, projectColors) {
   const days = [];
   const prevDays = [];
   
+  // Apply period offset to current date
+  const offsetNow = new Date();
+  const offsetDays = currentViewMode === 'weekly' ? (currentPeriodOffset * 7) : (currentPeriodOffset * 30);
+  offsetNow.setDate(offsetNow.getDate() - offsetDays);
+  
   // Create day objects for current period
   for (let i = daysToLookBack - 1; i >= 0; i--) {
-    const date = new Date(now);
+    const date = new Date(offsetNow);
     date.setDate(date.getDate() - i);
     days.push({
       date,
@@ -837,7 +978,7 @@ async function createChartLegend(container, projectNames, projectColors) {
   
   // Create day objects for previous period
   for (let i = daysToLookBack * 2 - 1; i >= daysToLookBack; i--) {
-    const date = new Date(now);
+    const date = new Date(offsetNow);
     date.setDate(date.getDate() - i);
     prevDays.push({
       date,
@@ -848,7 +989,7 @@ async function createChartLegend(container, projectNames, projectColors) {
   // Populate current period data
   history.forEach(session => {
     const sessionDate = new Date(session.start);
-    const daysDiff = Math.floor((now - sessionDate) / (1000 * 60 * 60 * 24));
+    const daysDiff = Math.floor((offsetNow - sessionDate) / (1000 * 60 * 60 * 24));
     
     // Add project to active set if in the current period
     if (daysDiff < daysToLookBack) {
@@ -1005,65 +1146,4 @@ async function createChartLegend(container, projectNames, projectColors) {
   // Ensure we add the legend to a consistent location
   const chartSection = document.querySelector('#insightsCard') || container.parentNode;
   chartSection.appendChild(legend);
-}
-
-// Display project summary tooltip with comparison to previous period
-function showProjectSummaryTooltip(projectName, projectId, totalMinutes, prevPeriodMinutes, viewMode, x, y) {
-  if (!customTooltip) return;
-  
-  // Create tooltip HTML content with rich formatting
-  const periodName = viewMode === 'weekly' ? 'week' : 'month';
-  const diff = totalMinutes - prevPeriodMinutes;
-  const percentChange = prevPeriodMinutes > 0 
-    ? Math.round((diff / prevPeriodMinutes) * 100)
-    : totalMinutes > 0 ? 100 : 0;
-  
-  // Calculate daily average
-  const daysInPeriod = viewMode === 'weekly' ? 7 : 30;
-  const avgMinutesPerDay = Math.round(totalMinutes / daysInPeriod);
-  
-  // Create tooltip content with HTML
-  let tooltipContent = `<span class="project-title">${projectName}</span>`;
-  tooltipContent += `Total: ${formatDuration(totalMinutes, true)} this ${periodName}`;
-  
-  if (avgMinutesPerDay > 0) {
-    tooltipContent += `<span class="project-stat">Average: ${formatDuration(avgMinutesPerDay, true)}/day</span>`;
-  }
-  
-  // Add comparison to previous period if we have data
-  if (prevPeriodMinutes > 0 || totalMinutes > 0) {
-    const changeText = diff === 0 
-      ? 'No change'
-      : diff > 0 
-        ? `▲ ${percentChange}%`
-        : `▼ ${Math.abs(percentChange)}%`;
-    
-    tooltipContent += `<span class="project-stat">vs Previous ${periodName}: <span class="stat-trend ${diff >= 0 ? 'positive' : 'negative'}">${changeText}</span></span>`;
-  }
-  
-  // Update tooltip
-  customTooltip.innerHTML = tooltipContent;
-  customTooltip.classList.remove('day-summary');
-  customTooltip.classList.add('project-summary', 'tooltip-show');
-  customTooltip.style.display = 'block';
-  
-  // Position tooltip near the cursor
-  customTooltip.style.left = `${x + 15}px`;
-  customTooltip.style.top = `${y - 40}px`;
-  
-  // Ensure tooltip stays within viewport
-  setTimeout(() => {
-    const tooltipRect = customTooltip.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    
-    // Adjust horizontal position if needed
-    if (tooltipRect.right > viewportWidth - 10) {
-      customTooltip.style.left = `${x - tooltipRect.width - 15}px`;
-    }
-    
-    // Adjust vertical position if needed
-    if (tooltipRect.top < 10) {
-      customTooltip.style.top = `${y + 15}px`;
-    }
-  }, 10);
 }

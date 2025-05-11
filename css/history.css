@@ -465,6 +465,8 @@ body.chart-highlight-active {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .chart-title {
@@ -473,17 +475,46 @@ body.chart-highlight-active {
   text-align: left;
 }
 
-/* View control buttons for switching between weekly/monthly view */
 .view-controls {
   display: flex;
-  justify-content: flex-end;
   align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
+/* Chart navigation */
+.chart-navigation {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 5px;
+}
+
+.nav-btn {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
+}
+
+.nav-btn:hover {
+  background: var(--hover);
+}
+
+#currentPeriodBtn {
+  min-width: 60px;
+}
+
+/* View mode buttons pill */
 .view-pill {
   display: flex;
+  align-items: center;
   background: var(--bg-alt);
   border-radius: 20px;
+  padding: 2px;
   overflow: hidden;
   border: 1px solid var(--border);
 }
@@ -494,22 +525,29 @@ body.chart-highlight-active {
   background: transparent;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--muted);
-}
-
-.view-btn:first-child {
-  border-radius: 20px 0 0 20px;
-}
-
-.view-btn:last-child {
-  border-radius: 0 20px 20px 0;
+  font-size: 0.8rem;
+  position: relative;
+  z-index: 1;
+  color: var(--fg);
+  border-radius: 18px;
 }
 
 .view-btn.active {
   background: var(--accent);
   color: white;
+}
+
+/* For smaller screens */
+@media (max-width: 600px) {
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .view-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 /* Define a brighter accent color if it doesn't exist in theme */
