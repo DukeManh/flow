@@ -354,16 +354,80 @@ function formatDuration(minutes, compact = true) {
   }
 }
 
+// Format a date for logging
+function formatDateForLog(date) {
+  return date.toLocaleDateString('en-US', { 
+    weekday: 'short', 
+    month: 'short', 
+    day: 'numeric',
+    year: 'numeric' 
+  });
+}
+
+// Log calculation details for debugging
+function logTimeCalculationDetails(mode, currentPeriod, prevPeriod, daysElapsed, currentTotal, prevTotal) {
+  console.log(`--------- ${mode.toUpperCase()} VIEW TIME CALCULATIONS ---------`);
+  console.log(`Current period: ${formatDateForLog(currentPeriod.start)} to ${formatDateForLog(currentPeriod.end)}`);
+  console.log(`Previous period: ${formatDateForLog(prevPeriod.start)} to ${formatDateForLog(prevPeriod.end)}`);
+  console.log(`Days elapsed in current period: ${daysElapsed}`);
+  
+  // Current period details
+  console.log(`\nCURRENT PERIOD DETAILS:`);
+  console.log(`Total minutes: ${currentTotal}`);
+  
+  // Calculate averages based on view mode
+  let currentAvg, prevAvg, displayUnit;
+  const prevDays = mode === 'weekly' ? 7 : 30; // Previous periods always use full days
+  
+  if (mode === 'weekly') {
+    // For weekly view: daily average
+    currentAvg = Math.round(currentTotal / daysElapsed);
+    prevAvg = Math.round(prevTotal / prevDays);
+    displayUnit = 'day';
+    console.log(`Average per day (${currentTotal} / ${daysElapsed}): ${currentAvg} minutes (${formatDuration(currentAvg, true)})`);
+  } else {
+    // For monthly view: weekly average
+    const weeksElapsed = Math.max(1, Math.round(daysElapsed / 7 * 10) / 10); // Round to 1 decimal
+    const prevWeeks = Math.round(prevDays / 7);
+    currentAvg = Math.round(currentTotal / weeksElapsed);
+    prevAvg = Math.round(prevTotal / prevWeeks);
+    displayUnit = 'week';
+    console.log(`Average per week (${currentTotal} / ${weeksElapsed}): ${currentAvg} minutes (${formatDuration(currentAvg, true)})`);
+  }
+  
+  // Previous period details
+  console.log(`\nPREVIOUS PERIOD DETAILS:`);
+  console.log(`Total minutes: ${prevTotal}`);
+  
+  if (mode === 'weekly') {
+    console.log(`Average per day (${prevTotal} / ${prevDays}): ${prevAvg} minutes (${formatDuration(prevAvg, true)})`);
+  } else {
+    const prevWeeks = Math.round(prevDays / 7);
+    console.log(`Average per week (${prevTotal} / ${prevWeeks}): ${prevAvg} minutes (${formatDuration(prevAvg, true)})`);
+  }
+  
+  // Comparison calculations based on averages now, not totals
+  const avgDiff = currentAvg - prevAvg;
+  const percentChange = prevAvg > 0 ? Math.round((avgDiff / prevAvg) * 100) : (currentAvg > 0 ? 100 : 0);
+  
+  console.log(`\nCOMPARISON (based on averages):`);
+  console.log(`Average difference: ${avgDiff} minutes per ${displayUnit}`);
+  console.log(`Percent change in average: ${percentChange}%`);
+  console.log(`Display text: ${percentChange >= 0 ? '▲' : '▼'} ${Math.abs(percentChange)}% from previous ${mode}`);
+  
+  // What user sees
+  console.log(`\nWHAT USER SEES:`);
+  console.log(`Average: ${formatDuration(currentAvg, true)}/${displayUnit}`);
+  console.log(`Comparison: ${percentChange >= 0 ? '▲' : '▼'} ${Math.abs(percentChange)}% from previous ${mode}`);
+  console.log('---------------------------------------------');
+}
+
 // Display project summary tooltip with comparison to previous period
 function showProjectSummaryTooltip(projectName, projectId, totalMinutes, prevPeriodMinutes, viewMode, x, y) {
   if (!customTooltip) return;
   
   // Create tooltip HTML content with rich formatting
   const periodName = viewMode === 'weekly' ? 'week' : 'month';
-  const diff = totalMinutes - prevPeriodMinutes;
-  const percentChange = prevPeriodMinutes > 0 
-    ? Math.round((diff / prevPeriodMinutes) * 100)
-    : totalMinutes > 0 ? 100 : 0;
   
   // Calculate the number of days that have elapsed
   const today = new Date();
@@ -383,8 +447,31 @@ function showProjectSummaryTooltip(projectName, projectId, totalMinutes, prevPer
     daysInPeriod = viewMode === 'weekly' ? 7 : 30;
   }
   
-  // Calculate daily average using elapsed days
-  const avgMinutesPerDay = daysInPeriod > 0 ? Math.round(totalMinutes / daysInPeriod) : 0;
+  // Calculate averages differently based on view mode
+  let avgValue, prevAvgValue, displayUnit;
+  
+  if (viewMode === 'weekly') {
+    // For weekly view: calculate daily average
+    avgValue = daysInPeriod > 0 ? Math.round(totalMinutes / daysInPeriod) : 0;
+    prevAvgValue = Math.round(prevPeriodMinutes / 7); // Previous week always uses full 7 days
+    displayUnit = 'day';
+  } else {
+    // For monthly view: calculate weekly average
+    const weeksElapsed = Math.max(1, Math.round(daysInPeriod / 7 * 10) / 10); // Round to 1 decimal
+    avgValue = weeksElapsed > 0 ? Math.round(totalMinutes / weeksElapsed) : 0;
+    
+    // Previous month always uses approx 4 weeks (or actual days / 7)
+    const prevDays = 30; // Approximate for previous month
+    const prevWeeks = Math.round(prevDays / 7);
+    prevAvgValue = Math.round(prevPeriodMinutes / prevWeeks);
+    displayUnit = 'week';
+  }
+  
+  // Calculate percentage change based on averages
+  const avgDiff = avgValue - prevAvgValue;
+  const percentChange = prevAvgValue > 0 
+    ? Math.round((avgDiff / prevAvgValue) * 100)
+    : avgValue > 0 ? 100 : 0;
   
   // Get period text based on offset
   const periodText = currentPeriodOffset === 0 
@@ -397,15 +484,15 @@ function showProjectSummaryTooltip(projectName, projectId, totalMinutes, prevPer
   let tooltipContent = `<span class="project-title">${projectName}</span>`;
   tooltipContent += `Total: ${formatDuration(totalMinutes, true)} ${periodText}`;
   
-  if (avgMinutesPerDay > 0) {
-    tooltipContent += `<span class="project-stat">Average: ${formatDuration(avgMinutesPerDay, true)}/day</span>`;
+  if (avgValue > 0) {
+    tooltipContent += `<span class="project-stat">Average: ${formatDuration(avgValue, true)}/${displayUnit}</span>`;
   }
   
   // Add comparison to previous period if we have data
-  if (prevPeriodMinutes > 0 || totalMinutes > 0) {
-    const changeText = diff === 0 
+  if (prevAvgValue > 0 || avgValue > 0) {
+    const changeText = avgDiff === 0 
       ? 'No change'
-      : diff > 0 
+      : avgDiff > 0 
         ? `▲ ${percentChange}%`
         : `▼ ${Math.abs(percentChange)}%`;
     
@@ -415,7 +502,7 @@ function showProjectSummaryTooltip(projectName, projectId, totalMinutes, prevPer
         ? `${periodName} before last` 
         : `${currentPeriodOffset + 1} ${periodName}s ago`;
         
-    tooltipContent += `<span class="project-stat">vs ${comparisonPeriodText}: <span class="stat-trend ${diff >= 0 ? 'positive' : 'negative'}">${changeText}</span></span>`;
+    tooltipContent += `<span class="project-stat">vs ${comparisonPeriodText}: <span class="stat-trend ${avgDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span></span>`;
   }
   
   // Update tooltip
@@ -589,49 +676,62 @@ export async function renderProductivityChart() {
     // Calculate weekly comparison data
     const currentWeekTotal = days.reduce((sum, day) => sum + day.totalMinutes, 0);
     const prevWeekTotal = prevWeekDays.reduce((sum, day) => sum + day.totalMinutes, 0);
-    const weeklyDiff = currentWeekTotal - prevWeekTotal;
-    const weeklyPercentChange = prevWeekTotal > 0 
-      ? Math.round((weeklyDiff / prevWeekTotal) * 100) 
-      : currentWeekTotal > 0 ? 100 : 0;
+    
+    // Calculate the number of days that have passed so far in the current week
+    const today = new Date();
+    let daysElapsed;
+    
+    if (currentPeriodOffset === 0) {
+      // For current week, count days elapsed so far (including today)
+      const startOfCurrentWeek = new Date(today);
+      startOfCurrentWeek.setDate(startOfCurrentWeek.getDate() - startOfCurrentWeek.getDay()); // Go to Sunday
+      startOfCurrentWeek.setHours(0, 0, 0, 0);
+      
+      // Calculate days elapsed including today (add 1 since getDay() is 0-indexed)
+      daysElapsed = today.getDay() + 1;
+    } else {
+      // For past weeks, use all 7 days
+      daysElapsed = 7;
+    }
+    
+    // Calculate daily averages
+    const currentDailyAvg = daysElapsed > 0 ? Math.round(currentWeekTotal / daysElapsed) : 0;
+    const prevDailyAvg = Math.round(prevWeekTotal / 7); // Previous week always uses full 7 days
+    
+    // Calculate percentage change based on daily averages, not total
+    const avgDailyDiff = currentDailyAvg - prevDailyAvg;
+    const weeklyPercentChange = prevDailyAvg > 0 
+      ? Math.round((avgDailyDiff / prevDailyAvg) * 100) 
+      : currentDailyAvg > 0 ? 100 : 0;
       
     // Update chart title with comparison and date range
     if (chartTitle) {
-      // Calculate the number of days that have passed so far in the current week
-      const today = new Date();
-      let daysElapsed;
-      
-      if (currentPeriodOffset === 0) {
-        // For current week, count days elapsed so far (including today)
-        const startOfCurrentWeek = new Date(today);
-        startOfCurrentWeek.setDate(startOfCurrentWeek.getDate() - startOfCurrentWeek.getDay()); // Go to Sunday
-        startOfCurrentWeek.setHours(0, 0, 0, 0);
-        
-        // Calculate days elapsed including today (add 1 since getDay() is 0-indexed)
-        daysElapsed = today.getDay() + 1;
-      } else {
-        // For past weeks, use all 7 days
-        daysElapsed = 7;
-      }
+      // Log detailed calculations for the weekly view
+      logTimeCalculationDetails(
+        'weekly', 
+        { start: startOfWeek, end: endOfWeek },
+        { start: startOfPrevWeek, end: new Date(startOfWeek.getTime() - 1) },
+        daysElapsed,
+        currentWeekTotal,
+        prevWeekTotal
+      );
       
       // Show "This Week" for current week, otherwise show date range
       const titlePrefix = currentPeriodOffset === 0 
         ? `This Week` 
         : `${dateRangeText}`;
       
-      // Calculate average using only elapsed days
-      const avgDailyMinutes = daysElapsed > 0 ? Math.round(currentWeekTotal / daysElapsed) : 0;
-      
       // Format the title with combined average - no brackets around date
-      const titleText = `Average ${titlePrefix}: ${formatDuration(avgDailyMinutes, true)}/day`;
+      const titleText = `Average ${titlePrefix}: ${formatDuration(currentDailyAvg, true)}/day`;
       
       // Add comparison as a separate element
-      const comparisonText = weeklyDiff === 0 
+      const comparisonText = avgDailyDiff === 0 
         ? 'No change from previous week'
-        : weeklyDiff > 0 
+        : avgDailyDiff > 0 
           ? `▲ ${weeklyPercentChange}% from previous week`
           : `▼ ${Math.abs(weeklyPercentChange)}% from previous week`;
       
-      chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${weeklyDiff >= 0 ? 'positive' : 'negative'}">${comparisonText}</span>`;
+      chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${avgDailyDiff >= 0 ? 'positive' : 'negative'}">${comparisonText}</span>`;
     }
   } else {
     // Monthly view - show the current calendar month
@@ -754,28 +854,43 @@ export async function renderProductivityChart() {
     // Calculate monthly comparison data
     const currentMonthTotal = days.reduce((sum, day) => sum + day.totalMinutes, 0);
     const prevMonthTotal = prevMonthDays.reduce((sum, day) => sum + day.totalMinutes, 0);
-    const monthlyDiff = currentMonthTotal - prevMonthTotal;
-    const monthlyPercentChange = prevMonthTotal > 0 
-      ? Math.round((monthlyDiff / prevMonthTotal) * 100) 
-      : currentMonthTotal > 0 ? 100 : 0;
+    
+    // Calculate the number of days that have passed so far in the current month
+    const today = new Date();
+    let daysElapsed;
+    
+    if (currentPeriodOffset === 0) {
+      // For current month, count days elapsed so far (including today)
+      daysElapsed = today.getDate();
+    } else {
+      // For past months, use all days in the month
+      daysElapsed = daysInMonth;
+    }
+    
+    // Calculate weekly averages instead of daily averages
+    const weeksElapsed = Math.max(1, Math.round(daysElapsed / 7 * 10) / 10); // Round to 1 decimal
+    const weeksInPrevMonth = Math.ceil(daysInPrevMonth / 7);
+    
+    const currentWeeklyAvg = Math.round(currentMonthTotal / weeksElapsed);
+    const prevWeeklyAvg = Math.round(prevMonthTotal / weeksInPrevMonth);
+    
+    // Calculate percentage change based on weekly averages, not total
+    const avgWeeklyDiff = currentWeeklyAvg - prevWeeklyAvg;
+    const monthlyPercentChange = prevWeeklyAvg > 0 
+      ? Math.round((avgWeeklyDiff / prevWeeklyAvg) * 100) 
+      : currentWeeklyAvg > 0 ? 100 : 0;
       
     // Update chart title with comparison and month/year
     if (chartTitle) {
-      // Calculate the number of days that have passed so far in the current month
-      const today = new Date();
-      let daysElapsed;
-      
-      if (currentPeriodOffset === 0) {
-        // For current month, count days elapsed so far (including today)
-        // We can just use the current day of the month since we've already verified we're in the current month
-        daysElapsed = today.getDate();
-      } else {
-        // For past months, use all days in the month
-        daysElapsed = daysInMonth;
-      }
-      
-      // Calculate average using only elapsed days
-      const avgDailyMinutes = daysElapsed > 0 ? Math.round(currentMonthTotal / daysElapsed) : 0;
+      // Log detailed calculations for the monthly view
+      logTimeCalculationDetails(
+        'monthly', 
+        { start: startOfMonth, end: endOfMonth },
+        { start: startOfPrevMonth, end: endOfPrevMonth },
+        daysElapsed,
+        currentMonthTotal,
+        prevMonthTotal
+      );
       
       // Show "This Month" for current month, otherwise show month and year
       const titlePrefix = currentPeriodOffset === 0 
@@ -783,14 +898,16 @@ export async function renderProductivityChart() {
         : `${monthYearText}`;
       
       // Format the title with combined average - no brackets around date
-      const titleText = `Average ${titlePrefix}: ${formatDuration(avgDailyMinutes, true)}/day`;
+      const titleText = `Average ${titlePrefix}: ${formatDuration(currentWeeklyAvg, true)}/week`;
       
       // Add comparison as a separate element
-      const comparisonText = monthlyDiff >= 0 
-          ? `▲ ${monthlyPercentChange}% from previous month`
-          : `▼ ${Math.abs(monthlyPercentChange)}% from previous month`;
+      const comparisonText = avgWeeklyDiff === 0 
+          ? 'No change from previous month'
+          : avgWeeklyDiff > 0 
+            ? `▲ ${monthlyPercentChange}% from previous month`
+            : `▼ ${Math.abs(monthlyPercentChange)}% from previous month`;
       
-      chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${monthlyDiff >= 0 ? 'positive' : 'negative'}">${comparisonText}</span>`;
+      chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${avgWeeklyDiff >= 0 ? 'positive' : 'negative'}">${comparisonText}</span>`;
     }
   }
   
