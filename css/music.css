@@ -8,5 +8,39 @@
 }
 
 #musicCard .controls {
-  /* Music-specific control modifications */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+#musicCard .controls button {
+  flex: 0 0 auto;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  white-space: nowrap;
+}
+
+#customVidInput {
+  flex: 1;
+  min-width: 120px;
+  margin-right: 5px;
+}
+
+/* Media query for mid-size screens where buttons might start to overflow */
+@media (max-width: 1600px) {
+  #musicCard .controls {
+    gap: 8px;
+  }
+  
+  #musicCard .controls button {
+    flex: 1 0 auto;
+    min-width: calc(33.333% - 8px); /* Three buttons per row */
+    margin-right: 0;
+  }
+  
+  #customVidInput {
+    flex: 1 0 calc(66.666% - 8px); /* Take 2/3 of a row */
+    margin-right: 0;
+  }
 }

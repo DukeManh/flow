@@ -143,11 +143,15 @@
   }
 
   #musicCard .controls button {
-    width: calc(50% - 3px);
+    flex: 1 0 auto;
+    width: calc(33.333% - 6px); /* Change from 50% to 33.333% to fit 3 buttons per row */
     padding: 4px 2px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     margin-bottom: 5px;
     min-height: 34px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   #customVidInput {
