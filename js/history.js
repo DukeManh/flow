@@ -31,18 +31,44 @@ function initCustomTooltip() {
   
   // Add click event listener to document to remove highlights when clicking elsewhere
   document.addEventListener('click', (e) => {
-    // If click is not on a bar container or its children, remove all highlights
-    if (!e.target.closest('.bar-container')) {
-      // Remove highlighted class from all bars
-      const highlightedBars = document.querySelectorAll('.bar-container-highlighted');
-      highlightedBars.forEach(bar => bar.classList.remove('bar-container-highlighted'));
+    // Don't remove highlighting if click is on chart bar segment or legend item
+    if (e.target.closest('.chart-bar-segment') || e.target.closest('.legend-item')) {
+      return;
+    }
+    
+    // Remove project highlighting
+    const highlightedSegments = document.querySelectorAll('.project-highlighted');
+    if (highlightedSegments.length > 0) {
+      // Reset all segments
+      const allSegments = document.querySelectorAll('.chart-bar-segment');
+      allSegments.forEach(seg => {
+        seg.classList.remove('project-highlighted');
+        seg.style.opacity = '1';
+      });
       
-      // Hide tooltip if showing day summary
-      if (customTooltip && customTooltip.classList.contains('day-summary')) {
-        customTooltip.classList.remove('day-summary');
+      // Remove active status from all legend items
+      document.querySelectorAll('.legend-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Hide project summary tooltip
+      if (customTooltip && customTooltip.classList.contains('project-summary')) {
+        customTooltip.classList.remove('project-summary');
         customTooltip.style.display = 'none';
       }
     }
+    
+    // Hide day summary tooltips (legacy behavior)
+    if (customTooltip && customTooltip.classList.contains('day-summary')) {
+      customTooltip.classList.remove('day-summary');
+      customTooltip.style.display = 'none';
+    }
+    
+    // Remove highlighted class from all bars (legacy behavior)
+    const highlightedBars = document.querySelectorAll('.bar-container-highlighted');
+    highlightedBars.forEach(bar => {
+      bar.classList.remove('bar-container-highlighted');
+    });
   });
 }
 
@@ -278,6 +304,32 @@ export async function recordSession(sessionStartTime, todos) {
   }
 }
 
+// Format duration in minutes to a readable format (converting to hours if needed)
+function formatDuration(minutes, compact = true) {
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const remainingMins = minutes % 60;
+    
+    if (compact) {
+      // Compact format: 3h 34min
+      if (remainingMins === 0) {
+        return `${hours}h`;
+      } else {
+        return `${hours}h ${remainingMins}min`;
+      }
+    } else {
+      // Standard format
+      if (remainingMins === 0) {
+        return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+      } else {
+        return `${hours} ${hours === 1 ? 'hour' : 'hours'} ${remainingMins} min`;
+      }
+    }
+  } else {
+    return compact ? `${minutes}min` : `${minutes} min`;
+  }
+}
+
 // Render productivity chart with stacked bars by project
 export async function renderProductivityChart() {
   const chartContainer = document.getElementById('chartContainer');
@@ -296,6 +348,10 @@ export async function renderProductivityChart() {
   // Create objects for the days based on view mode
   const days = [];
   
+  // Declare variables for previous periods outside the conditional blocks
+  let prevWeekDays = [];
+  let prevMonthDays = [];
+  
   if (currentViewMode === 'weekly') {
     // Weekly view - last 7 days
     for (let i = 6; i >= 0; i--) {
@@ -309,9 +365,81 @@ export async function renderProductivityChart() {
       });
     }
     
-    // Update chart title
+    // Previous period (for comparison)
+    for (let i = 13; i >= 7; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      prevWeekDays.push({
+        date,
+        totalMinutes: 0,
+        projectMinutes: {}
+      });
+    }
+    
+    // Populate current week data
+    history.forEach(session => {
+      const sessionDate = new Date(session.start);
+      for (let day of days) {
+        if (sessionDate.getDate() === day.date.getDate() &&
+            sessionDate.getMonth() === day.date.getMonth() &&
+            sessionDate.getFullYear() === day.date.getFullYear()) {
+          
+          // Add to total minutes
+          day.totalMinutes += session.duration;
+          
+          // Add to project-specific minutes
+          const projectId = session.projectId || 'default';
+          if (!day.projectMinutes[projectId]) {
+            day.projectMinutes[projectId] = 0;
+          }
+          day.projectMinutes[projectId] += session.duration;
+          
+          break;
+        }
+      }
+    });
+    
+    // Populate previous week data
+    history.forEach(session => {
+      const sessionDate = new Date(session.start);
+      for (let day of prevWeekDays) {
+        if (sessionDate.getDate() === day.date.getDate() &&
+            sessionDate.getMonth() === day.date.getMonth() &&
+            sessionDate.getFullYear() === day.date.getFullYear()) {
+          
+          // Add to total minutes
+          day.totalMinutes += session.duration;
+          
+          // Add to project-specific minutes
+          const projectId = session.projectId || 'default';
+          if (!day.projectMinutes[projectId]) {
+            day.projectMinutes[projectId] = 0;
+          }
+          day.projectMinutes[projectId] += session.duration;
+          
+          break;
+        }
+      }
+    });
+    
+    // Calculate weekly comparison data
+    const currentWeekTotal = days.reduce((sum, day) => sum + day.totalMinutes, 0);
+    const prevWeekTotal = prevWeekDays.reduce((sum, day) => sum + day.totalMinutes, 0);
+    const weeklyDiff = currentWeekTotal - prevWeekTotal;
+    const weeklyPercentChange = prevWeekTotal > 0 
+      ? Math.round((weeklyDiff / prevWeekTotal) * 100) 
+      : currentWeekTotal > 0 ? 100 : 0;
+      
+    // Update chart title with comparison
     if (chartTitle) {
-      chartTitle.textContent = 'Focus Time by Project - Last 7 Days';
+      const changeText = weeklyDiff === 0 
+        ? 'No change from last week'
+        : weeklyDiff > 0 
+          ? `▲ ${weeklyPercentChange}% from last week`
+          : `▼ ${Math.abs(weeklyPercentChange)}% from last week`;
+          
+      const avgDailyMinutes = Math.round(currentWeekTotal / 7);
+      chartTitle.innerHTML = `Focus Time by Project - Last 7 Days <span class="chart-comparison ${weeklyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
     }
   } else {
     // Monthly view - last ~30 days
@@ -335,34 +463,82 @@ export async function renderProductivityChart() {
       });
     }
     
-    // Update chart title
+    // Previous period (for comparison)
+    for (let i = daysToShow * 2 - 1; i >= daysToShow; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      
+      prevMonthDays.push({
+        date,
+        totalMinutes: 0,
+        projectMinutes: {}
+      });
+    }
+    
+    // Populate current month data
+    history.forEach(session => {
+      const sessionDate = new Date(session.start);
+      for (let day of days) {
+        if (sessionDate.getDate() === day.date.getDate() &&
+            sessionDate.getMonth() === day.date.getMonth() &&
+            sessionDate.getFullYear() === day.date.getFullYear()) {
+          
+          // Add to total minutes
+          day.totalMinutes += session.duration;
+          
+          // Add to project-specific minutes
+          const projectId = session.projectId || 'default';
+          if (!day.projectMinutes[projectId]) {
+            day.projectMinutes[projectId] = 0;
+          }
+          day.projectMinutes[projectId] += session.duration;
+          
+          break;
+        }
+      }
+    });
+    
+    // Populate previous month data
+    history.forEach(session => {
+      const sessionDate = new Date(session.start);
+      for (let day of prevMonthDays) {
+        if (sessionDate.getDate() === day.date.getDate() &&
+            sessionDate.getMonth() === day.date.getMonth() &&
+            sessionDate.getFullYear() === day.date.getFullYear()) {
+          
+          // Add to total minutes
+          day.totalMinutes += session.duration;
+          
+          // Add to project-specific minutes
+          const projectId = session.projectId || 'default';
+          if (!day.projectMinutes[projectId]) {
+            day.projectMinutes[projectId] = 0;
+          }
+          day.projectMinutes[projectId] += session.duration;
+          
+          break;
+        }
+      }
+    });
+    
+    // Calculate monthly comparison data
+    const currentMonthTotal = days.reduce((sum, day) => sum + day.totalMinutes, 0);
+    const prevMonthTotal = prevMonthDays.reduce((sum, day) => sum + day.totalMinutes, 0);
+    const monthlyDiff = currentMonthTotal - prevMonthTotal;
+    const monthlyPercentChange = prevMonthTotal > 0 
+      ? Math.round((monthlyDiff / prevMonthTotal) * 100) 
+      : currentMonthTotal > 0 ? 100 : 0;
+      
+    // Update chart title with comparison
     if (chartTitle) {
-      chartTitle.textContent = 'Focus Time by Project - Last 30 Days';
+      const changeText = monthlyDiff >= 0 
+          ? `▲ ${monthlyPercentChange}% from previous month`
+          : `▼ ${Math.abs(monthlyPercentChange)}% from previous month`;
+          
+      const avgDailyMinutes = Math.round(currentMonthTotal / 30);
+      chartTitle.innerHTML = `Focus Time by Project - Last 30 Days <span class="chart-comparison ${monthlyDiff >= 0 ? 'positive' : 'negative'}">${changeText}</span>`;
     }
   }
-
-  // Calculate minutes for each project for each day
-  history.forEach(session => {
-    const sessionDate = new Date(session.start);
-    for (let day of days) {
-      if (sessionDate.getDate() === day.date.getDate() &&
-        sessionDate.getMonth() === day.date.getMonth() &&
-        sessionDate.getFullYear() === day.date.getFullYear()) {
-        
-        // Add to total minutes
-        day.totalMinutes += session.duration;
-        
-        // Add to project-specific minutes
-        const projectId = session.projectId || 'default';
-        if (!day.projectMinutes[projectId]) {
-          day.projectMinutes[projectId] = 0;
-        }
-        day.projectMinutes[projectId] += session.duration;
-        
-        break;
-      }
-    }
-  });
 
   // Find the maximum minutes for scaling
   const maxMinutes = Math.max(...days.map(d => d.totalMinutes)) || 60;
@@ -380,14 +556,45 @@ export async function renderProductivityChart() {
 
     const yLabel = document.createElement('div');
     yLabel.className = 'chart-y-label';
-    yLabel.textContent = `${value} min`;
+    yLabel.textContent = formatDuration(value);
     yLabel.style.bottom = `${yPos}px`;
     chartContainer.appendChild(yLabel);
   }
 
   // Calculate bar width based on view mode and number of days
-  const barWidth = (100 / days.length) - (currentViewMode === 'weekly' ? 5 : 1);
-  const barSpacing = currentViewMode === 'weekly' ? 2.5 : 0.5;
+  const barWidth = currentViewMode === 'weekly' 
+    ? (100 / days.length) - 5  // Weekly view - keep the original spacing
+    : (100 / days.length) - 0.5; // Monthly view - much less spacing for thicker bars
+  
+  const barSpacing = currentViewMode === 'weekly' 
+    ? 2.5  // Weekly view - original spacing
+    : 0.25; // Monthly view - minimal spacing for thicker bars
+  
+  // Track project-specific data for both current and previous periods
+  const projectTotals = {};
+  const prevPeriodProjectTotals = {};
+  
+  // Calculate totals for current period
+  days.forEach(day => {
+    Object.entries(day.projectMinutes).forEach(([projectId, minutes]) => {
+      projectTotals[projectId] = (projectTotals[projectId] || 0) + minutes;
+    });
+  });
+  
+  // Calculate totals for previous period
+  if (currentViewMode === 'weekly' && prevWeekDays) {
+    prevWeekDays.forEach(day => {
+      Object.entries(day.projectMinutes).forEach(([projectId, minutes]) => {
+        prevPeriodProjectTotals[projectId] = (prevPeriodProjectTotals[projectId] || 0) + minutes;
+      });
+    });
+  } else if (currentViewMode === 'monthly' && prevMonthDays) {
+    prevMonthDays.forEach(day => {
+      Object.entries(day.projectMinutes).forEach(([projectId, minutes]) => {
+        prevPeriodProjectTotals[projectId] = (prevPeriodProjectTotals[projectId] || 0) + minutes;
+      });
+    });
+  }
   
   // Create stacked bars for each day
   let visibleBarCount = 0; // Counter for visible bars
@@ -418,61 +625,6 @@ export async function renderProductivityChart() {
     barContainer.dataset.totalMinutes = day.totalMinutes;
     chartContainer.appendChild(barContainer);
     
-    // Add click event to the bar container to highlight and show day summary
-    barContainer.addEventListener('click', (e) => {
-      e.stopPropagation(); // Stop propagation to prevent document handler from immediately removing highlight
-      
-      // Remove highlighted class from all other bars
-      const allBars = document.querySelectorAll('.bar-container');
-      allBars.forEach(bar => {
-        if (bar !== barContainer) {
-          bar.classList.remove('bar-container-highlighted');
-        }
-      });
-      
-      // Toggle highlight on this bar
-      const wasHighlighted = barContainer.classList.contains('bar-container-highlighted');
-      barContainer.classList.toggle('bar-container-highlighted');
-      
-      // If highlighted, show day summary tooltip
-      if (!wasHighlighted) { // Only add if it wasn't already highlighted
-        const dateStr = barContainer.dataset.date;
-        const totalMinutes = barContainer.dataset.totalMinutes;
-        
-        // Show simplified tooltip with just date and total minutes
-        customTooltip.textContent = `${dateStr}: ${totalMinutes} total minutes`;
-        customTooltip.classList.add('day-summary');
-        
-        // Keep tooltip visible
-        customTooltip.style.display = 'block';
-        
-        // Use existing tooltip position from the bar container if available
-        if (barContainer.dataset.lastTooltipX && barContainer.dataset.lastTooltipY) {
-          customTooltip.style.left = `${barContainer.dataset.lastTooltipX}px`;
-          customTooltip.style.top = `${barContainer.dataset.lastTooltipY}px`;
-        } else {
-          // Fall back to click position if tooltip position not saved
-          customTooltip.style.left = `${e.pageX + 10}px`;
-          customTooltip.style.top = `${e.pageY + 10}px`;
-          
-          // Adjust position to ensure tooltip is visible within viewport
-          setTimeout(() => {
-            const tooltipRect = customTooltip.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            
-            // Check if tooltip is off the right edge
-            if (tooltipRect.right > viewportWidth - 10) {
-              customTooltip.style.left = `${e.pageX - tooltipRect.width - 10}px`;
-            }
-          }, 10);
-        }
-      } else {
-        // If not highlighted (toggled off), hide the tooltip
-        customTooltip.classList.remove('day-summary');
-        customTooltip.style.display = 'none';
-      }
-    });
-    
     // Total height for the entire bar
     const totalBarHeight = (day.totalMinutes / maxMinutes) * chartHeight;
     barContainer.style.height = `${totalBarHeight}px`;
@@ -487,6 +639,7 @@ export async function renderProductivityChart() {
       
       const segment = document.createElement('div');
       segment.className = 'chart-bar-segment';
+      segment.dataset.projectId = projectId;
       segment.style.width = '100%';
       segment.style.height = `${segmentHeight}px`;
       segment.style.bottom = `${currentHeight}px`; // Stack from bottom
@@ -498,27 +651,27 @@ export async function renderProductivityChart() {
       const projectName = projectNames[projectId] || 'Unassigned';
       segment.dataset.tooltip = `${projectName}: ${minutes} min (${percentage}%)`;
       segment.dataset.date = day.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      segment.dataset.projectName = projectName;
       
       // Add mouse events for custom tooltip
       segment.addEventListener('mousemove', (e) => {
-        // Only show segment tooltip if the bar is not highlighted
-        if (customTooltip && !barContainer.classList.contains('bar-container-highlighted')) {
+        // Only show segment tooltip if no project is highlighted
+        if (customTooltip && !document.querySelector('.project-highlighted')) {
           // Show date in tooltip for monthly view
           const tooltipText = currentViewMode === 'monthly' 
             ? `${segment.dataset.date} - ${segment.dataset.tooltip}`
             : segment.dataset.tooltip;
             
           customTooltip.textContent = tooltipText;
-          customTooltip.classList.remove('day-summary');
+          customTooltip.classList.remove('day-summary', 'project-summary');
           customTooltip.classList.add('tooltip-show');
           customTooltip.style.display = 'block';
           customTooltip.style.left = `${e.pageX + 10}px`;
           customTooltip.style.top = `${e.pageY + 10}px`;
           
-          // Store current tooltip position on the bar container itself
-          // This ensures we always have the latest position even when moving between segments
-          barContainer.dataset.lastTooltipX = e.pageX + 10;
-          barContainer.dataset.lastTooltipY = e.pageY + 10;
+          // Store current tooltip position for potential click
+          segment.dataset.tooltipX = e.pageX + 10;
+          segment.dataset.tooltipY = e.pageY + 10;
           
           // Prevent tooltip from going off-screen
           setTimeout(() => {
@@ -528,24 +681,63 @@ export async function renderProductivityChart() {
             if (tooltipRect.right > viewportWidth - 10) {
               const newLeft = e.pageX - tooltipRect.width - 10;
               customTooltip.style.left = `${newLeft}px`;
-              barContainer.dataset.lastTooltipX = newLeft; // Update stored position
+              segment.dataset.tooltipX = newLeft;
             }
           }, 0);
         }
       });
       
       segment.addEventListener('mouseleave', () => {
-        // Only hide tooltip if the bar is not highlighted
-        if (customTooltip && !barContainer.classList.contains('bar-container-highlighted')) {
+        // Only hide tooltip if no project is highlighted
+        if (customTooltip && !document.querySelector('.project-highlighted')) {
           customTooltip.style.display = 'none';
           customTooltip.classList.remove('tooltip-show');
         }
       });
       
-      // Make sure tooltip doesn't flicker when moving between segments
-      segment.addEventListener('mouseenter', (e) => {
-        if (barContainer.classList.contains('bar-container-highlighted')) {
-          e.stopPropagation();
+      // Add click event to highlight all segments of the same project
+      segment.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent event bubbling
+        
+        const selectedProjectId = segment.dataset.projectId;
+        const isAlreadyHighlighted = document.querySelector(`.chart-bar-segment[data-project-id="${selectedProjectId}"].project-highlighted`);
+        
+        // Remove highlighting from all segments
+        const allSegments = document.querySelectorAll('.chart-bar-segment');
+        allSegments.forEach(seg => {
+          seg.classList.remove('project-highlighted');
+          // Reset segment opacity
+          seg.style.opacity = '1';
+        });
+        
+        // Toggle highlighting for this project
+        if (!isAlreadyHighlighted) {
+          // Highlight all segments of this project
+          const projectSegments = document.querySelectorAll(`.chart-bar-segment[data-project-id="${selectedProjectId}"]`);
+          projectSegments.forEach(seg => {
+            seg.classList.add('project-highlighted');
+          });
+          
+          // Dim other project segments
+          allSegments.forEach(seg => {
+            if (!seg.classList.contains('project-highlighted')) {
+              seg.style.opacity = '0.3';
+            }
+          });
+          
+          // Show project summary tooltip
+          showProjectSummaryTooltip(
+            segment.dataset.projectName,
+            selectedProjectId,
+            projectTotals[selectedProjectId] || 0,
+            prevPeriodProjectTotals[selectedProjectId] || 0,
+            currentViewMode,
+            e.pageX,
+            e.pageY
+          );
+        } else {
+          // Hide tooltip when unhighlighting
+          customTooltip.style.display = 'none';
         }
       });
       
@@ -625,15 +817,88 @@ async function createChartLegend(container, projectNames, projectColors) {
   // Set time range based on view mode
   const daysToLookBack = currentViewMode === 'weekly' ? 7 : 30;
   
+  // Track project-specific data for the current period (needed for tooltips)
+  const projectTotals = {};
+  const prevPeriodProjectTotals = {};
+  
+  // Populate project totals for current and previous periods
+  const days = [];
+  const prevDays = [];
+  
+  // Create day objects for current period
+  for (let i = daysToLookBack - 1; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    days.push({
+      date,
+      projectMinutes: {}
+    });
+  }
+  
+  // Create day objects for previous period
+  for (let i = daysToLookBack * 2 - 1; i >= daysToLookBack; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    prevDays.push({
+      date,
+      projectMinutes: {}
+    });
+  }
+  
+  // Populate current period data
   history.forEach(session => {
     const sessionDate = new Date(session.start);
     const daysDiff = Math.floor((now - sessionDate) / (1000 * 60 * 60 * 24));
     
-    // Only include sessions from the relevant time range
+    // Add project to active set if in the current period
     if (daysDiff < daysToLookBack) {
       const projectId = session.projectId || 'default';
       projectsWithData.add(projectId);
     }
+    
+    // Populate current period totals
+    for (let day of days) {
+      if (sessionDate.getDate() === day.date.getDate() &&
+          sessionDate.getMonth() === day.date.getMonth() &&
+          sessionDate.getFullYear() === day.date.getFullYear()) {
+        
+        const projectId = session.projectId || 'default';
+        if (!day.projectMinutes[projectId]) {
+          day.projectMinutes[projectId] = 0;
+        }
+        day.projectMinutes[projectId] += session.duration;
+        break;
+      }
+    }
+    
+    // Populate previous period totals
+    for (let day of prevDays) {
+      if (sessionDate.getDate() === day.date.getDate() &&
+          sessionDate.getMonth() === day.date.getMonth() &&
+          sessionDate.getFullYear() === day.date.getFullYear()) {
+        
+        const projectId = session.projectId || 'default';
+        if (!day.projectMinutes[projectId]) {
+          day.projectMinutes[projectId] = 0;
+        }
+        day.projectMinutes[projectId] += session.duration;
+        break;
+      }
+    }
+  });
+  
+  // Calculate project totals for current period
+  days.forEach(day => {
+    Object.entries(day.projectMinutes).forEach(([projectId, minutes]) => {
+      projectTotals[projectId] = (projectTotals[projectId] || 0) + minutes;
+    });
+  });
+  
+  // Calculate project totals for previous period
+  prevDays.forEach(day => {
+    Object.entries(day.projectMinutes).forEach(([projectId, minutes]) => {
+      prevPeriodProjectTotals[projectId] = (prevPeriodProjectTotals[projectId] || 0) + minutes;
+    });
   });
   
   // Don't show legend if no project has data
@@ -650,6 +915,10 @@ async function createChartLegend(container, projectNames, projectColors) {
     
     const legendItem = document.createElement('div');
     legendItem.className = 'legend-item';
+    legendItem.dataset.projectId = projectId;
+    
+    // Make legend item clickable to highlight corresponding bars
+    legendItem.style.cursor = 'pointer';
     
     // Check if this is a deleted project
     const isDeleted = !activeProjectIds.has(projectId) && projectId !== 'default';
@@ -675,10 +944,126 @@ async function createChartLegend(container, projectNames, projectColors) {
     legendItem.appendChild(colorSwatch);
     legendItem.appendChild(nameSpan);
     
+    // Add click event to highlight project bars
+    legendItem.addEventListener('click', (e) => {
+      // Check if this project is already highlighted
+      const isAlreadyHighlighted = legendItem.classList.contains('active');
+      
+      // Remove highlighting from all segments and reset all legend items
+      const allSegments = document.querySelectorAll('.chart-bar-segment');
+      allSegments.forEach(seg => {
+        seg.classList.remove('project-highlighted');
+        seg.style.opacity = '1';
+      });
+      
+      // Remove active status from all legend items
+      document.querySelectorAll('.legend-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Hide any existing tooltip
+      if (customTooltip) {
+        customTooltip.style.display = 'none';
+      }
+      
+      // Toggle highlighting - only highlight if it wasn't already highlighted
+      if (!isAlreadyHighlighted) {
+        // Highlight all segments of this project
+        const projectSegments = document.querySelectorAll(`.chart-bar-segment[data-project-id="${projectId}"]`);
+        projectSegments.forEach(seg => {
+          seg.classList.add('project-highlighted');
+        });
+        
+        // Dim other project segments
+        allSegments.forEach(seg => {
+          if (!seg.classList.contains('project-highlighted')) {
+            seg.style.opacity = '0.3';
+          }
+        });
+        
+        // Mark this legend item as active
+        legendItem.classList.add('active');
+        
+        // Show project summary tooltip
+        showProjectSummaryTooltip(
+          projectNames[projectId],
+          projectId,
+          projectTotals[projectId] || 0,
+          prevPeriodProjectTotals[projectId] || 0,
+          currentViewMode,
+          e.pageX,
+          e.pageY
+        );
+      }
+      // If it was already highlighted, we've already removed the highlighting
+      // and reset everything above, so no further action needed here
+    });
+    
     legend.appendChild(legendItem);
   }
   
   // Ensure we add the legend to a consistent location
   const chartSection = document.querySelector('#insightsCard') || container.parentNode;
   chartSection.appendChild(legend);
+}
+
+// Display project summary tooltip with comparison to previous period
+function showProjectSummaryTooltip(projectName, projectId, totalMinutes, prevPeriodMinutes, viewMode, x, y) {
+  if (!customTooltip) return;
+  
+  // Create tooltip HTML content with rich formatting
+  const periodName = viewMode === 'weekly' ? 'week' : 'month';
+  const diff = totalMinutes - prevPeriodMinutes;
+  const percentChange = prevPeriodMinutes > 0 
+    ? Math.round((diff / prevPeriodMinutes) * 100)
+    : totalMinutes > 0 ? 100 : 0;
+  
+  // Calculate daily average
+  const daysInPeriod = viewMode === 'weekly' ? 7 : 30;
+  const avgMinutesPerDay = Math.round(totalMinutes / daysInPeriod);
+  
+  // Create tooltip content with HTML
+  let tooltipContent = `<span class="project-title">${projectName}</span>`;
+  tooltipContent += `Total: ${formatDuration(totalMinutes, true)} this ${periodName}`;
+  
+  if (avgMinutesPerDay > 0) {
+    tooltipContent += `<span class="project-stat">Average: ${formatDuration(avgMinutesPerDay, true)}/day</span>`;
+  }
+  
+  // Add comparison to previous period if we have data
+  if (prevPeriodMinutes > 0 || totalMinutes > 0) {
+    const changeText = diff === 0 
+      ? 'No change'
+      : diff > 0 
+        ? `▲ ${percentChange}%`
+        : `▼ ${Math.abs(percentChange)}%`;
+    
+    tooltipContent += `<span class="project-stat">vs Previous ${periodName}: <span class="stat-trend ${diff >= 0 ? 'positive' : 'negative'}">${changeText}</span></span>`;
+  }
+  
+  // Update tooltip
+  customTooltip.innerHTML = tooltipContent;
+  customTooltip.classList.remove('day-summary');
+  customTooltip.classList.add('project-summary', 'tooltip-show');
+  customTooltip.style.display = 'block';
+  
+  // Position tooltip near the cursor
+  customTooltip.style.left = `${x + 15}px`;
+  customTooltip.style.top = `${y - 40}px`;
+  
+  // Ensure tooltip stays within viewport
+  setTimeout(() => {
+    const tooltipRect = customTooltip.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    
+    // Adjust horizontal position if needed
+    if (tooltipRect.right > viewportWidth - 10) {
+      customTooltip.style.left = `${x - tooltipRect.width - 15}px`;
+    }
+    
+    // Adjust vertical position if needed
+    if (tooltipRect.top < 10) {
+      customTooltip.style.top = `${y + 15}px`;
+    }
+  }, 10);
 }

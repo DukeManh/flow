@@ -130,6 +130,21 @@
   filter: brightness(1); /* Reset brightness for non-hovered segments */
 }
 
+/* Project highlighting styles */
+.chart-bar-segment.project-highlighted {
+  filter: brightness(1.2) !important;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  z-index: 20; /* Ensure highlighted segments stay on top */
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transform: scale(1.03); /* Subtle scaling for emphasis */
+  transition: all 0.2s ease-out;
+}
+
+/* Reset document-level click handler */
+body.chart-highlight-active {
+  cursor: default;
+}
+
 /* Bar animation */
 @keyframes bar-grow {
   0% {
@@ -188,8 +203,9 @@
 .chart-title {
   font-size: 0.875rem;
   font-weight: 500;
-  margin-bottom: 8px;
+  margin-bottom: 14px;
   text-align: center;
+  line-height: 1.4;
 }
 
 #chartContainer::before {
@@ -200,6 +216,26 @@
   width: 100%;
   height: 1px;
   background: var(--muted);
+}
+
+/* Chart comparison indicators */
+.chart-comparison {
+  display: inline-block;
+  font-size: 0.8rem;
+  padding: 3px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  font-weight: 400;
+}
+
+.chart-comparison.positive {
+  background-color: rgba(0, 180, 0, 0.1);
+  color: rgb(0, 140, 0);
+}
+
+.chart-comparison.negative {
+  background-color: rgba(255, 0, 0, 0.1);
+  color: rgb(200, 0, 0);
 }
 
 /* Chart legend styles */
@@ -228,6 +264,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 160px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.legend-item:hover {
+  background-color: var(--bg);
+  transform: translateY(-1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Active/clicked legend item */
+.legend-item.active {
+  background-color: var(--accent);
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.legend-item.active .legend-color {
+  border: 2px solid white;
 }
 
 .legend-color {
@@ -310,6 +366,45 @@
   color: white;
   border-color: var(--accent);
   font-weight: 500;
+}
+
+/* Project tooltip when highlighted */
+.custom-tooltip.project-summary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  font-weight: 500;
+  max-width: 250px;
+  padding: 8px 12px;
+}
+
+.custom-tooltip.project-summary .project-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.custom-tooltip.project-summary .project-stat {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+}
+
+.custom-tooltip.project-summary .stat-trend {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-left: 4px;
+  font-size: 0.75rem;
+}
+
+.custom-tooltip.project-summary .stat-trend.positive {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.custom-tooltip.project-summary .stat-trend.negative {
+  background-color: rgba(255, 0, 0, 0.2);
 }
 
 /* Tooltip pop animation */
