@@ -722,14 +722,14 @@ export async function renderProductivityChart() {
         : `${dateRangeText}`;
       
       // Format the title with combined average - no brackets around date
-      const titleText = `Average ${titlePrefix}: ${formatDuration(currentDailyAvg, true)}/day`;
+      const titleText = `<div>Average ${titlePrefix}</div><div>${formatDuration(currentDailyAvg, true)} / day</div>`;
       
       // Add comparison as a separate element
       const comparisonText = avgDailyDiff === 0 
-        ? 'No change from previous week'
+        ? 'No change from last week'
         : avgDailyDiff > 0 
-          ? `▲ ${weeklyPercentChange}% from previous week`
-          : `▼ ${Math.abs(weeklyPercentChange)}% from previous week`;
+          ? `▲ ${weeklyPercentChange}% from last week`
+          : `▼ ${Math.abs(weeklyPercentChange)}% from last week`;
       
       chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${avgDailyDiff >= 0 ? 'positive' : 'negative'}">${comparisonText}</span>`;
     }
@@ -898,14 +898,14 @@ export async function renderProductivityChart() {
         : `${monthYearText}`;
       
       // Format the title with combined average - no brackets around date
-      const titleText = `Average ${titlePrefix}: ${formatDuration(currentWeeklyAvg, true)}/week`;
+      const titleText = `<div>Average ${titlePrefix}</div><div>${formatDuration(currentWeeklyAvg, true)} / week</div>`;
       
       // Add comparison as a separate element
       const comparisonText = avgWeeklyDiff === 0 
-          ? 'No change from previous month'
-          : avgWeeklyDiff > 0 
-            ? `▲ ${monthlyPercentChange}% from previous month`
-            : `▼ ${Math.abs(monthlyPercentChange)}% from previous month`;
+          ? 'No change from last month'
+          : avgWeeklyDiff >= 0 
+            ? `▲ ${monthlyPercentChange}% from last month`
+            : `▼ ${Math.abs(monthlyPercentChange)}% from last month`;
       
       chartTitle.innerHTML = `${titleText} <span class="chart-comparison ${avgWeeklyDiff >= 0 ? 'positive' : 'negative'}">${comparisonText}</span>`;
     }

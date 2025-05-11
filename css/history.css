@@ -209,17 +209,7 @@ body.chart-highlight-active {
   display: flex;
   flex-direction: column;
   align-items: start;
-}
-
-.chart-avg-duration {
-  display: inline-block;
-  font-size: 0.8rem;
-  padding: 3px 8px;
-  border-radius: 4px;
-  margin-left: 6px;
-  font-weight: 500;
-  background-color: var(--bg-alt);
-  color: var(--fg);
+  gap: 4px;
 }
 
 #chartContainer::before {
@@ -238,7 +228,6 @@ body.chart-highlight-active {
   font-size: 0.8rem;
   padding: 3px 6px;
   border-radius: 4px;
-  margin-left: 6px;
   font-weight: 400;
 }
 
@@ -508,17 +497,7 @@ body.chart-highlight-active {
   padding: 3px 8px;
   border: 1px solid var(--border);
   background: var(--bg-alt);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.8rem;
-}
-
-.nav-btn:hover {
-  background: var(--hover);
-}
-
-#currentPeriodBtn {
+  justify-contPeriodBtn {
   min-width: 60px;
 }
 
@@ -552,8 +531,13 @@ body.chart-highlight-active {
 }
 
 /* For smaller screens */
-@media (max-width: 600px) {
+@media (max-width: 600px 20px 0;
+}
 
+.view-btn:last-child {
+    flex-direction: column;
+    align-items: flex-start;
+  }
   
   .view-controls {
     width: 100%;
