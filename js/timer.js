@@ -88,6 +88,60 @@ function updateTimerTitle(presetKey) {
       titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 52/17 Rule<span class="tooltip" title="52 minutes of concentrated work time followed by a 17-minute break"><i class="fas fa-info-circle"></i></span>';
       break;
   }
+  
+  // After updating the timer title, add the daily target indicator
+  updateDailyTargetDisplay();
+}
+
+// Update daily target display
+export async function updateDailyTargetDisplay() {
+  try {
+    // Import the needed functions
+    const { getCurrentProject, getProjectStats } = await import('./projects.js');
+    
+    const currentProject = await getCurrentProject();
+    if (!currentProject || !currentProject.targetFocusTime) return;
+    
+    const { history } = await getProjectStats();
+    
+    // Calculate today's focus time
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+    
+    const todayFocusTime = history
+      .filter(session => 
+        session.projectId === currentProject.id && 
+        session.start >= startOfDay && 
+        session.start <= endOfDay)
+      .reduce((total, session) => total + session.duration, 0);
+    
+    // Update the target progress text in the goal card
+    const targetProgressText = document.getElementById('targetProgressText');
+    if (targetProgressText) {
+      // Format times for display
+      const formatMinutes = (mins) => {
+        if (mins >= 60) {
+          const hours = Math.floor(mins / 60);
+          const remainingMins = mins % 60;
+          return remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours}h`;
+        }
+        return `${mins}m`;
+      };
+      
+      // Update progress text
+      targetProgressText.textContent = `${formatMinutes(todayFocusTime)} / ${formatMinutes(currentProject.targetFocusTime)}`;
+      
+      // Apply styles based on completion
+      if (todayFocusTime >= currentProject.targetFocusTime) {
+        targetProgressText.classList.add('target-complete');
+      } else {
+        targetProgressText.classList.remove('target-complete');
+      }
+    }
+  } catch (error) {
+    console.error('Error updating daily target display:', error);
+  }
 }
 
 // Save timer state to storage - expose this function for external use

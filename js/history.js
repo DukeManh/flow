@@ -283,48 +283,75 @@ async function loadHistory() {
   }
 }
 
-// Record a completed session
-export async function recordSession(sessionStartTime, todos) {
+// Record a completed timer session
+export async function recordSession(sessionData) {
   try {
-    // Only record work sessions, not breaks
-    const startTime = sessionStartTime || Date.now();
-    const endTime = Date.now();
-    
-    // Calculate duration with a reasonable maximum
-    let duration = Math.round((endTime - startTime) / 60000);
-    
-    // Cap duration at a reasonable maximum
-    if (duration > MAX_DURATION_MINUTES || duration < 0) {
-      duration = Math.min(MAX_DURATION_MINUTES, 52); // Use either max or default work session length
-    }
-    
-    // Get current project and goal
+    // Get current project info
+    const { getCurrentProject } = await import('./projects.js');
     const currentProject = await getCurrentProject();
+    
+    // Get current goal
+    const { getCurrentGoal } = await import('./goals.js');
     const currentGoal = await getCurrentGoal();
     
-    const entry = {
-      start: startTime,
+    // Calculate end time
+    const endTime = new Date().getTime();
+    const durationInMinutes = Math.round(sessionData.duration / 60); // Convert seconds to minutes
+    
+    // Create a session record
+    const session = {
+      id: 'session_' + Date.now(),
+      start: sessionData.startTime || (endTime - (sessionData.duration * 1000)),
       end: endTime,
-      duration: duration,
-      goal: currentGoal,
-      music: currentVideoID,
-      todos: todos,
-      projectId: currentProject ? currentProject.id : 'default',
-      projectName: currentProject ? currentProject.name : 'Unassigned'
+      duration: durationInMinutes,
+      isBreak: sessionData.isBreak || false,
+      goal: currentGoal || '',
+      music: currentVideoID || '',
+      todos: sessionData.todos || [],
+      projectId: currentProject?.id || 'default',
+      projectName: currentProject?.name || 'Unassigned',
+      projectColor: currentProject?.color || '#5D8AA8'
     };
     
-    // Save to storage
-    const history = await getSessionHistoryFromStorage();
-    history.push(entry);
+    // Get existing history
+    let history = await getSessionHistoryFromStorage();
+    
+    // Add new session to top
+    history.unshift(session);
+    
+    // Limit history to 100 items
+    if (history.length > 100) {
+      history = history.slice(0, 100);
+    }
+    
+    // Save updated history
     await saveSessionHistoryToStorage(history);
     
-    // Update UI
-    addHistoryEntry(entry);
+    // Add the entry to the UI
+    if (historyList) {
+      addHistoryEntry(session);
+    }
     
-    // Render the chart once after adding the new entry
+    // Update project stats
+    const { updateDailyTargetDisplay } = await import('./timer.js');
+    updateDailyTargetDisplay();
+    
+    // If this was a focus session (not a break),
+    // trigger an automatic check-in regardless of duration
+    // This ensures streaks are updated continuously throughout the day
+    if (!session.isBreak) {
+      const { addAutomaticCheckIn } = await import('./projects.js');
+      await addAutomaticCheckIn(durationInMinutes);
+    }
+    
+    // Render the productivity chart with new data
     renderProductivityChart();
+    
+    console.log('Session recorded successfully:', session);
+    return session;
   } catch (error) {
     console.error('Error recording session:', error);
+    return null;
   }
 }
 
@@ -1204,7 +1231,6 @@ async function createChartLegend(container, projectNames, projectColors) {
     // Calculate end of the week (Saturday)
     endOfPeriod = new Date(startOfPeriod);
     endOfPeriod.setDate(endOfPeriod.getDate() + 6);
-    // Set to end of the day
     endOfPeriod.setHours(23, 59, 59, 999);
   } else {
     // Monthly view - current calendar month with offset

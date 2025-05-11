@@ -349,7 +349,13 @@ export class TimerCore {
         } else {
           // Work session ended
           if (this.callbacks.onSessionEnd) {
-            this.callbacks.onSessionEnd(this.state.startTime, this.callbacks.getTodos());
+            const sessionDuration = this.state.workDuration;
+            this.callbacks.onSessionEnd({
+              startTime: this.state.startTime,
+              duration: sessionDuration,
+              isBreak: false,
+              todos: this.callbacks.getTodos ? this.callbacks.getTodos() : []
+            });
           }
           playSound(getEndSound());
           this.startBreak();
@@ -401,7 +407,13 @@ export class TimerCore {
       
       // Call the onSessionEnd callback
       if (this.callbacks.onSessionEnd) {
-        this.callbacks.onSessionEnd(this.state.startTime, this.callbacks.getTodos());
+        const sessionDuration = this.state.workDuration - this.state.remainingTime;
+        this.callbacks.onSessionEnd({
+          startTime: this.state.startTime,
+          duration: sessionDuration,
+          isBreak: false,
+          todos: this.callbacks.getTodos ? this.callbacks.getTodos() : []
+        });
       }
       
       playSound(getEndSound());

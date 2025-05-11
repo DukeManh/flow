@@ -1,5 +1,6 @@
 // Project management for the Flow State app
 import storageService from './storage.js';
+import { updateDailyTargetDisplay } from './timer.js';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -159,6 +160,9 @@ export function initProjects() {
     }
   });
   
+  // Create target focus time and check-in section
+  createTargetAndCheckInSection();
+  
   // Initialize projects if none exist
   getProjects().then(projects => {
     if (projects.length === 0) {
@@ -267,7 +271,12 @@ export async function createProject(name, color = "#5D8AA8") {
     color,
     createdAt: Date.now(),
     goal: '',
-    todos: []
+    todos: [],
+    // New properties for target focus time and check-ins
+    targetFocusTime: 0, // Daily target in minutes
+    checkIns: [],       // Array of daily check-in objects
+    streak: 0,          // Consecutive days meeting target
+    lastCheckIn: null   // Timestamp of last check-in
   };
   
   projects.push(newProject);
@@ -697,4 +706,489 @@ export async function cleanupDuplicateProjects() {
   }
   
   return false;
+}
+
+// Set a daily target focus time for the current project
+export async function setTargetFocusTime(minutes) {
+  const projects = await getProjects();
+  const currentProject = await getCurrentProject();
+  
+  if (currentProject) {
+    const index = projects.findIndex(p => p.id === currentProject.id);
+    if (index !== -1) {
+      projects[index].targetFocusTime = minutes;
+      return await saveProjects(projects);
+    }
+  }
+  return false;
+}
+
+// Add a daily check-in for the current project
+export async function addDailyCheckIn(reflectionText) {
+  const projects = await getProjects();
+  const currentProject = await getCurrentProject();
+  
+  if (!currentProject) return false;
+  
+  const index = projects.findIndex(p => p.id === currentProject.id);
+  if (index === -1) return false;
+  
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  
+  // Get today's total focus time from history
+  const { history } = await getProjectStats();
+  const todayFocusTime = calculateTodayFocusTime(history, currentProject.id);
+  
+  // Check if target was met
+  const targetMet = currentProject.targetFocusTime > 0 && 
+                   todayFocusTime >= currentProject.targetFocusTime;
+  
+  // Update streak
+  let streak = currentProject.streak || 0;
+  
+  // Check if last check-in was yesterday to maintain streak
+  const lastDate = currentProject.lastCheckIn ? new Date(currentProject.lastCheckIn) : null;
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isConsecutiveDay = lastDate && 
+                          lastDate.getFullYear() === yesterday.getFullYear() &&
+                          lastDate.getMonth() === yesterday.getMonth() &&
+                          lastDate.getDate() === yesterday.getDate();
+  
+  if (targetMet) {
+    // Increment streak only if this is a consecutive day or first check-in
+    if (isConsecutiveDay || !lastDate) {
+      streak++;
+    }
+  } else if (!isConsecutiveDay) {
+    // Reset streak if target not met and not a consecutive day
+    streak = 0;
+  }
+  
+  // Create check-in object
+  const checkIn = {
+    date: today,
+    focusTime: todayFocusTime,
+    targetMet,
+    reflection: reflectionText,
+    streak
+  };
+  
+  // Add to check-ins array (limited to last 30)
+  if (!projects[index].checkIns) {
+    projects[index].checkIns = [];
+  }
+  
+  projects[index].checkIns.push(checkIn);
+  
+  // Limit to last 30 check-ins
+  if (projects[index].checkIns.length > 30) {
+    projects[index].checkIns = projects[index].checkIns.slice(-30);
+  }
+  
+  // Update last check-in and streak
+  projects[index].lastCheckIn = today;
+  projects[index].streak = streak;
+  
+  return await saveProjects(projects);
+}
+
+// Add automatic check-in for the current project
+export async function addAutomaticCheckIn(focusTime) {
+  // Convert to seconds if needed (in case minutes are passed)
+  const focusTimeInSeconds = focusTime > 100 ? focusTime : focusTime * 60;
+  
+  // Only register check-in if the focus time is at least 5 minutes (300 seconds)
+  if (focusTimeInSeconds < 300) return false;
+  
+  const projects = await getProjects();
+  const currentProject = await getCurrentProject();
+  
+  if (!currentProject) return false;
+  
+  const index = projects.findIndex(p => p.id === currentProject.id);
+  if (index === -1) return false;
+  
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  
+  // Get today's total focus time from history
+  const { history } = await getProjectStats();
+  const todayFocusTime = calculateTodayFocusTime(history, currentProject.id);
+  
+  // Check if target was met
+  const targetMet = currentProject.targetFocusTime > 0 && 
+                   todayFocusTime >= currentProject.targetFocusTime;
+  
+  // Update streak
+  let streak = currentProject.streak || 0;
+  
+  // Check if last check-in was yesterday to maintain streak
+  const lastDate = currentProject.lastCheckIn ? new Date(currentProject.lastCheckIn) : null;
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isConsecutiveDay = lastDate && 
+                          lastDate.getFullYear() === yesterday.getFullYear() &&
+                          lastDate.getMonth() === yesterday.getMonth() &&
+                          lastDate.getDate() === yesterday.getDate();
+  
+  // For today's check-ins, always increment streak if target is met
+  // This allows streaks to be updated in real-time during the day
+  const isToday = lastDate && 
+                  lastDate.getFullYear() === now.getFullYear() &&
+                  lastDate.getMonth() === now.getMonth() &&
+                  lastDate.getDate() === now.getDate();
+  
+  if (targetMet) {
+    // Increment streak if this is first check-in, a consecutive day, or target was just met today
+    if (!lastDate || isConsecutiveDay || (isToday && projects[index].streak === streak)) {
+      streak++;
+    }
+  } else if (!isConsecutiveDay && !isToday) {
+    // Reset streak if target not met and not a consecutive day or today
+    streak = 0;
+  }
+  
+  // Create auto check-in object
+  const checkIn = {
+    date: today,
+    focusTime: todayFocusTime,
+    targetMet,
+    automatic: true,
+    streak
+  };
+  
+  // Add to check-ins array (limited to last 30)
+  if (!projects[index].checkIns) {
+    projects[index].checkIns = [];
+  }
+  
+  // Check if we already have a check-in for today
+  const todayCheckInIndex = projects[index].checkIns.findIndex(
+    c => new Date(c.date).toDateString() === new Date(today).toDateString()
+  );
+  
+  if (todayCheckInIndex >= 0) {
+    // Update existing check-in for today
+    projects[index].checkIns[todayCheckInIndex] = checkIn;
+  } else {
+    // Add new check-in
+    projects[index].checkIns.push(checkIn);
+    
+    // Limit to last 30 check-ins
+    if (projects[index].checkIns.length > 30) {
+      projects[index].checkIns = projects[index].checkIns.slice(-30);
+    }
+  }
+  
+  // Update last check-in and streak
+  projects[index].lastCheckIn = today;
+  projects[index].streak = streak;
+  
+  const saveResult = await saveProjects(projects);
+  
+  // Update UI
+  if (saveResult) {
+    updateDailyTargetDisplay();
+    updateStreakRecord();
+  }
+  
+  return saveResult;
+}
+
+// Get check-ins for the current project
+export async function getProjectCheckIns() {
+  const currentProject = await getCurrentProject();
+  return currentProject?.checkIns || [];
+}
+
+// Utility function to calculate today's focus time for a project
+function calculateTodayFocusTime(history, projectId) {
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+  
+  return history
+    .filter(session => 
+      session.projectId === projectId && 
+      session.start >= startOfDay && 
+      session.start <= endOfDay)
+    .reduce((total, session) => total + session.duration, 0);
+}
+
+// Create the target focus time and check-in UI
+function createTargetAndCheckInSection() {
+  // Get the target settings container in the goal card
+  const targetSettings = document.getElementById('targetSettings');
+  if (!targetSettings) return;
+  
+  // Add event listeners for the target focus time editing
+  const targetInput = document.getElementById('targetFocusInput');
+  const saveTargetBtn = document.getElementById('saveTargetBtn');
+  
+  if (targetInput && saveTargetBtn) {
+    // Set up save/edit button event listener
+    if (!saveTargetBtn.hasEventListener) {
+      saveTargetBtn.addEventListener('click', async () => {
+        if (targetInput.disabled) {
+          // Currently in display mode, switch to edit mode
+          targetInput.disabled = false;
+          saveTargetBtn.textContent = 'Save';
+          targetInput.focus();
+        } else {
+          // Currently in edit mode, save the value and switch to display mode
+          const value = parseInt(targetInput.value);
+          if (isNaN(value) || value < 1) {
+            alert('Please enter a valid target (minimum 1 minute)');
+            return;
+          }
+          
+          if (value > 480) {
+            alert('Maximum target is 8 hours (480 minutes) per day');
+            targetInput.value = 480;
+            return;
+          }
+          
+          // Get the current project name for the confirmation message
+          const currentProject = await getCurrentProject();
+          const projectName = currentProject?.name || 'current project';
+          
+          const success = await setTargetFocusTime(value);
+          if (success) {
+            // Switch back to display mode
+            targetInput.disabled = true;
+            saveTargetBtn.textContent = 'Edit';
+            
+            updateDailyTargetDisplay();
+            updateStreakRecord();
+          } else {
+            alert('Failed to set target focus time. Please try again.');
+          }
+        }
+      });
+      saveTargetBtn.hasEventListener = true;
+    }
+  }
+  
+  // Get the check-in card for streak display only
+  const checkInCard = document.getElementById('checkInCard');
+  if (!checkInCard) return;
+  
+  // Create streak record section for the check-in card
+  const streakRecord = document.getElementById('streakRecord');
+  if (!streakRecord) {
+    const newStreakRecord = document.createElement('div');
+    newStreakRecord.className = 'streak-record';
+    newStreakRecord.id = 'streakRecord';
+    checkInCard.appendChild(newStreakRecord);
+  }
+  
+  // Load current target and streak data
+  loadProjectTargetAndCheckIns();
+}
+
+// Load target focus time and check-ins for the current project
+async function loadProjectTargetAndCheckIns() {
+  try {
+    const currentProject = await getCurrentProject();
+    
+    // Update target input field
+    const targetInput = document.getElementById('targetFocusInput');
+    const saveTargetBtn = document.getElementById('saveTargetBtn');
+    
+    if (targetInput && currentProject) {
+      // Set the value in the input field
+      if (currentProject.targetFocusTime) {
+        targetInput.value = currentProject.targetFocusTime;
+        targetInput.placeholder = `${currentProject.targetFocusTime} minutes`;
+      } else {
+        targetInput.value = "";
+        targetInput.placeholder = "No target set";
+      }
+      
+      // Ensure input is disabled in display mode
+      targetInput.disabled = true;
+      
+      // Set button text to "Edit"
+      if (saveTargetBtn) {
+        saveTargetBtn.textContent = 'Edit';
+      }
+    }
+    
+    // Update streak record display
+    updateStreakRecord();
+    
+    // Update daily target indicator in timer
+    updateDailyTargetDisplay();
+  } catch (error) {
+    console.error('Error loading target and check-ins:', error);
+  }
+}
+
+// Update streak record display in check-in card
+export async function updateStreakRecord() {
+  try {
+    const streakRecord = document.getElementById('streakRecord');
+    if (!streakRecord) return;
+    
+    const currentProject = await getCurrentProject();
+    if (!currentProject) return;
+    
+    // Find the highest streak ever achieved
+    let highestStreak = currentProject.streak || 0;
+    
+    if (currentProject.checkIns && currentProject.checkIns.length > 0) {
+      const maxStreakInCheckIns = Math.max(...currentProject.checkIns.map(c => c.streak || 0));
+      highestStreak = Math.max(highestStreak, maxStreakInCheckIns);
+    }
+    
+    // Get check-in history for the past 2 weeks to display in calendar
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    twoWeeksAgo.setHours(0, 0, 0, 0);
+    
+    // Get check-ins for the last 14 days
+    const recentCheckIns = {};
+    
+    if (currentProject.checkIns) {
+      currentProject.checkIns.forEach(checkIn => {
+        const checkInDate = new Date(checkIn.date);
+        // Create object with date as key and check-in as value
+        recentCheckIns[checkInDate.toDateString()] = checkIn;
+      });
+    }
+    
+    // Calculate streak consistency - what percentage of the last 30 days hit target
+    let daysWithCheckIns = 0;
+    let daysWithTargetMet = 0;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+    
+    // Count days from 30 days ago until yesterday (not including today)
+    for (let d = new Date(thirtyDaysAgo); d < now; d.setDate(d.getDate() + 1)) {
+      const dateString = d.toDateString();
+      if (recentCheckIns[dateString]) {
+        daysWithCheckIns++;
+        if (recentCheckIns[dateString].targetMet) {
+          daysWithTargetMet++;
+        }
+      }
+    }
+    
+    const consistency = daysWithCheckIns > 0 
+      ? Math.round((daysWithTargetMet / 30) * 100) 
+      : 0;
+    
+    // Get today's check-in if exists
+    const todayCheckIn = recentCheckIns[now.toDateString()];
+    const todayTargetMet = todayCheckIn?.targetMet || false;
+    
+    // Calculate next milestone
+    const nextMilestone = highestStreak > 0 
+      ? Math.ceil(highestStreak / 5) * 5 
+      : 5;
+    
+    // Create last week's calendar
+    let calendarHTML = '';
+    for (let i = 6; i >= 0; i--) {
+      const calDate = new Date();
+      calDate.setDate(calDate.getDate() - i);
+      const dateString = calDate.toDateString();
+      const hasCheckIn = !!recentCheckIns[dateString];
+      const targetMet = hasCheckIn && recentCheckIns[dateString].targetMet;
+      
+      calendarHTML += `<div class="calendar-day ${targetMet ? 'target-met' : ''}" 
+        title="${calDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}${
+          targetMet ? ' - Target met' : (hasCheckIn ? ' - Target not met' : ' - No activity')
+        }"></div>`;
+    }
+    
+    // Get today's focus progress
+    const { history } = await getProjectStats();
+    const todayFocusTime = calculateTodayFocusTime(history, currentProject.id);
+    const targetProgress = currentProject.targetFocusTime > 0 
+      ? Math.min(100, Math.round((todayFocusTime / currentProject.targetFocusTime) * 100)) 
+      : 0;
+    
+    // Create streak message based on current streak
+    let streakMessage = '';
+    if (currentProject.streak === 0) {
+      streakMessage = `Start your streak today by meeting your daily focus target!`;
+    } else if (currentProject.streak === 1) {
+      streakMessage = `Great start! You've met your focus target for 1 day.`;
+    } else if (currentProject.streak <= 3) {
+      streakMessage = `You're building momentum with a ${currentProject.streak}-day streak!`;
+    } else if (currentProject.streak <= 7) {
+      streakMessage = `Impressive! You've maintained your streak for a week!`;
+    } else if (currentProject.streak <= 20) {
+      streakMessage = `Amazing discipline! Keep your ${currentProject.streak}-day streak going!`;
+    } else {
+      streakMessage = `Extraordinary focus! Your ${currentProject.streak}-day streak shows incredible dedication!`;
+    }
+    
+    // Format streak record display with enhanced UI
+    streakRecord.innerHTML = `
+      <div class="streak-record-container">
+        <div class="current-streak">
+          <h3>Current Streak</h3>
+          <div class="streak-value">${currentProject.streak || 0}<span class="streak-flame">🔥</span></div>
+          <div class="streak-label">consecutive days</div>
+          ${currentProject.lastCheckIn ? 
+            `<div class="streak-date">Last: ${new Date(currentProject.lastCheckIn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>` : ''}
+        </div>
+        
+        <div class="highest-streak">
+          <h3>Record Streak</h3>
+          <div class="streak-value">${highestStreak}<span class="streak-flame">🔥</span></div>
+          <div class="streak-label">best run</div>
+          <div class="streak-info">
+            <i class="fas fa-trophy"></i> Next milestone: ${nextMilestone} days
+          </div>
+        </div>
+        
+        <div class="streak-stats">
+          <h3>Today's Progress</h3>
+          ${currentProject.targetFocusTime > 0 ? `
+            <div class="streak-progress-container">
+              <div class="streak-progress-bar" style="width: ${targetProgress}%"></div>
+            </div>
+            <div class="streak-label">
+              ${todayFocusTime} of ${currentProject.targetFocusTime} minutes
+              ${todayTargetMet ? '<span style="color: var(--accent)"> ✓ Target met!</span>' : ''}
+            </div>
+          ` : `
+            <div class="streak-label" style="margin-top: 15px">No target set for this project</div>
+          `}
+          <div class="streak-calendar" title="Past 7 days">
+            ${calendarHTML}
+          </div>
+        </div>
+      </div>
+      
+      <div class="streak-message">
+        ${streakMessage}
+      </div>
+      
+      <div class="streak-additional-stats">
+        <div class="stat-item">
+          <div class="stat-value">${consistency}%</div>
+          <div class="stat-label">Monthly Consistency</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${daysWithTargetMet}</div>
+          <div class="stat-label">Days Target Met (30 days)</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${currentProject.checkIns?.length || 0}</div>
+          <div class="stat-label">Total Check-ins</div>
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error updating streak record:', error);
+  }
 }

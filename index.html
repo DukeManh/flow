@@ -193,7 +193,7 @@
     </div>
 
     <div class="card" id="goalCard">
-      <h2><i class="fas fa-bullseye"></i> What is your goal today?</h2>
+      <h2><i class="fas fa-bullseye"></i> Projects</h2>
       
       <!-- Project selector (moved to goal card) - updated to dropdown style -->
       <div class="project-header">
@@ -221,7 +221,28 @@
         </button>
       </div>
       
-      <div id="goalContainer"></div>
+      <!-- Goal input with header like focus target -->
+      <div class="goal-settings">
+        <div class="goal-header-group">
+          <h3>What are your goals today?</h3>
+        </div>
+        <div id="goalContainer"></div>
+      </div>
+      
+      <!-- Focus target setting directly in HTML -->
+      <div id="targetSettings" class="target-settings">
+        <div class="target-header-group">
+          <h3>Project Focus Target</h3>
+          <div class="target-progress">
+            <span id="targetProgressText">0 / 0 min</span>
+          </div>
+        </div>
+        <div class="compact-target-input">
+          <input type="number" id="targetFocusInput" class="target-input" placeholder="Minutes" min="1" max="480">
+          <button id="saveTargetBtn" class="target-save-btn">Set</button>
+        </div>
+        <p class="target-description">Set a daily focus target for this project</p>
+      </div>
     </div>
     
     <div class="card" id="todoCard">
@@ -268,6 +289,22 @@
       </div>
       <div id="chartContainer"></div>
     </div>
+    
+    <div class="card" id="checkInCard">
+      <h2><i class="fas fa-calendar-check"></i> Daily Check-ins</h2>
+      
+      <div class="auto-checkin-info">
+        <div class="info-icon"><i class="fas fa-info-circle"></i></div>
+        <div class="info-content">
+          <p><strong>Automatic Streak Tracking</strong></p>
+          <p>Your streaks are automatically tracked when you complete focus sessions. Any session counts toward your daily focus target.</p>
+          <p>Set a daily focus target in the Projects section to start building your streak!</p>
+        </div>
+      </div>
+      
+      <div id="streakRecord"></div>
+    </div>
+    
     <div class="card" id="historyCard">
       <h2><i class="fas fa-history"></i> Session History</h2>
       <ul id="historyList"></ul>

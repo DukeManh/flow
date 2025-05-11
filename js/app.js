@@ -62,7 +62,7 @@ function initMobileNavigation() {
     'timer': ['#timerCard', '#goalCard'],
     'tasks': ['#todoCard'],
     'music': ['#musicCard'],
-    'stats': ['#insightsCard', '#historyCard']
+    'stats': ['#insightsCard', '#checkInCard', '#historyCard']
   };
   
   function smoothScrollTo(targetY, duration = 500) {
@@ -538,6 +538,15 @@ async function reloadProjectData() {
   // Reload goals and todos
   await loadGoal();
   await loadTodos();
+  
+  // Also reload target focus time display
+  const { updateDailyTargetDisplay } = await import('./timer.js');
+  if (typeof updateDailyTargetDisplay === 'function') {
+    updateDailyTargetDisplay();
+  }
+  
+  // Load check-ins
+  loadProjectCheckIns();
 }
 
 // Register global function for project switching

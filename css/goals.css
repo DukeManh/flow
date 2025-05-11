@@ -25,3 +25,23 @@
   color: var(--fg);
   resize: vertical;
 }
+
+/* Goal settings section */
+.goal-settings {
+  margin-top: 15px;
+  padding: 15px;
+  background: var(--bg-alt);
+  border-left: 3px solid var(--accent);
+}
+
+.goal-header-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.goal-header-group h3 {
+  font-size: 0.95rem;
+  margin: 0;
+}

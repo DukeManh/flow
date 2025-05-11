@@ -388,6 +388,476 @@
   padding-bottom: 15px;
 }
 
+/* Target focus time and daily check-in styles */
+.daily-target-indicator {
+  margin-top: 12px;
+  padding: 10px 15px;
+  background: var(--bg-alt);
+  transition: all 0.3s ease;
+}
+
+.daily-target-indicator.target-complete {
+  background: rgba(50, 180, 50, 0.15);
+  border-left: 3px solid var(--green, #4CAF50);
+}
+
+.target-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.streak-counter {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.target-progress-container {
+  height: 6px;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.target-progress-bar {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.5s ease;
+}
+
+.target-complete .target-progress-bar {
+  background: var(--green, #4CAF50);
+}
+
+/* Target settings section */
+.target-settings {
+  margin-top: 15px;
+  padding: 15px;
+  background: var(--bg-alt);
+  border-left: 3px solid var(--accent);
+}
+
+.target-header-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.target-header-group h3 {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.target-progress {
+  font-size: 0.9rem;
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.target-progress .target-complete {
+  color: var(--green, #4CAF50);
+}
+
+/* Target value display */
+#targetValueDisplay {
+  font-size: 1.125rem;
+  margin-bottom: 12px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+/* Target input mode */
+.target-input-container {
+  margin-bottom: 12px;
+  display: none;
+}
+
+.compact-target-input {
+  display: flex;
+  align-items: center;
+  max-width: 200px;
+  margin-bottom: 10px;
+}
+
+.target-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: var(--radius) 0 0 var(--radius);
+  color: var(--fg);
+  font-family: inherit;
+  -moz-appearance: textfield; /* Firefox */
+}
+
+/* Hide spinner buttons in webkit browsers */
+.target-input::-webkit-inner-spin-button, 
+.target-input::-webkit-outer-spin-button { 
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.target-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.target-save-btn {
+  padding: 8px 12px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.target-save-btn:hover {
+  background: var(--accent-hover, var(--accent));
+  opacity: 0.9;
+}
+
+/* Target edit button */
+#editTargetBtn {
+  background-color: var(--bg);
+  border: 1px solid var(--muted);
+  color: var(--fg);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+#editTargetBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.target-description {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 5px 0 0 0;
+}
+
+/* Check-in section */
+.checkin-container {
+  margin-top: 15px;
+  padding: 15px;
+  background: var(--bg-alt);
+  border-left: 3px solid var(--accent);
+}
+
+.checkin-container h3 {
+  font-size: 0.95rem;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.checkin-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  margin-bottom: 12px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.checkin-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkin-btn:hover {
+  background: var(--accent-hover, var(--accent));
+  transform: translateY(-1px);
+}
+
+/* Check-in history list */
+.checkin-history {
+  margin-top: 15px;
+}
+
+.checkin-history-item {
+  padding: 12px;
+  margin-bottom: 10px;
+  background: var(--bg-alt);
+  border-left: 3px solid var(--accent);
+}
+
+.checkin-history-item.target-met {
+  border-left-color: var(--green, #4CAF50);
+}
+
+.checkin-date {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.checkin-reflection {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Streak record styling */
+.streak-record {
+  margin-top: 15px;
+}
+
+.streak-record-container {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  gap: 20px;
+}
+
+.current-streak, .highest-streak, .streak-stats {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 15px 10px;
+  border-radius: 10px;
+  position: relative;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+  background-color: var(--card-bg);
+}
+
+.current-streak {
+  background: linear-gradient(180deg, var(--card-bg), var(--card-bg-hover));
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.highest-streak {
+  background: linear-gradient(180deg, var(--card-bg), var(--card-bg-hover));
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.streak-stats {
+  background: linear-gradient(180deg, var(--card-bg), var(--card-bg-hover));
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.streak-record h3 {
+  margin: 0 0 5px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.streak-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 10px 0;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.streak-flame {
+  font-size: 1.8rem;
+  margin-left: 2px;
+  animation: flicker 1.5s infinite alternate;
+}
+
+@keyframes flicker {
+  0%, 18%, 22%, 25%, 53%, 57%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  20%, 24%, 55% {
+    opacity: 0.8;
+    transform: scale(0.9);
+  }
+}
+
+.streak-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-transform: lowercase;
+}
+
+.streak-date {
+  font-size: 0.8rem;
+  margin-top: 5px;
+  color: var(--text-secondary);
+}
+
+.streak-progress-container {
+  width: 100%;
+  margin: 15px 0 5px;
+  height: 8px;
+  background-color: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.streak-progress-bar {
+  height: 100%;
+  background-color: var(--accent);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.streak-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.calendar-day {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  background-color: var(--border-color);
+}
+
+.calendar-day.target-met {
+  background-color: var(--accent);
+}
+
+.streak-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.streak-info i {
+  color: var(--accent);
+}
+
+.streak-details {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-color);
+  width: 100%;
+}
+
+.streak-message {
+  text-align: center;
+  margin: 10px 0;
+  padding: 8px;
+  border-radius: 5px;
+  background-color: var(--bg-light);
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.streak-milestone {
+  font-weight: bold;
+  color: var(--accent);
+}
+
+/* Row for additional stats below main streak metrics */
+.streak-additional-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  flex: 1;
+  min-width: 120px;
+  background-color: var(--bg-light);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive layout for smaller screens */
+@media (max-width: 768px) {
+  .streak-record-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .current-streak, .highest-streak, .streak-stats {
+    width: 100%;
+  }
+}
+
+/* Add a divider between the streak records */
+.current-streak {
+  border-right: 1px solid var(--border);
+}
+
+/* Highlight when there's an active streak */
+.current-streak .streak-value:not(:contains('0')) {
+  color: var(--accent);
+}
+
+/* Auto-checkin info styling */
+.auto-checkin-info {
+  display: flex;
+  background: var(--bg-alt);
+  padding: 15px;
+  margin-bottom: 20px;
+  border-left: 3px solid var(--accent);
+}
+
+.info-icon {
+  font-size: 24px;
+  color: var(--accent);
+  margin-right: 15px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-content p {
+  margin: 0 0 10px 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.info-content p:last-child {
+  margin-bottom: 0;
+}
+
 /* Mobile styles */
 @media (max-width: 1200px) {
   .project-header {
