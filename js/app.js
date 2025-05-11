@@ -295,13 +295,121 @@ function initMobileNavigation() {
 // Initialize app installation prompt
 function initAppInstallation() {
   let deferredPrompt;
-  const addHomeBtn = document.createElement('button');
-  addHomeBtn.id = 'addToHomeBtn';
-  addHomeBtn.innerHTML = '<i class="fas fa-download"></i> Add Flow to Home Screen';
-  addHomeBtn.style.display = 'none';
   
-  // Add the button to the page
-  document.body.appendChild(addHomeBtn);
+  // Check if the app is already installed
+  const isAppInstalled = () => 
+    (window.matchMedia('(display-mode: standalone)').matches) || 
+    (window.navigator.standalone) || 
+    document.referrer.includes('android-app://');
+    
+  // Check if user has previously dismissed the prompt
+  const hasUserDismissed = localStorage.getItem('flowAppPromptDismissed') === 'true';
+  
+  // If app is already installed or user dismissed the prompt, don't show it
+  if (isAppInstalled() || hasUserDismissed) {
+    return;
+  }
+  
+  // Create installation prompt container as a floating element
+  const installPrompt = document.createElement('div');
+  installPrompt.id = 'installPrompt';
+  installPrompt.className = 'install-prompt';
+  installPrompt.innerHTML = `
+    <button id="addToHomeBtn" class="install-prompt-button">
+      <i class="fas fa-download"></i>
+      <span>Add Flow App to Home Screen</span>
+    </button>
+    <button id="dismissPromptBtn"><i class="fas fa-times"></i></button>
+  `;
+  
+  // Add to body
+  document.body.appendChild(installPrompt);
+  
+  // Initially hide the prompt until we know it's available
+  installPrompt.style.display = 'none';
+  
+  // Add styling for the install prompt
+  const style = document.createElement('style');
+  style.textContent = `
+    .install-prompt {
+      position: fixed;
+      top: 60px; /* Position below the header */
+      right: 20px;
+      background-color: var(--bg-alt);
+      padding: 8px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px var(--shadow);
+      z-index: 1000;
+      max-width: 260px;
+      transition: all 0.3s ease;
+      opacity: 0.95;
+      display: flex;
+      align-items: center;
+    }
+    
+    .install-prompt-button {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 0.85rem;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      border-radius: var(--radius);
+      transition: background-color 0.2s ease;
+      flex: 1;
+      text-align: left;
+    }
+    
+    .install-prompt-button:hover {
+      background-color: var(--hover);
+    }
+    
+    .install-prompt i.fa-download {
+      color: var(--primary);
+      margin-right: 8px;
+    }
+    
+    #dismissPromptBtn {
+      background-color: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    @media (max-width: 600px) {
+      .install-prompt {
+        top: unset;
+        right: 12px;
+        bottom: 70px; /* Position above mobile nav on small screens */
+        max-width: 220px;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  // Add event listener for the dismiss button
+  const dismissBtn = document.getElementById('dismissPromptBtn');
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      // Hide the prompt with fade-out animation
+      installPrompt.style.opacity = '0';
+      setTimeout(() => {
+        installPrompt.style.display = 'none';
+      }, 300);
+      
+      // Remember that user dismissed it
+      localStorage.setItem('flowAppPromptDismissed', 'true');
+    });
+  }
+  
+  const addHomeBtn = document.getElementById('addToHomeBtn');
   
   // Listen for the beforeinstallprompt event
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -309,41 +417,46 @@ function initAppInstallation() {
     e.preventDefault();
     // Stash the event so it can be triggered later
     deferredPrompt = e;
-    // Update UI to notify the user they can add to home screen
-    addHomeBtn.style.display = 'block';
-    addHomeBtn.style.position = 'fixed';
-    addHomeBtn.style.bottom = 'calc(70px + env(safe-area-inset-bottom, 0px))';
-    addHomeBtn.style.right = '20px';
-    addHomeBtn.style.padding = '10px 15px';
-    addHomeBtn.style.backgroundColor = 'var(--primary)';
-    addHomeBtn.style.color = 'white';
-    addHomeBtn.style.border = 'none';
-    addHomeBtn.style.borderRadius = '30px';
-    addHomeBtn.style.boxShadow = '0 4px 10px rgba(0,0,0,0.2)';
-    addHomeBtn.style.zIndex = '900';
+    // Show the install prompt with fade-in animation
+    installPrompt.style.display = 'flex';
+    setTimeout(() => {
+      installPrompt.style.opacity = '1';
+    }, 10);
   });
   
-  // Add click event to the 'Add to Home Screen' button
-  addHomeBtn.addEventListener('click', (e) => {
-    // Hide our user interface
-    addHomeBtn.style.display = 'none';
-    // Show the prompt
-    deferredPrompt.prompt();
-    // Wait for the user to respond to the prompt
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the A2HS prompt');
-      } else {
-        console.log('User dismissed the A2HS prompt');
-      }
-      deferredPrompt = null;
+  // Add click event to the main button
+  if (addHomeBtn) {
+    addHomeBtn.addEventListener('click', (e) => {
+      // Hide our user interface
+      installPrompt.style.opacity = '0';
+      setTimeout(() => {
+        installPrompt.style.display = 'none';
+      }, 300);
+      
+      // Show the prompt
+      deferredPrompt.prompt();
+      // Wait for the user to respond to the prompt
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the A2HS prompt');
+          // Remember that the app is installed
+          localStorage.setItem('flowAppInstalled', 'true');
+        } else {
+          console.log('User dismissed the A2HS prompt');
+        }
+        deferredPrompt = null;
+      });
     });
-  });
+  }
   
   // Handle installed app events
   window.addEventListener('appinstalled', (evt) => {
     console.log('Flow app was installed');
-    addHomeBtn.style.display = 'none';
+    installPrompt.style.opacity = '0';
+    setTimeout(() => {
+      installPrompt.style.display = 'none';
+    }, 300);
+    localStorage.setItem('flowAppInstalled', 'true');
   });
 }
 
