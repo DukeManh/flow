@@ -149,7 +149,8 @@
 
   /* Make buttons more touch-friendly */
   button,
-  input[type="checkbox"] {
+  input[type="checkbox"],
+  input {
     min-height: 44px;
   }
 

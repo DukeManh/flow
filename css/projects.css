@@ -403,6 +403,9 @@
 
 /* Mobile styles */
 @media (max-width: 600px) {
+  .project-option {
+    padding: 0px 10px;
+  }
   
   .project-selector-container {
     margin-right: 0; /* Remove spacing on mobile */

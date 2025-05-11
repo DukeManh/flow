@@ -7,16 +7,6 @@
   align-items: center;
 }
 
-#todoInput {
-  flex: 1;
-  padding: 8px;
-  font-size: 0.9rem;
-  border: 1px solid var(--muted);
-  border-radius: var(--radius);
-  background: var(--bg);
-  color: var(--fg);
-}
-
 #addTodoBtn {
   min-width: 3rem;
   font-size: 0.9rem;

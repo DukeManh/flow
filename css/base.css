@@ -95,19 +95,33 @@ body.distraction #insightsCard {
   display: none;
 }
 
+.input {
+  flex: 1;
+  padding: 8px;
+  font-size: 0.9rem;
+  border: 1px solid var(--muted);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+
 /* Settings button styling */
 .settings-btn {
-  background: transparent;
-  color: var(--fg);
+  background: none;
   border: none;
-  padding: 6px;
-  border-radius: 50%;
-  margin-right: 8px;
-  transition: all var(--transition);
+  font-size: 1.25rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--transition);
+  padding: 2px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .settings-btn:hover {
-  background: var(--bg-alt);
+  color: var(--accent);
 }
 
 /* Timer presets in settings */
