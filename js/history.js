@@ -28,6 +28,22 @@ function initCustomTooltip() {
     customTooltip.style.display = 'none';
     document.body.appendChild(customTooltip);
   }
+  
+  // Add click event listener to document to remove highlights when clicking elsewhere
+  document.addEventListener('click', (e) => {
+    // If click is not on a bar container or its children, remove all highlights
+    if (!e.target.closest('.bar-container')) {
+      // Remove highlighted class from all bars
+      const highlightedBars = document.querySelectorAll('.bar-container-highlighted');
+      highlightedBars.forEach(bar => bar.classList.remove('bar-container-highlighted'));
+      
+      // Hide tooltip if showing day summary
+      if (customTooltip && customTooltip.classList.contains('day-summary')) {
+        customTooltip.classList.remove('day-summary');
+        customTooltip.style.display = 'none';
+      }
+    }
+  });
 }
 
 // Storage utility functions
@@ -374,6 +390,7 @@ export async function renderProductivityChart() {
   const barSpacing = currentViewMode === 'weekly' ? 2.5 : 0.5;
   
   // Create stacked bars for each day
+  let visibleBarCount = 0; // Counter for visible bars
   days.forEach((day, index) => {
     let currentHeight = 0;
     
@@ -397,7 +414,64 @@ export async function renderProductivityChart() {
     barContainer.className = 'bar-container';
     barContainer.style.left = `${(index * (100 / days.length)) + barSpacing}%`;
     barContainer.style.width = `${barWidth}%`;
+    barContainer.dataset.date = day.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    barContainer.dataset.totalMinutes = day.totalMinutes;
     chartContainer.appendChild(barContainer);
+    
+    // Add click event to the bar container to highlight and show day summary
+    barContainer.addEventListener('click', (e) => {
+      e.stopPropagation(); // Stop propagation to prevent document handler from immediately removing highlight
+      
+      // Remove highlighted class from all other bars
+      const allBars = document.querySelectorAll('.bar-container');
+      allBars.forEach(bar => {
+        if (bar !== barContainer) {
+          bar.classList.remove('bar-container-highlighted');
+        }
+      });
+      
+      // Toggle highlight on this bar
+      const wasHighlighted = barContainer.classList.contains('bar-container-highlighted');
+      barContainer.classList.toggle('bar-container-highlighted');
+      
+      // If highlighted, show day summary tooltip
+      if (!wasHighlighted) { // Only add if it wasn't already highlighted
+        const dateStr = barContainer.dataset.date;
+        const totalMinutes = barContainer.dataset.totalMinutes;
+        
+        // Show simplified tooltip with just date and total minutes
+        customTooltip.textContent = `${dateStr}: ${totalMinutes} total minutes`;
+        customTooltip.classList.add('day-summary');
+        
+        // Keep tooltip visible
+        customTooltip.style.display = 'block';
+        
+        // Use existing tooltip position from the bar container if available
+        if (barContainer.dataset.lastTooltipX && barContainer.dataset.lastTooltipY) {
+          customTooltip.style.left = `${barContainer.dataset.lastTooltipX}px`;
+          customTooltip.style.top = `${barContainer.dataset.lastTooltipY}px`;
+        } else {
+          // Fall back to click position if tooltip position not saved
+          customTooltip.style.left = `${e.pageX + 10}px`;
+          customTooltip.style.top = `${e.pageY + 10}px`;
+          
+          // Adjust position to ensure tooltip is visible within viewport
+          setTimeout(() => {
+            const tooltipRect = customTooltip.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            
+            // Check if tooltip is off the right edge
+            if (tooltipRect.right > viewportWidth - 10) {
+              customTooltip.style.left = `${e.pageX - tooltipRect.width - 10}px`;
+            }
+          }, 10);
+        }
+      } else {
+        // If not highlighted (toggled off), hide the tooltip
+        customTooltip.classList.remove('day-summary');
+        customTooltip.style.display = 'none';
+      }
+    });
     
     // Total height for the entire bar
     const totalBarHeight = (day.totalMinutes / maxMinutes) * chartHeight;
@@ -406,6 +480,7 @@ export async function renderProductivityChart() {
     // Create a bar segment for each project
     for (const [projectId, minutes] of Object.entries(day.projectMinutes)) {
       const segmentHeight = (minutes / maxMinutes) * chartHeight;
+      const percentage = Math.round((minutes / day.totalMinutes) * 100);
       
       // Skip tiny segments
       if (segmentHeight < 2) continue;
@@ -419,29 +494,58 @@ export async function renderProductivityChart() {
       // Use the project's color from projectColors
       segment.style.backgroundColor = projectColors[projectId] || 'var(--accent)';
       
-      // Store tooltip data
+      // Store tooltip data with percentage
       const projectName = projectNames[projectId] || 'Unassigned';
-      segment.dataset.tooltip = `${projectName}: ${minutes} minutes`;
+      segment.dataset.tooltip = `${projectName}: ${minutes} min (${percentage}%)`;
       segment.dataset.date = day.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
       
       // Add mouse events for custom tooltip
       segment.addEventListener('mousemove', (e) => {
-        if (customTooltip) {
+        // Only show segment tooltip if the bar is not highlighted
+        if (customTooltip && !barContainer.classList.contains('bar-container-highlighted')) {
           // Show date in tooltip for monthly view
           const tooltipText = currentViewMode === 'monthly' 
             ? `${segment.dataset.date} - ${segment.dataset.tooltip}`
             : segment.dataset.tooltip;
             
           customTooltip.textContent = tooltipText;
+          customTooltip.classList.remove('day-summary');
+          customTooltip.classList.add('tooltip-show');
           customTooltip.style.display = 'block';
           customTooltip.style.left = `${e.pageX + 10}px`;
           customTooltip.style.top = `${e.pageY + 10}px`;
+          
+          // Store current tooltip position on the bar container itself
+          // This ensures we always have the latest position even when moving between segments
+          barContainer.dataset.lastTooltipX = e.pageX + 10;
+          barContainer.dataset.lastTooltipY = e.pageY + 10;
+          
+          // Prevent tooltip from going off-screen
+          setTimeout(() => {
+            const tooltipRect = customTooltip.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            
+            if (tooltipRect.right > viewportWidth - 10) {
+              const newLeft = e.pageX - tooltipRect.width - 10;
+              customTooltip.style.left = `${newLeft}px`;
+              barContainer.dataset.lastTooltipX = newLeft; // Update stored position
+            }
+          }, 0);
         }
       });
       
       segment.addEventListener('mouseleave', () => {
-        if (customTooltip) {
+        // Only hide tooltip if the bar is not highlighted
+        if (customTooltip && !barContainer.classList.contains('bar-container-highlighted')) {
           customTooltip.style.display = 'none';
+          customTooltip.classList.remove('tooltip-show');
+        }
+      });
+      
+      // Make sure tooltip doesn't flicker when moving between segments
+      segment.addEventListener('mouseenter', (e) => {
+        if (barContainer.classList.contains('bar-container-highlighted')) {
+          e.stopPropagation();
         }
       });
       
@@ -449,6 +553,16 @@ export async function renderProductivityChart() {
       
       // Update current height for next segment
       currentHeight += segmentHeight;
+    }
+    
+    // Only assign animation index to bars that have a significant height
+    // This way we skip incrementing the animation sequence for very short or empty bars
+    if (day.totalMinutes > 0 && (day.totalMinutes / maxMinutes) * chartHeight > 5) {
+      // Only animate bars that are tall enough to be noticeable (more than 5px)
+      barContainer.style.setProperty('--bar-index', visibleBarCount++);
+    } else {
+      // For short or empty bars, animate them all at once with the first group
+      barContainer.style.setProperty('--bar-index', 0);
     }
   });
   

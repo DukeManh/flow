@@ -81,6 +81,22 @@
   width: 100%;
   height: 100%;
   opacity: 0;
+  cursor: pointer; /* Add pointer cursor to indicate clickable */
+  transition: all 0.3s ease; /* Add transition for hover and highlight effects */
+  border: 2px solid transparent; /* Prepare for highlight border */
+}
+
+/* Bar container hover effect - subtle brightening instead of scaling */
+.bar-container:hover {
+  filter: brightness(1.05); /* Slightly brighter on hover instead of scaling */
+}
+
+/* Highlighted bar (clicked) state - using border instead of transform */
+.bar-container-highlighted {
+  border: 2px solid var(--accent-bright, #4d9fff); /* Bright border for highlighted bars */
+  z-index: 10; /* Keep highlighted bars on top */
+  filter: brightness(1.05); /* Make highlighted bars slightly brighter */
+  /* Remove the transform scale that was making it taller */
 }
 
 /* Paused state - bars at height 0 */
@@ -92,7 +108,7 @@
 /* Animated state - trigger the animation */
 .bar-container-animated {
   animation: bar-grow 2.5s cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
-  animation-delay: 0.7s;
+  animation-delay: calc(0.1s * var(--bar-index, 0)); /* Sequential animation based on index */
 }
 
 /* New chart bar segment for stacked bars */
@@ -101,6 +117,17 @@
   bottom: 0;
   /* Add a subtle border at the top of each segment */
   border-top: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease-out; /* Smooth transition for hover effects */
+}
+
+/* Segment hover effect */
+.chart-bar-segment:hover {
+  filter: brightness(1.15); /* Brighten segment on hover */
+}
+
+/* When bar is highlighted, dim non-hovered segments slightly */
+.bar-container-highlighted .chart-bar-segment:not(:hover) {
+  filter: brightness(1); /* Reset brightness for non-hovered segments */
 }
 
 /* Bar animation */
@@ -268,6 +295,36 @@
   max-width: 200px;
   white-space: normal; /* Allow text to wrap */
   word-wrap: break-word; /* Break long words if necessary */
+  transition: opacity 0.2s ease, transform 0.2s ease; /* Smooth tooltip animation */
+  transform-origin: top left;
+}
+
+/* Tooltip animation when appearing */
+.custom-tooltip.tooltip-show {
+  animation: tooltip-pop 0.25s ease-out forwards;
+}
+
+/* Enhanced tooltip style for day summary */
+.custom-tooltip.day-summary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  font-weight: 500;
+}
+
+/* Tooltip pop animation */
+@keyframes tooltip-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* View control buttons for switching between weekly/monthly view */
@@ -358,4 +415,9 @@
 .view-btn.active {
   background: var(--accent);
   color: white;
+}
+
+/* Define a brighter accent color if it doesn't exist in theme */
+:root {
+  --accent-bright: #4d9fff; /* Brighter version of the default accent color */
 }
