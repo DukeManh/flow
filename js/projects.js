@@ -1161,7 +1161,7 @@ export async function updateStreakRecord() {
             </div>
             <div class="streak-label">
               ${todayFocusTime} of ${currentProject.targetFocusTime} minutes
-              ${todayTargetMet ? '<span style="color: var(--accent)"> ✓ Target met!</span>' : ''}
+              ${todayTargetMet ? '<p style="color: var(--accent)"> ✓ Target met!</p>' : ''}
             </div>
           ` : `
             <div class="streak-label" style="margin-top: 15px">No target set for this project</div>

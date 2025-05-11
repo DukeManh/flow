@@ -444,22 +444,126 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
 }
 
 .target-header-group h3 {
-  font-size: 0.95rem;
+  font-size: 1rem;
   margin: 0;
+  font-weight: 500;
 }
 
 .target-progress {
   font-size: 0.9rem;
   color: var(--fg);
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .target-progress .target-complete {
   color: var(--green, #4CAF50);
+}
+
+/* Project Focus Target card specific styling */
+.project-focus-target {
+  background-color: var(--bg-alt);
+  border-radius: var(--radius);
+  padding: 15px;
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  border-left: 3px solid var(--accent);
+}
+
+.project-focus-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.project-focus-header h3 {
+  font-size: 1rem;
+  margin: 0;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.project-focus-value {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.focus-target-display {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+#editTargetBtn {
+  background-color: var(--bg);
+  border: 1px solid var(--muted);
+  color: var(--fg);
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+#editTargetBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Target input field */
+.target-input-container {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.target-input {
+  flex: 1;
+  max-width: 80px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: var(--radius);
+  color: var(--fg);
+  font-size: 0.9rem;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.target-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.target-save-btn {
+  padding: 8px 12px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.target-save-btn:hover {
+  filter: brightness(1.1);
+}
+
+.target-description {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 8px 0 0 0;
+  line-height: 1.4;
 }
 
 /* Target value display */
@@ -810,6 +914,19 @@
   
   .current-streak, .highest-streak, .streak-stats {
     width: 100%;
+  }
+}
+
+/* Responsive layout for tablet screens */
+@media (min-width: 800px) and (max-width: 1024px) {
+  .streak-record-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .current-streak, .highest-streak, .streak-stats {
+    width: 100%;
+    max-width: 100%;
   }
 }
 

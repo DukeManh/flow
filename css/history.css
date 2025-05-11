@@ -3,7 +3,7 @@
 /* Session history styling */
 #historyList {
   list-style: none;
-  max-height: 400px;
+  max-height: 500px;
   /* Increased from 300px to 400px to make it taller */
   overflow-y: auto;
 }

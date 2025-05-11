@@ -1,5 +1,20 @@
 /* Todo list component styles for the Flow State app */
 
+/* Make the todoCard a flex container to better control space distribution */
+#todoCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#todoCard h2 {
+  margin-bottom: 12px;
+}
+
+#todoCard .focus-tips {
+  margin-bottom: 15px;
+}
+
 #todoCard .todo-input {
   display: flex;
   gap: 12px;
@@ -12,10 +27,14 @@
   font-size: 0.9rem;
 }
 
+/* Make the todoList take up remaining space */
 #todoList {
   list-style: none;
-  max-height: 200px;
   overflow-y: auto;
+  flex: 1;
+  min-height: 100px; /* Ensure a minimum height even when empty */
+  margin: 0;
+  padding: 0;
 }
 
 #todoList li {
