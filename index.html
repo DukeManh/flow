@@ -252,7 +252,15 @@
     </div>
     <div class="card" id="insightsCard">
       <h2><i class="fas fa-chart-bar"></i> Productivity Insights</h2>
-      <div class="chart-title">Focus Time by Project - Last 7 Days</div>
+      <div class="chart-header">
+        <div class="chart-title" id="chartTitle">Focus Time by Project - Last 7 Days</div>
+        <div class="view-controls">
+          <div class="view-pill">
+            <button id="weeklyViewBtn" class="view-btn active">Weekly</button>
+            <button id="monthlyViewBtn" class="view-btn">Monthly</button>
+          </div>
+        </div>
+      </div>
       <div id="chartContainer"></div>
     </div>
     <div class="card" id="historyCard">

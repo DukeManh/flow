@@ -3,7 +3,7 @@
 /* Session history styling */
 #historyList {
   list-style: none;
-  max-height: 300px;
+  max-height: 400px; /* Increased from 300px to 400px to make it taller */
   overflow-y: auto;
 }
 
@@ -59,7 +59,7 @@
 /* Chart styles */
 #chartContainer {
   width: 100%;
-  height: 200px;
+  height: 250px; /* Increased height from 200px to 250px */
   margin-top: 12px;
   position: relative;
 }
@@ -266,5 +266,96 @@
   pointer-events: none;
   z-index: 1000;
   max-width: 200px;
+  white-space: normal; /* Allow text to wrap */
+  word-wrap: break-word; /* Break long words if necessary */
+}
+
+/* View control buttons for switching between weekly/monthly view */
+.view-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.view-btn {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
+}
+
+.view-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* Monthly view specific styles */
+.monthly-label {
+  font-size: 0.65rem; /* Smaller font size for monthly labels */
   white-space: nowrap;
+}
+
+/* Hide certain labels in monthly view to avoid cluttering */
+.chart-label:empty {
+  display: none;
+}
+
+/* Chart header with title and view controls */
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.chart-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+/* View control buttons for switching between weekly/monthly view */
+.view-controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.view-pill {
+  display: flex;
+  background: var(--bg-alt);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.view-btn {
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.view-btn:first-child {
+  border-radius: 20px 0 0 20px;
+}
+
+.view-btn:last-child {
+  border-radius: 0 20px 20px 0;
+}
+
+.view-btn.active {
+  background: var(--accent);
+  color: white;
 }

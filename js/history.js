@@ -7,12 +7,14 @@ import storageService from './storage.js';
 
 // Storage keys
 const STORAGE_KEYS = {
-  SESSION_HISTORY: 'sessionHistory'
+  SESSION_HISTORY: 'sessionHistory',
+  VIEW_MODE: 'historyViewMode'
 };
 
 // History elements
 let historyList;
 let currentVideoID;
+let currentViewMode = 'weekly'; // Default to weekly view
 
 // Custom tooltip element
 let customTooltip;
@@ -52,6 +54,52 @@ async function saveSessionHistoryToStorage(history) {
 export function initHistory(videoID) {
   historyList = document.getElementById('historyList');
   currentVideoID = videoID;
+  
+  // Set up view mode controls
+  const weeklyViewBtn = document.getElementById('weeklyViewBtn');
+  const monthlyViewBtn = document.getElementById('monthlyViewBtn');
+  
+  if (weeklyViewBtn && monthlyViewBtn) {
+    // Load saved view preference
+    storageService.getItem(STORAGE_KEYS.VIEW_MODE).then(savedViewMode => {
+      if (savedViewMode) {
+        currentViewMode = savedViewMode;
+        
+        // Update button state based on saved preference
+        if (currentViewMode === 'monthly') {
+          weeklyViewBtn.classList.remove('active');
+          monthlyViewBtn.classList.add('active');
+        } else {
+          weeklyViewBtn.classList.add('active');
+          monthlyViewBtn.classList.remove('active');
+        }
+      }
+      
+      // Initial render of productivity chart with saved view mode
+      renderProductivityChart();
+    });
+    
+    // Add event listeners for view buttons
+    weeklyViewBtn.addEventListener('click', () => {
+      if (currentViewMode !== 'weekly') {
+        currentViewMode = 'weekly';
+        weeklyViewBtn.classList.add('active');
+        monthlyViewBtn.classList.remove('active');
+        storageService.setItem(STORAGE_KEYS.VIEW_MODE, currentViewMode);
+        renderProductivityChart();
+      }
+    });
+    
+    monthlyViewBtn.addEventListener('click', () => {
+      if (currentViewMode !== 'monthly') {
+        currentViewMode = 'monthly';
+        monthlyViewBtn.classList.add('active');
+        weeklyViewBtn.classList.remove('active');
+        storageService.setItem(STORAGE_KEYS.VIEW_MODE, currentViewMode);
+        renderProductivityChart();
+      }
+    });
+  }
   
   // Load saved history
   loadHistory();
@@ -217,6 +265,7 @@ export async function recordSession(sessionStartTime, todos) {
 // Render productivity chart with stacked bars by project
 export async function renderProductivityChart() {
   const chartContainer = document.getElementById('chartContainer');
+  const chartTitle = document.getElementById('chartTitle');
   if (!chartContainer) return;
   
   chartContainer.innerHTML = '';
@@ -228,17 +277,52 @@ export async function renderProductivityChart() {
   const { history, projectNames, projectColors } = await getProjectStats();
   const now = new Date();
 
-  // Create objects for the last 7 days
+  // Create objects for the days based on view mode
   const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    days.push({
-      date,
-      label: date.toLocaleDateString('en-US', { weekday: 'short' }),
-      totalMinutes: 0,
-      projectMinutes: {} // To store minutes by project
-    });
+  
+  if (currentViewMode === 'weekly') {
+    // Weekly view - last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      days.push({
+        date,
+        label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        totalMinutes: 0,
+        projectMinutes: {} // To store minutes by project
+      });
+    }
+    
+    // Update chart title
+    if (chartTitle) {
+      chartTitle.textContent = 'Focus Time by Project - Last 7 Days';
+    }
+  } else {
+    // Monthly view - last ~30 days
+    const daysToShow = 30;
+    
+    for (let i = daysToShow - 1; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      
+      // For monthly view, only show labels for first day of week (Sunday)
+      let label = '';
+      if (date.getDay() === 0) { // Sunday (start of week)
+        label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+      
+      days.push({
+        date,
+        label,
+        totalMinutes: 0,
+        projectMinutes: {} // To store minutes by project
+      });
+    }
+    
+    // Update chart title
+    if (chartTitle) {
+      chartTitle.textContent = 'Focus Time by Project - Last 30 Days';
+    }
   }
 
   // Calculate minutes for each project for each day
@@ -266,7 +350,7 @@ export async function renderProductivityChart() {
 
   // Find the maximum minutes for scaling
   const maxMinutes = Math.max(...days.map(d => d.totalMinutes)) || 60;
-  const chartHeight = 180;
+  const chartHeight = 220; // Increased height
 
   // Add grid lines and labels
   for (let i = 0; i <= 4; i++) {
@@ -285,16 +369,23 @@ export async function renderProductivityChart() {
     chartContainer.appendChild(yLabel);
   }
 
+  // Calculate bar width based on view mode and number of days
+  const barWidth = (100 / days.length) - (currentViewMode === 'weekly' ? 5 : 1);
+  const barSpacing = currentViewMode === 'weekly' ? 2.5 : 0.5;
+  
   // Create stacked bars for each day
   days.forEach((day, index) => {
-    const barWidth = (100 / days.length) - 5;
     let currentHeight = 0;
     
-    // Add label for day
+    // Add label for day - smaller for monthly view
     const label = document.createElement('div');
     label.className = 'chart-label';
+    if (currentViewMode === 'monthly') {
+      label.classList.add('monthly-label');
+    }
+    
     label.textContent = day.label;
-    label.style.left = `${(index * (100 / days.length)) + (barWidth / 2) + 2.5}%`;
+    label.style.left = `${(index * (100 / days.length)) + (barWidth / 2) + barSpacing}%`;
     label.style.width = `${barWidth}%`;
     chartContainer.appendChild(label);
     
@@ -304,7 +395,7 @@ export async function renderProductivityChart() {
     // Create a container for the entire day's bar stack
     const barContainer = document.createElement('div');
     barContainer.className = 'bar-container';
-    barContainer.style.left = `${(index * (100 / days.length)) + 2.5}%`;
+    barContainer.style.left = `${(index * (100 / days.length)) + barSpacing}%`;
     barContainer.style.width = `${barWidth}%`;
     chartContainer.appendChild(barContainer);
     
@@ -331,11 +422,17 @@ export async function renderProductivityChart() {
       // Store tooltip data
       const projectName = projectNames[projectId] || 'Unassigned';
       segment.dataset.tooltip = `${projectName}: ${minutes} minutes`;
+      segment.dataset.date = day.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
       
       // Add mouse events for custom tooltip
       segment.addEventListener('mousemove', (e) => {
         if (customTooltip) {
-          customTooltip.textContent = segment.dataset.tooltip;
+          // Show date in tooltip for monthly view
+          const tooltipText = currentViewMode === 'monthly' 
+            ? `${segment.dataset.date} - ${segment.dataset.tooltip}`
+            : segment.dataset.tooltip;
+            
+          customTooltip.textContent = tooltipText;
           customTooltip.style.display = 'block';
           customTooltip.style.left = `${e.pageX + 10}px`;
           customTooltip.style.top = `${e.pageY + 10}px`;
@@ -408,15 +505,18 @@ async function createChartLegend(container, projectNames, projectColors) {
   // Create a set of active project IDs for quick lookup
   const activeProjectIds = new Set(activeProjects.map(p => p.id));
   
-  // Find projects that have data in the last 7 days
+  // Find projects that have data in the relevant time range
   const projectsWithData = new Set();
+  
+  // Set time range based on view mode
+  const daysToLookBack = currentViewMode === 'weekly' ? 7 : 30;
   
   history.forEach(session => {
     const sessionDate = new Date(session.start);
     const daysDiff = Math.floor((now - sessionDate) / (1000 * 60 * 60 * 24));
     
-    // Only include sessions from the last 7 days
-    if (daysDiff < 7) {
+    // Only include sessions from the relevant time range
+    if (daysDiff < daysToLookBack) {
       const projectId = session.projectId || 'default';
       projectsWithData.add(projectId);
     }
