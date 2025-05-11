@@ -186,7 +186,6 @@
 .wave-canvas {
   position: absolute;
   left: -20px;
-  top: -10px;
   width: calc(100% + 40px);
   height: 60px;
   z-index: -1; /* Reverted back to -1 to place waves behind text */
