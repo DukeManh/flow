@@ -546,7 +546,8 @@ async function reloadProjectData() {
   }
   
   // Load check-ins
-  loadProjectCheckIns();
+  const { loadProjectCheckIns } = await import('./projects.js');
+  await loadProjectCheckIns();
 }
 
 // Register global function for project switching

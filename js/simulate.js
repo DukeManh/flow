@@ -274,13 +274,156 @@ function generateSimulatedHistory(days = 30) {
   return history;
 }
 
+// Generate streak data for projects based on session history
+function generateProjectStreaks(sessionHistory) {
+  const streakData = {};
+  const projectDays = {};
+  
+  // Initialize project days tracking
+  simulatedProjects.forEach(project => {
+    projectDays[project.id] = {};
+  });
+  
+  // Process session history to determine which days each project had activity
+  sessionHistory.forEach(session => {
+    const projectId = session.projectId;
+    const sessionDate = new Date(session.start);
+    const dateStr = sessionDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    // Mark this day as having activity for this project
+    if (projectDays[projectId]) {
+      projectDays[projectId][dateStr] = true;
+    }
+  });
+  
+  // Calculate streaks for each project based on the activity days
+  simulatedProjects.forEach(project => {
+    const projectId = project.id;
+    const days = projectDays[projectId];
+    const calendarData = {};
+    
+    // Get sorted dates to calculate streaks properly
+    const sortedDates = Object.keys(days).sort();
+    
+    // Fill in the last 30 days for the calendar
+    const today = new Date();
+    for (let i = 0; i < 30; i++) {
+      const date = new Date();
+      date.setDate(today.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      calendarData[dateStr] = days[dateStr] || false;
+    }
+    
+    // Calculate current streak (consecutive days from today/yesterday backward)
+    let currentStreak = 0;
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(today.getDate() - 1);
+    const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
+    
+    // Check if streak includes today or yesterday (to allow for not having logged today yet)
+    const hasToday = days[todayStr];
+    const hasYesterday = days[yesterdayStr];
+    
+    // Start counting from today or yesterday, whichever makes sense
+    let currentDay = hasToday ? todayStr : (hasYesterday ? yesterdayStr : null);
+    
+    if (currentDay) {
+      currentStreak = 1; // Start with 1 for today/yesterday
+      
+      // Count backwards from the starting day
+      let checkDate = new Date(currentDay);
+      checkDate.setDate(checkDate.getDate() - 1);
+      
+      while (true) {
+        const checkDateStr = checkDate.toISOString().split('T')[0];
+        if (days[checkDateStr]) {
+          currentStreak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+    }
+    
+    // Calculate highest streak
+    let highestStreak = 0;
+    let currentCount = 0;
+    let streakStart = null;
+    let streakEnd = null;
+    let highestStreakStart = null;
+    let highestStreakEnd = null;
+    
+    for (let i = 0; i < sortedDates.length; i++) {
+      const currentDate = sortedDates[i];
+      
+      if (i === 0) {
+        // Start first streak
+        currentCount = 1;
+        streakStart = currentDate;
+        streakEnd = currentDate;
+      } else {
+        // Check if this date is consecutive with previous
+        const prevDate = new Date(sortedDates[i-1]);
+        const currDate = new Date(currentDate);
+        prevDate.setDate(prevDate.getDate() + 1);
+        
+        if (prevDate.toISOString().split('T')[0] === currDate.toISOString().split('T')[0]) {
+          // Consecutive day, extend streak
+          currentCount++;
+          streakEnd = currentDate;
+        } else {
+          // Streak broken, check if it was the highest
+          if (currentCount > highestStreak) {
+            highestStreak = currentCount;
+            highestStreakStart = streakStart;
+            highestStreakEnd = streakEnd;
+          }
+          
+          // Start new streak
+          currentCount = 1;
+          streakStart = currentDate;
+          streakEnd = currentDate;
+        }
+      }
+    }
+    
+    // Check if the final streak is the highest
+    if (currentCount > highestStreak) {
+      highestStreak = currentCount;
+      highestStreakStart = streakStart;
+      highestStreakEnd = streakEnd;
+    }
+    
+    // Count total days with check-ins
+    const totalDaysWithCheckin = Object.keys(days).length;
+    
+    // Store streak data for this project
+    streakData[projectId] = {
+      currentStreak,
+      highestStreak,
+      highestStreakStart: highestStreakStart || null,
+      highestStreakEnd: highestStreakEnd || null,
+      totalDaysWithCheckin,
+      calendar: calendarData
+    };
+  });
+  
+  return streakData;
+}
+
 // Generate and store simulated history data
 const simulatedData = generateSimulatedHistory(70);
 localStorage.setItem('sessionHistory', JSON.stringify(simulatedData));
 
+// Generate streak data based on the session history
+const streakData = generateProjectStreaks(simulatedData);
+localStorage.setItem('projectStreaks', JSON.stringify(streakData));
+
 console.log('Simulated data has been loaded!');
 console.log('Projects:', simulatedProjects.length);
 console.log('History entries:', simulatedData.length);
+console.log('Streak data generated for', Object.keys(streakData).length, 'projects');
 
 // Log breakdown of sessions by project
 const projectCounts = {};

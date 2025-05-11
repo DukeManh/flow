@@ -903,6 +903,22 @@ export async function getProjectCheckIns() {
   return currentProject?.checkIns || [];
 }
 
+// Load project check-ins
+export async function loadProjectCheckIns() {
+  try {
+    const currentProject = await getCurrentProject();
+    if (!currentProject) return;
+    
+    // Update streak record display
+    updateStreakRecord();
+    
+    return currentProject?.checkIns || [];
+  } catch (error) {
+    console.error('Error loading project check-ins:', error);
+    return [];
+  }
+}
+
 // Utility function to calculate today's focus time for a project
 function calculateTodayFocusTime(history, projectId) {
   const now = new Date();
@@ -1035,12 +1051,40 @@ export async function updateStreakRecord() {
     const currentProject = await getCurrentProject();
     if (!currentProject) return;
     
-    // Find the highest streak ever achieved
-    let highestStreak = currentProject.streak || 0;
+    // Check for new streak data format (with calendar)
+    const streakDataKey = currentProject.id;
+    let currentStreak = 0;
+    let highestStreak = 0;
     
-    if (currentProject.checkIns && currentProject.checkIns.length > 0) {
-      const maxStreakInCheckIns = Math.max(...currentProject.checkIns.map(c => c.streak || 0));
-      highestStreak = Math.max(highestStreak, maxStreakInCheckIns);
+    // Get the streak data from localStorage directly if it exists
+    try {
+      const streakData = await storageService.getJSON('streakData', {});
+      
+      if (streakData && streakData[streakDataKey]) {
+        // Use the streak data from the new format
+        currentStreak = streakData[streakDataKey].currentStreak || 0;
+        highestStreak = streakData[streakDataKey].highestStreak || 0;
+      } else {
+        // Fall back to the old format
+        // Find the highest streak ever achieved in the old format
+        highestStreak = currentProject.streak || 0;
+        currentStreak = currentProject.streak || 0;
+        
+        if (currentProject.checkIns && currentProject.checkIns.length > 0) {
+          const maxStreakInCheckIns = Math.max(...currentProject.checkIns.map(c => c.streak || 0));
+          highestStreak = Math.max(highestStreak, maxStreakInCheckIns);
+        }
+      }
+    } catch (error) {
+      console.error('Error getting streak data:', error);
+      // Fall back to the old format
+      highestStreak = currentProject.streak || 0;
+      currentStreak = currentProject.streak || 0;
+      
+      if (currentProject.checkIns && currentProject.checkIns.length > 0) {
+        const maxStreakInCheckIns = Math.max(...currentProject.checkIns.map(c => c.streak || 0));
+        highestStreak = Math.max(highestStreak, maxStreakInCheckIns);
+      }
     }
     
     // Get check-in history for the past 2 weeks to display in calendar
@@ -1119,18 +1163,18 @@ export async function updateStreakRecord() {
     
     // Create streak message based on current streak
     let streakMessage = '';
-    if (currentProject.streak === 0) {
+    if (currentStreak === 0) {
       streakMessage = `Start your streak today by meeting your daily focus target!`;
-    } else if (currentProject.streak === 1) {
+    } else if (currentStreak === 1) {
       streakMessage = `Great start! You've met your focus target for 1 day.`;
-    } else if (currentProject.streak <= 3) {
-      streakMessage = `You're building momentum with a ${currentProject.streak}-day streak!`;
-    } else if (currentProject.streak <= 7) {
+    } else if (currentStreak <= 3) {
+      streakMessage = `You're building momentum with a ${currentStreak}-day streak!`;
+    } else if (currentStreak <= 7) {
       streakMessage = `Impressive! You've maintained your streak for a week!`;
-    } else if (currentProject.streak <= 20) {
-      streakMessage = `Amazing discipline! Keep your ${currentProject.streak}-day streak going!`;
+    } else if (currentStreak <= 20) {
+      streakMessage = `Amazing discipline! Keep your ${currentStreak}-day streak going!`;
     } else {
-      streakMessage = `Extraordinary focus! Your ${currentProject.streak}-day streak shows incredible dedication!`;
+      streakMessage = `Extraordinary focus! Your ${currentStreak}-day streak shows incredible dedication!`;
     }
     
     // Format streak record display with enhanced UI
@@ -1138,7 +1182,7 @@ export async function updateStreakRecord() {
       <div class="streak-record-container">
         <div class="current-streak">
           <h3>Current Streak</h3>
-          <div class="streak-value">${currentProject.streak || 0}<span class="streak-flame">🔥</span></div>
+          <div class="streak-value">${currentStreak}<span class="streak-flame">🔥</span></div>
           <div class="streak-label">consecutive days</div>
           ${currentProject.lastCheckIn ? 
             `<div class="streak-date">Last: ${new Date(currentProject.lastCheckIn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>` : ''}
