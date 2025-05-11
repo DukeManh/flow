@@ -1,6 +1,13 @@
 // Service Worker for Flow PWA
-const CACHE_NAME = 'flow-cache-v1.4'; // Incremented version to force update
-const SW_VERSION = '2025-05-10-1'; // Version identifier with date
+const CACHE_NAME = 'flow-cache-v1.5'; // Incremented version to force update
+const SW_VERSION = '2025-05-10-2'; // Version identifier with date
+const DEV_HOSTNAMES = ['localhost', 'dev.local']; // Development hostnames to bypass caching
+
+// Check if we're on a development environment
+function isDevEnvironment() {
+  return DEV_HOSTNAMES.includes(self.location.hostname);
+}
+
 const urlsToCache = [
   './',
   './index.html',
@@ -190,6 +197,24 @@ self.addEventListener('fetch', event => {
       url.protocol === 'moz-extension:' || 
       url.protocol === 'about:') {
     event.respondWith(fetch(event.request));
+    return;
+  }
+  
+  // In development environments (localhost, dev.local), always go to network first
+  // This ensures you're always seeing the latest changes during development
+  if (isDevEnvironment()) {
+    console.log(`[SW] Development environment detected - bypassing cache for: ${url.pathname}`);
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          return response;
+        })
+        .catch(error => {
+          console.error('Network fetch failed in dev mode:', error);
+          // If network fetch fails, try cache as fallback
+          return caches.match(event.request);
+        })
+    );
     return;
   }
   
