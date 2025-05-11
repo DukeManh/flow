@@ -3,7 +3,8 @@
 /* Session history styling */
 #historyList {
   list-style: none;
-  max-height: 400px; /* Increased from 300px to 400px to make it taller */
+  max-height: 400px;
+  /* Increased from 300px to 400px to make it taller */
   overflow-y: auto;
 }
 
@@ -59,7 +60,8 @@
 /* Chart styles */
 #chartContainer {
   width: 100%;
-  height: 250px; /* Increased height from 200px to 250px */
+  height: 250px;
+  /* Increased height from 200px to 250px */
   margin-top: 12px;
   position: relative;
 }
@@ -81,21 +83,28 @@
   width: 100%;
   height: 100%;
   opacity: 0;
-  cursor: pointer; /* Add pointer cursor to indicate clickable */
-  transition: all 0.3s ease; /* Add transition for hover and highlight effects */
-  border: 2px solid transparent; /* Prepare for highlight border */
+  cursor: pointer;
+  /* Add pointer cursor to indicate clickable */
+  transition: all 0.3s ease;
+  /* Add transition for hover and highlight effects */
+  border: 2px solid transparent;
+  /* Prepare for highlight border */
 }
 
 /* Bar container hover effect - subtle brightening instead of scaling */
 .bar-container:hover {
-  filter: brightness(1.05); /* Slightly brighter on hover instead of scaling */
+  filter: brightness(1.05);
+  /* Slightly brighter on hover instead of scaling */
 }
 
 /* Highlighted bar (clicked) state - using border instead of transform */
 .bar-container-highlighted {
-  border: 2px solid var(--accent-bright, #4d9fff); /* Bright border for highlighted bars */
-  z-index: 10; /* Keep highlighted bars on top */
-  filter: brightness(1.05); /* Make highlighted bars slightly brighter */
+  border: 2px solid var(--accent-bright, #4d9fff);
+  /* Bright border for highlighted bars */
+  z-index: 10;
+  /* Keep highlighted bars on top */
+  filter: brightness(1.05);
+  /* Make highlighted bars slightly brighter */
   /* Remove the transform scale that was making it taller */
 }
 
@@ -108,7 +117,8 @@
 /* Animated state - trigger the animation */
 .bar-container-animated {
   animation: bar-grow 2.5s cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
-  animation-delay: calc(0.1s * var(--bar-index, 0)); /* Sequential animation based on index */
+  animation-delay: calc(0.1s * var(--bar-index, 0));
+  /* Sequential animation based on index */
 }
 
 /* New chart bar segment for stacked bars */
@@ -117,26 +127,31 @@
   bottom: 0;
   /* Add a subtle border at the top of each segment */
   border-top: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.2s ease-out; /* Smooth transition for hover effects */
+  transition: all 0.2s ease-out;
+  /* Smooth transition for hover effects */
 }
 
 /* Segment hover effect */
 .chart-bar-segment:hover {
-  filter: brightness(1.15); /* Brighten segment on hover */
+  filter: brightness(1.15);
+  /* Brighten segment on hover */
 }
 
 /* When bar is highlighted, dim non-hovered segments slightly */
 .bar-container-highlighted .chart-bar-segment:not(:hover) {
-  filter: brightness(1); /* Reset brightness for non-hovered segments */
+  filter: brightness(1);
+  /* Reset brightness for non-hovered segments */
 }
 
 /* Project highlighting styles */
 .chart-bar-segment.project-highlighted {
   filter: brightness(1.2) !important;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-  z-index: 20; /* Ensure highlighted segments stay on top */
+  z-index: 20;
+  /* Ensure highlighted segments stay on top */
   border: 1px solid rgba(255, 255, 255, 0.4);
-  transform: scale(1.03); /* Subtle scaling for emphasis */
+  transform: scale(1.03);
+  /* Subtle scaling for emphasis */
   transition: all 0.2s ease-out;
 }
 
@@ -151,9 +166,11 @@ body.chart-highlight-active {
     transform: scaleY(0);
     opacity: 0;
   }
+
   20% {
     opacity: 1;
   }
+
   100% {
     transform: scaleY(1);
     opacity: 1;
@@ -209,7 +226,7 @@ body.chart-highlight-active {
   display: flex;
   flex-direction: column;
   align-items: start;
-  gap: 4px;
+  gap: 1em;
 }
 
 #chartContainer::before {
@@ -352,9 +369,12 @@ body.chart-highlight-active {
   pointer-events: none;
   z-index: 1000;
   max-width: 200px;
-  white-space: normal; /* Allow text to wrap */
-  word-wrap: break-word; /* Break long words if necessary */
-  transition: opacity 0.2s ease, transform 0.2s ease; /* Smooth tooltip animation */
+  white-space: normal;
+  /* Allow text to wrap */
+  word-wrap: break-word;
+  /* Break long words if necessary */
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  /* Smooth tooltip animation */
   transform-origin: top left;
 }
 
@@ -416,9 +436,11 @@ body.chart-highlight-active {
     opacity: 0;
     transform: scale(0.9);
   }
+
   70% {
     transform: scale(1.05);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
@@ -453,7 +475,8 @@ body.chart-highlight-active {
 
 /* Monthly view specific styles */
 .monthly-label {
-  font-size: 0.65rem; /* Smaller font size for monthly labels */
+  font-size: 0.65rem;
+  /* Smaller font size for monthly labels */
   white-space: nowrap;
 }
 
@@ -494,10 +517,12 @@ body.chart-highlight-active {
 }
 
 .nav-btn {
-  padding: 3px 8px;
+  padding: 3px 1em;
   border: 1px solid var(--border);
   background: var(--bg-alt);
-  justify-contPeriodBtn {
+}
+
+justify-contPeriodBtn {
   min-width: 60px;
 }
 
@@ -530,27 +555,38 @@ body.chart-highlight-active {
   color: white;
 }
 
-/* For smaller screens */
-@media (max-width: 600px 20px 0;
-}
-
-.view-btn:last-child {
+@media (max-width: 600px) {
+  .view-btn:last-child {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .view-controls {
-    width: 100%;
-    justify-content: space-between;
+    display: flex;
+    justify-items: end;
+    align-items: end;
+    flex-direction: column-reverse;
+    gap: 2px;
   }
 
   .chart-header {
-    flex-direction: column;
+    /* flex-direction: column; */
     align-items: flex-start;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .view-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    flex-direction: column-reverse;
+    gap: 4px;
   }
 }
 
 /* Define a brighter accent color if it doesn't exist in theme */
 :root {
-  --accent-bright: #4d9fff; /* Brighter version of the default accent color */
+  --accent-bright: #4d9fff;
+  /* Brighter version of the default accent color */
 }

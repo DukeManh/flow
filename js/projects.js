@@ -1092,19 +1092,22 @@ export async function updateStreakRecord() {
       ? Math.ceil(highestStreak / 5) * 5 
       : 5;
     
-    // Create last week's calendar
+    // Create last week's calendar with day labels
     let calendarHTML = '';
+    const dayAbbreviations = ['M', 'T', 'W', 'T', 'F', 'S', 'S']; // Mon-Sun abbreviations
+    
     for (let i = 6; i >= 0; i--) {
       const calDate = new Date();
       calDate.setDate(calDate.getDate() - i);
       const dateString = calDate.toDateString();
       const hasCheckIn = !!recentCheckIns[dateString];
       const targetMet = hasCheckIn && recentCheckIns[dateString].targetMet;
+      const dayIndex = (calDate.getDay() + 6) % 7; // Convert to Mon-Sun (0-6)
       
       calendarHTML += `<div class="calendar-day ${targetMet ? 'target-met' : ''}" 
         title="${calDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}${
           targetMet ? ' - Target met' : (hasCheckIn ? ' - Target not met' : ' - No activity')
-        }"></div>`;
+        }">${dayAbbreviations[dayIndex]}</div>`;
     }
     
     // Get today's focus progress
