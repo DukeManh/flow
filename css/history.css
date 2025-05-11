@@ -22,12 +22,20 @@
   font-weight: 500;
 }
 
+.history-header span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
 .history-duration {
   background: var(--accent);
   color: white;
   border-radius: 12px;
   padding: 2px 8px;
   font-size: 0.8rem;
+  flex-shrink: 0;
 }
 
 .history-details {
@@ -43,6 +51,9 @@
 
 .history-value {
   color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Chart styles */
