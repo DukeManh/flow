@@ -1,0 +1,37 @@
+{
+  "name": "flow-state",
+  "version": "1.0.0",
+  "description": "Flow State productivity timer application",
+  "main": "index.html",
+  "scripts": {
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:e2e": "jest tests/e2e",
+    "test:watch": "jest --watch",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "serve": "http-server -p 5500 -s --log-ip false",
+    "serve:live": "live-server --port=5500",
+    "cy:run": "cypress run",
+    "cy:open": "cypress open",
+    "test:e2e:run": "start-server-and-test serve 5500 cy:run",
+    "test:e2e:open": "start-server-and-test serve 5500 cy:open",
+    "test:all": "npm run test:unit && npm run test:e2e:run",
+    "test:all:open": "npm run test:unit && npm run test:e2e:open"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@babel/preset-env": "^7.20.0",
+    "@testing-library/dom": "^9.3.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "babel-jest": "^29.5.0",
+    "cypress": "^13.0.0",
+    "http-server": "^14.1.1",
+    "jest": "^29.5.0",
+    "jest-environment-jsdom": "^29.5.0",
+    "live-server": "^1.2.2",
+    "start-server-and-test": "^2.0.0"
+  }
+}

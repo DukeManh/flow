@@ -116,7 +116,7 @@ function updateCircularProgress(state) {
 }
 
 // Setup YouTube player controls
-function setupYouTubeControls() {
+async function setupYouTubeControls() {
   // Toggle player size (normal/collapsed)
   togglePlayerBtn.addEventListener('click', () => {
     ytPlayerContainer.classList.toggle('collapsed');
@@ -124,7 +124,7 @@ function setupYouTubeControls() {
     togglePlayerBtn.innerHTML = ytPlayerContainer.classList.contains('collapsed') 
       ? '<i class="fas fa-compress-alt"></i>' 
       : '<i class="fas fa-expand-arrows-alt"></i>';
-    storageService.setItem('ytPlayerCollapsed', ytPlayerContainer.classList.contains('collapsed'));
+    storageService.setItem('youtubePlayerCollapsed', ytPlayerContainer.classList.contains('collapsed'));
   });
   
   // Mute/unmute player
@@ -195,9 +195,8 @@ function setupYouTubeControls() {
     isCollapsed = true;
   } else {
     // On desktop, use the saved state or default to expanded
-    storageService.getItem('ytPlayerCollapsed').then(collapsed => {
-      isCollapsed = collapsed === 'true';
-    });
+    const savedCollapsed = await storageService.getItem('youtubePlayerCollapsed');
+    isCollapsed = savedCollapsed === 'true';
   }
   
   if (isCollapsed) {
@@ -209,14 +208,13 @@ function setupYouTubeControls() {
   }
   
   // Save the initial state
-  storageService.setItem('ytPlayerCollapsed', isCollapsed);
+  storageService.setItem('youtubePlayerCollapsed', isCollapsed);
   
-  storageService.getItem('ytPlayerMuted').then(muted => {
-    isMuted = muted === 'true';
-    if (isMuted) {
-      mutePlayerBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-    }
-  });
+  const muted = await storageService.getItem('ytPlayerMuted');
+  isMuted = muted === 'true';
+  if (isMuted) {
+    mutePlayerBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+  }
 }
 
 // Continue music playback from the main page

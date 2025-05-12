@@ -1401,3 +1401,60 @@ async function createChartLegend(container, projectNames, projectColors) {
   const chartSection = document.querySelector('#insightsCard') || container.parentNode;
   chartSection.appendChild(legend);
 }
+
+// Get history stats for active projects
+async function getProjectSessionStats(date = new Date()) {
+  try {
+    const sessions = await getSessionHistoryFromStorage();
+    const projects = await storageService.getJSON('flowProjects', []);
+    const activeProjects = projects || []; // Add fallback if projects is null
+    
+    // Create a Set of active project IDs for faster lookup
+    const activeProjectIds = new Set(activeProjects.map(p => p.id));
+    
+    // Group sessions by project
+    const projectSessions = {};
+    
+    // Initialize projectSessions with all active projects
+    activeProjects.forEach(project => {
+      projectSessions[project.id] = {
+        id: project.id,
+        name: project.name,
+        color: project.color,
+        icon: project.icon,
+        sessions: [],
+        totalTime: 0
+      };
+    });
+    
+    // Add sessions to their respective projects
+    sessions.forEach(session => {
+      // Skip if session has no project ID or project is no longer active
+      if (!session.projectId || !activeProjectIds.has(session.projectId)) return;
+      
+      // Make sure the project entry exists (in case we have a session for a project that wasn't in activeProjects)
+      if (!projectSessions[session.projectId]) {
+        projectSessions[session.projectId] = {
+          id: session.projectId,
+          name: session.projectName || 'Unknown Project',
+          color: '#888888',
+          icon: 'question',
+          sessions: [],
+          totalTime: 0
+        };
+      }
+      
+      projectSessions[session.projectId].sessions.push(session);
+      projectSessions[session.projectId].totalTime += session.duration;
+    });
+    
+    // Convert to array and sort by most time spent
+    return Object.values(projectSessions)
+      .filter(p => p.sessions.length > 0)
+      .sort((a, b) => b.totalTime - a.totalTime);
+      
+  } catch (error) {
+    console.error('Error getting project session stats:', error);
+    return [];
+  }
+}
