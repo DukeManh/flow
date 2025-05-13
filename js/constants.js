@@ -13,17 +13,19 @@ export const BREAK = TIMER_PRESETS.default.break; // 17 minutes in seconds
 
 // YouTube Video IDs
 export const REBOOT_VIDEO_ID = 'wL8DVHuWI7Y';
-export const BEATS_VIDEO_ID = '1_G60OdEzXs';
+export const BINAURAL_40HZ_VIDEO_ID = '1_G60OdEzXs';
+export const BINAURAL_60HZ_VIDEO_ID = 'DHGPl4vJXU4';
 export const LOFI_VIDEO_ID = 'sF80I-TQiW0';
 export const WHITE_NOISE_VIDEO_ID = 'nMfPqeZjc2c';
 export const TICKING_VIDEO_ID = 'xyCQFLOSWGc';
 
 // Music labels for readable display
 export const musicLabels = {
-  [BEATS_VIDEO_ID]: 'Binaural Beats',
+  [BINAURAL_40HZ_VIDEO_ID]: '40Hz Binaural',
+  [BINAURAL_60HZ_VIDEO_ID]: '60Hz Binaural',
   [LOFI_VIDEO_ID]: 'Chill Study Beats',
   [WHITE_NOISE_VIDEO_ID]: 'White Noise',
-  [TICKING_VIDEO_ID]: 'Ticking',
+  [TICKING_VIDEO_ID]: 'Clock Ticking',
   [REBOOT_VIDEO_ID]: 'Memory Reboot',
 };
 

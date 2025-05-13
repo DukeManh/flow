@@ -2,7 +2,8 @@
 import { setCurrentVideo } from './history.js';
 import { 
   REBOOT_VIDEO_ID,
-  BEATS_VIDEO_ID, 
+  BINAURAL_40HZ_VIDEO_ID, 
+  BINAURAL_60HZ_VIDEO_ID, 
   LOFI_VIDEO_ID,
   WHITE_NOISE_VIDEO_ID,
   TICKING_VIDEO_ID,
@@ -12,7 +13,7 @@ import storageService from './storage.js';
 
 // Music elements
 let ytPlayer, customVidInput;
-let vBtn, bBtn, lBtn, wBtn, tBtn, loadBtn;
+let vBtn, b4Btn, b6Btn, lBtn, wBtn, tBtn, loadBtn;
 let currentVideoID;
 
 // Storage keys
@@ -46,7 +47,8 @@ export async function initMusic() {
   ytPlayer = document.getElementById('ytPlayer');
   customVidInput = document.getElementById('customVidInput');
   vBtn = document.getElementById('vBtn');
-  bBtn = document.getElementById('bBtn');
+  b4Btn = document.getElementById('b4Btn');
+  b6Btn = document.getElementById('b6Btn');
   lBtn = document.getElementById('lBtn');
   wBtn = document.getElementById('wBtn');
   tBtn = document.getElementById('tBtn');
@@ -58,7 +60,8 @@ export async function initMusic() {
   
   // Set up event listeners
   vBtn.addEventListener('click', () => changeVideo(REBOOT_VIDEO_ID));
-  bBtn.addEventListener('click', () => changeVideo(BEATS_VIDEO_ID));
+  b4Btn.addEventListener('click', () => changeVideo(BINAURAL_40HZ_VIDEO_ID));
+  b6Btn.addEventListener('click', () => changeVideo(BINAURAL_60HZ_VIDEO_ID));
   lBtn.addEventListener('click', () => changeVideo(LOFI_VIDEO_ID));
   wBtn.addEventListener('click', () => changeVideo(WHITE_NOISE_VIDEO_ID));
   tBtn.addEventListener('click', () => changeVideo(TICKING_VIDEO_ID));
@@ -88,10 +91,10 @@ export function getCurrentVideoID() {
   return currentVideoID;
 }
 
-// Update button labels from constants
 function updateButtonLabels() {
   const buttonMap = {
-    [BEATS_VIDEO_ID]: bBtn,
+    [BINAURAL_40HZ_VIDEO_ID]: b4Btn,
+    [BINAURAL_60HZ_VIDEO_ID]: b6Btn,
     [LOFI_VIDEO_ID]: lBtn,
     [WHITE_NOISE_VIDEO_ID]: wBtn,
     [TICKING_VIDEO_ID]: tBtn,
