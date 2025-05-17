@@ -18,6 +18,9 @@
   font-weight: 500;
   /* Replace hard-coded shadow with theme-aware shadow */
   box-shadow: 0 1px 3px var(--shadow);
+  white-space: pre-wrap; /* Preserve line breaks */
+  word-wrap: break-word; /* Break long words to prevent overflow */
+  overflow-wrap: break-word; /* Modern alternative to word-wrap */
 }
 
 #goalInput {

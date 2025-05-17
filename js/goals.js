@@ -30,14 +30,34 @@ export async function loadGoal() {
 
 // Render goal editor UI
 function renderGoalEditor(initialValue = '') {
-  container.innerHTML = '<textarea id="goalInput" placeholder="Enter your focus…"></textarea><button id="saveGoalBtn">Save</button>';
+  container.innerHTML = '<textarea id="goalInput" rows=4" placeholder="Enter your focus…"></textarea><button id="saveGoalBtn">Save</button>';
   document.getElementById('goalInput').value = initialValue;
   document.getElementById('saveGoalBtn').addEventListener('click', saveAndDisplay);
+  
+  // Add keyboard shortcut (Ctrl+Enter or Cmd+Enter) to save
+  const textarea = document.getElementById('goalInput');
+  textarea.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      saveAndDisplay();
+    }
+  });
+  
+  // Focus and place cursor at the end
+  textarea.focus();
+  textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
 }
 
 // Render goal display UI
 function renderGoalDisplay(goal) {
-  container.innerHTML = `<p id="flowGoal">${goal}</p><button id="editGoalBtn">Edit</button>`;
+  // Safely escape the goal text while preserving line breaks
+  const safeGoal = goal
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+    
+  container.innerHTML = `<p id="flowGoal">${safeGoal}</p><button id="editGoalBtn">Edit</button>`;
   document.getElementById('editGoalBtn').addEventListener('click', () => renderGoalEditor(goal));
 }
 
