@@ -33,6 +33,7 @@
   overflow-y: auto;
   flex: 1;
   min-height: 100px; /* Ensure a minimum height even when empty */
+  max-height: 500px; /* Ensure a minimum height even when empty */
   margin: 0;
   padding: 0;
 }

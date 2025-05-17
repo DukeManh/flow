@@ -396,8 +396,6 @@ export class TimerCore {
   // End session
   endSession() {
     if (this.state.onBreak) {
-      // Skip break
-      if (!confirm('Skip the rest of your break?')) return;
       clearInterval(this.state.interval);
       this.endBreak();
     } else {
