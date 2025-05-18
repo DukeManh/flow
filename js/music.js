@@ -10,6 +10,7 @@ import {
   musicLabels
 } from './constants.js';
 import storageService from './storage.js';
+import { initAdBlocker } from './adBlocker.js'; // Import our new ad blocker
 
 // Music elements
 let ytPlayer, customVidInput;
@@ -68,7 +69,10 @@ export async function initMusic() {
   loadBtn.addEventListener('click', () => changeVideo(customVidInput.value.trim()));
   
   // Initialize YouTube player with the remembered video
-  ytPlayer.src = `https://www.youtube.com/embed/${currentVideoID}?autoplay=0&loop=1&playlist=${currentVideoID}`;
+  ytPlayer.src = `https://www.youtube.com/embed/${currentVideoID}?autoplay=0&loop=1&playlist=${currentVideoID}&rel=0&controls=1&iv_load_policy=3&modestbranding=1&enablejsapi=1&origin=${window.location.origin}`;
+  
+  // Initialize the ad blocker for the YouTube player
+  initAdBlocker(ytPlayer);
   
   // Update button labels
   updateButtonLabels();
@@ -80,7 +84,12 @@ export async function initMusic() {
 async function changeVideo(id) { 
   if (!id) return; 
   currentVideoID = id; 
-  ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}`;
+  
+  // Updated YouTube embed URL with ad-blocking parameters
+  ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}&rel=0&controls=1&iv_load_policy=3&modestbranding=1&enablejsapi=1&origin=${window.location.origin}`;
+  
+  // Re-initialize the ad blocker for the new video
+  setTimeout(() => initAdBlocker(ytPlayer), 500);
   
   await saveLastVideoIDToStorage(id);
   setCurrentVideo(id);

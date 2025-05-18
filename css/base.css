@@ -165,9 +165,11 @@ body.distraction #insightsCard {
 }
 
 .settings-description {
-  color: var(--muted);
-  margin-bottom: 15px;
-  font-size: 0.9em;
+  color: var(--text-secondary, #999);
+  font-size: 0.85em;
+  margin-top: 4px;
+  margin-left: 24px; /* Align with text after checkbox */
+  opacity: 0.85;
 }
 
 /* Add or update these styles for the modal */
@@ -319,4 +321,46 @@ body.distraction #insightsCard {
 
 #insightsCard {
   padding-left: 24px !important;
+}
+
+/* Checkbox control layout for settings */
+.checkbox-control {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.checkbox-control input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.checkbox-control label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.setting-description {
+  margin-top: 6px;
+  margin-left: 24px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+/* Settings options with checkbox */
+.settings-option {
+  margin: 12px 0;
+}
+
+.settings-option input[type="checkbox"] {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.settings-option label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 500;
 }
