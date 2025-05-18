@@ -192,7 +192,8 @@ export class TimerCore {
       }
       
       if (this.elements.endBtn) {
-        // this.elements.endBtn.disabled = !running;
+        // Always enable the end button during break
+        this.elements.endBtn.disabled = false;
         this.elements.endBtn.textContent = "Skip Break";
       }
     } else {
@@ -207,12 +208,14 @@ export class TimerCore {
       }
       
       if (this.elements.endBtn) {
-        this.elements.endBtn.disabled = !running;
+        // Always enable the end button regardless of running state
+        this.elements.endBtn.disabled = false;
         this.elements.endBtn.textContent = "End";
       }
       
       if (this.elements.resetBtn) {
-        this.elements.resetBtn.disabled = !running;
+        // Always enable the reset button regardless of running state
+        this.elements.resetBtn.disabled = false;
         this.elements.resetBtn.style.display = '';
       }
     }
