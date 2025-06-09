@@ -30,7 +30,7 @@ export async function loadGoal() {
 
 // Render goal editor UI
 function renderGoalEditor(initialValue = '') {
-  container.innerHTML = '<textarea id="goalInput" rows=4" placeholder="Enter your focus…"></textarea><button id="saveGoalBtn">Save</button>';
+  container.innerHTML = '<textarea id="goalInput" rows="4" placeholder="Enter your focus…"></textarea><button id="saveGoalBtn">Save</button>';
   document.getElementById('goalInput').value = initialValue;
   document.getElementById('saveGoalBtn').addEventListener('click', saveAndDisplay);
   
