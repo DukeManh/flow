@@ -1,7 +1,7 @@
 /**
  * Initial theme loader for Flow app
  * This script loads the user's preferred theme immediately before the page renders
- * to avoid Flash of inAccurate coloR Theme (FART)
+ * to avoid Flash of inaccurate color theme (FART)
  */
 (function() {
   try {
