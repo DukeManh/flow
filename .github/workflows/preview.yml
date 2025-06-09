@@ -1,0 +1,29 @@
+name: Preview Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy preview to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: '.'
+          target-folder: pr-${{ github.event.pull_request.number }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          clean: false
+      - name: Comment preview URL
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Preview URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
