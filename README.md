@@ -16,3 +16,5 @@ https://${{ github.repository_owner }}.github.io/${{ github.event.repository.nam
 ```
 
 Visit the link from the pull request comments to view a live preview of the changes.
+
+The preview workflow runs on `pull_request_target` so that deployments work for contributions from forks.
