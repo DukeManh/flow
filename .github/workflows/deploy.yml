@@ -19,3 +19,5 @@ jobs:
           folder: '.'
           token: ${{ secrets.GITHUB_TOKEN }}
           clean: true
+          clean-exclude: |
+            preview-pr
