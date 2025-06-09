@@ -4,13 +4,10 @@
 
 import storageService from './storage.js';
 
-const PIPED_BASE = 'https://piped.video';
-
 let adBlockerEnabled = true;
 let adSkipAttempts = 0;
 const MAX_SKIP_ATTEMPTS = 5;
 let listenerRegistered = false;
-let pipedAvailable = true;
 
 /**
  * Add parameters to reduce ads and enable the YouTube JS API.
@@ -20,6 +17,9 @@ let pipedAvailable = true;
 function enhanceEmbedUrl(src) {
   try {
     const url = new URL(src);
+    if (url.hostname.includes('youtube.com')) {
+      url.hostname = url.hostname.replace('youtube.com', 'youtube-nocookie.com');
+    }
     if (url.searchParams.get('ad_block') === 'true') return src;
     url.searchParams.set('rel', '0');
     url.searchParams.set('controls', '1');
@@ -27,6 +27,8 @@ function enhanceEmbedUrl(src) {
     url.searchParams.set('modestbranding', '1');
     url.searchParams.set('enablejsapi', '1');
     url.searchParams.set('origin', window.location.origin);
+    url.searchParams.set('playsinline', '1');
+    url.searchParams.set('fs', '1');
     url.searchParams.set('ad_block', 'true');
     return url.toString();
   } catch {
@@ -150,16 +152,6 @@ function getAdSkipperCode() {
   `;
 }
 
-/** Apply ad-blocking to a given iframe. */
-async function checkPipedAvailability() {
-  try {
-    const resp = await fetch(`${PIPED_BASE}/favicon.ico`, { method: 'HEAD', mode: 'no-cors' });
-    pipedAvailable = resp.ok || resp.type === 'opaque';
-  } catch {
-    pipedAvailable = false;
-  }
-}
-
 function extractVideoId(src) {
   try {
     const url = new URL(src);
@@ -173,32 +165,12 @@ function extractVideoId(src) {
   }
 }
 
-function buildPipedUrl(id) {
-  return `${PIPED_BASE}/embed/${id}?player_style=youtube`;
-}
-
 async function applyAdBlocker(iframe) {
   if (!iframe || iframe.dataset.originalSrc) return;
-  await checkPipedAvailability();
   iframe.dataset.originalSrc = iframe.src;
   iframe.dataset.adblockerManaged = 'true';
-  const videoId = extractVideoId(iframe.src);
-  if (pipedAvailable && videoId) {
-    iframe.src = buildPipedUrl(videoId);
-    iframe.dataset.piped = 'true';
-    iframe.addEventListener(
-      'error',
-      () => {
-        pipedAvailable = false;
-        iframe.src = enhanceEmbedUrl(iframe.dataset.originalSrc);
-        injectAdSkipper(iframe);
-      },
-      { once: true }
-    );
-  } else {
-    iframe.src = enhanceEmbedUrl(iframe.src);
-    iframe.addEventListener('load', () => injectAdSkipper(iframe), { once: true });
-  }
+  iframe.src = enhanceEmbedUrl(iframe.src);
+  iframe.addEventListener('load', () => injectAdSkipper(iframe), { once: true });
   if (!listenerRegistered) {
     window.addEventListener('message', handleYouTubeMessages);
     listenerRegistered = true;
@@ -246,6 +218,5 @@ export async function isAdBlockerEnabled() {
 }
 
 (async function () {
-  await checkPipedAvailability();
   adBlockerEnabled = await isAdBlockerEnabled();
 })();
