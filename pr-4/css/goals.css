@@ -1,0 +1,59 @@
+/* Goal component styles for the Flow State app */
+
+#goalCard p {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+#flowGoal {
+  font-size: 1.25rem;
+  margin: 15px 0;
+  min-height: 65px;
+  line-height: 1.5;
+  padding: 12px 15px;
+  background-color: var(--bg-alt);
+  border-radius: var(--radius);
+  border-left: none; /* Remove the left border */
+  color: var(--fg);
+  font-weight: 500;
+  /* Replace hard-coded shadow with theme-aware shadow */
+  box-shadow: 0 1px 3px var(--shadow);
+  white-space: pre-wrap; /* Preserve line breaks */
+  word-wrap: break-word; /* Break long words to prevent overflow */
+  overflow-wrap: break-word; /* Modern alternative to word-wrap */
+}
+
+#goalInput {
+  margin-bottom: 12px;
+}
+
+#goalCard textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid var(--muted);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+  resize: vertical;
+}
+
+/* Goal settings section */
+.goal-settings {
+  margin-top: 15px;
+  padding: 15px;
+  background: var(--bg-alt);
+  border-left: 3px solid var(--accent);
+}
+
+.goal-header-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.goal-header-group h3 {
+  font-size: 0.95rem;
+  margin: 0;
+}
