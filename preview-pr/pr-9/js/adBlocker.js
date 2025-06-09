@@ -8,6 +8,20 @@ let adBlockerEnabled = true;
 let adSkipAttempts = 0;
 const MAX_SKIP_ATTEMPTS = 5;
 let listenerRegistered = false;
+let apiLoaded = false;
+
+function loadYouTubeIframeAPI() {
+  if (apiLoaded) return;
+  if (document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+    apiLoaded = true;
+    return;
+  }
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  const first = document.getElementsByTagName('script')[0];
+  if (first && first.parentNode) first.parentNode.insertBefore(tag, first);
+  apiLoaded = true;
+}
 
 /**
  * Add parameters to reduce ads and enable the YouTube JS API.
@@ -65,7 +79,8 @@ function injectAdSkipper(iframe) {
  */
 function handleYouTubeMessages(event) {
   try {
-    if (!event.origin.includes('youtube.com')) return;
+    if (!event.origin.includes('youtube.com') &&
+        !event.origin.includes('youtube-nocookie.com')) return;
     let data;
     if (typeof event.data === 'string') {
       try {
@@ -126,7 +141,10 @@ function getAdSkipperCode() {
     (function() {
       const adObserver = new MutationObserver(() => {
         if (document.querySelector('.ad-showing') ||
+            document.querySelector('.ad-interrupting') ||
+            document.querySelector('.video-ads') ||
             document.querySelector('.ytp-ad-player-overlay') ||
+            document.querySelector('.ytp-ad-preview-container') ||
             document.querySelector('.ytp-ad-text')) {
           window.parent.postMessage(JSON.stringify({ type: 'adStateChange', isAd: true }), '*');
           const skipButton = document.querySelector('.ytp-ad-skip-button') ||
@@ -167,6 +185,7 @@ function extractVideoId(src) {
 
 async function applyAdBlocker(iframe) {
   if (!iframe || iframe.dataset.originalSrc) return;
+  loadYouTubeIframeAPI();
   iframe.dataset.originalSrc = iframe.src;
   iframe.dataset.adblockerManaged = 'true';
   iframe.src = enhanceEmbedUrl(iframe.src);
