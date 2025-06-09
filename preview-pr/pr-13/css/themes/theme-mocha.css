@@ -1,0 +1,12 @@
+/* Mocha theme variables */
+:root {
+  --bg: #272220;
+  --bg-alt: #352f2d;
+  --card-bg: #352f2d;
+  --fg: #e8e1df;
+  --muted: #b3a8a4;
+  --accent: #d28470;
+  --shadow: rgba(210, 132, 112, 0.1);
+  --accent-rgb: 210, 132, 112;
+  --accent-secondary: #d9a292;
+}
