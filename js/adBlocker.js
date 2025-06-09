@@ -4,10 +4,13 @@
 
 import storageService from './storage.js';
 
+const PIPED_BASE = 'https://piped.video';
+
 let adBlockerEnabled = true;
 let adSkipAttempts = 0;
 const MAX_SKIP_ATTEMPTS = 5;
 let listenerRegistered = false;
+let pipedAvailable = true;
 
 /**
  * Add parameters to reduce ads and enable the YouTube JS API.
@@ -148,12 +151,54 @@ function getAdSkipperCode() {
 }
 
 /** Apply ad-blocking to a given iframe. */
-function applyAdBlocker(iframe) {
+async function checkPipedAvailability() {
+  try {
+    const resp = await fetch(`${PIPED_BASE}/favicon.ico`, { method: 'HEAD', mode: 'no-cors' });
+    pipedAvailable = resp.ok || resp.type === 'opaque';
+  } catch {
+    pipedAvailable = false;
+  }
+}
+
+function extractVideoId(src) {
+  try {
+    const url = new URL(src);
+    const embedIdx = url.pathname.indexOf('/embed/');
+    if (embedIdx !== -1) {
+      return url.pathname.substring(embedIdx + 7).split(/[?&]/)[0];
+    }
+    return url.searchParams.get('v');
+  } catch {
+    return null;
+  }
+}
+
+function buildPipedUrl(id) {
+  return `${PIPED_BASE}/embed/${id}?player_style=youtube`;
+}
+
+async function applyAdBlocker(iframe) {
   if (!iframe || iframe.dataset.originalSrc) return;
+  await checkPipedAvailability();
   iframe.dataset.originalSrc = iframe.src;
-  iframe.src = enhanceEmbedUrl(iframe.src);
   iframe.dataset.adblockerManaged = 'true';
-  iframe.addEventListener('load', () => injectAdSkipper(iframe), { once: true });
+  const videoId = extractVideoId(iframe.src);
+  if (pipedAvailable && videoId) {
+    iframe.src = buildPipedUrl(videoId);
+    iframe.dataset.piped = 'true';
+    iframe.addEventListener(
+      'error',
+      () => {
+        pipedAvailable = false;
+        iframe.src = enhanceEmbedUrl(iframe.dataset.originalSrc);
+        injectAdSkipper(iframe);
+      },
+      { once: true }
+    );
+  } else {
+    iframe.src = enhanceEmbedUrl(iframe.src);
+    iframe.addEventListener('load', () => injectAdSkipper(iframe), { once: true });
+  }
   if (!listenerRegistered) {
     window.addEventListener('message', handleYouTubeMessages);
     listenerRegistered = true;
@@ -169,10 +214,10 @@ function restoreOriginalEmbed(iframe) {
   }
 }
 
-export function initAdBlocker(ytPlayerElement) {
+export async function initAdBlocker(ytPlayerElement) {
   if (!ytPlayerElement) return;
   if (adBlockerEnabled) {
-    applyAdBlocker(ytPlayerElement);
+    await applyAdBlocker(ytPlayerElement);
   } else {
     restoreOriginalEmbed(ytPlayerElement);
   }
@@ -201,5 +246,6 @@ export async function isAdBlockerEnabled() {
 }
 
 (async function () {
+  await checkPipedAvailability();
   adBlockerEnabled = await isAdBlockerEnabled();
 })();
