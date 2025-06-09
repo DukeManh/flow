@@ -7,6 +7,8 @@ import storageService from './storage.js';
 import { TimerCore } from './timerCore.js';
 import { initSounds } from './sound.js';
 import { initAdBlocker } from './adBlocker.js'; // Import our ad blocker
+import { initNetworkAdBlocker } from './networkAdBlocker.js';
+import { initSponsorBlocker } from './sponsorBlocker.js';
 
 // DOM elements
 let timerEl, circularProgressEl;
@@ -230,6 +232,10 @@ async function continueMusicPlayback() {
       
       // Initialize ad blocker for the focus mode YouTube player
       initAdBlocker(ytPlayer);
+      // Block network ad requests
+      initNetworkAdBlocker();
+      // Initialize SponsorBlocker to skip sponsors
+      initSponsorBlocker(ytPlayer, videoID);
       
       // Add a play button to the YouTube container
       const playButtonContainer = document.createElement('div');
