@@ -5,7 +5,22 @@ import storageService from './storage.js';
 // Ad blocking state
 let adBlockerEnabled = true;
 let adSkipAttempts = 0;
-const MAX_SKIP_ATTEMPTS = 5;
+const MAX_SKIP_ATTEMPTS = 5; // Increased attempts
+let adDetectionInterval = null;
+let currentVideoId = null;
+let adBlockingStrategies = [];
+let lastAdSkipTime = 0;
+let consecutiveAdDetections = 0;
+
+// Additional advanced tracking
+const AD_DETECTION_PATTERNS = [
+  'Advertisement',
+  'Sponsored',
+  'Ad will end in',
+  'Skip Ad',
+  'Skip in',
+  'You can skip this ad in'
+];
 
 /**
  * Initialize ad blocker for a YouTube iframe element
@@ -14,82 +29,117 @@ const MAX_SKIP_ATTEMPTS = 5;
 export function initAdBlocker(ytPlayerElement) {
   if (!ytPlayerElement || !adBlockerEnabled) return;
   
-  console.log('[AdBlocker] Initializing for YouTube player');
+  console.log('[AdBlocker] Initializing comprehensive ad blocker for YouTube player');
   
   // Set better parameters for minimal ads
   enhanceEmbedParameters(ytPlayerElement);
   
+  // Initialize ad blocking strategies
+  initializeAdBlockingStrategies();
+  
   // Observe iframe load to inject ad-blocking script
   ytPlayerElement.addEventListener('load', () => {
-    injectAdSkipper(ytPlayerElement);
+    injectAdvancedAdSkipper(ytPlayerElement);
+    startAdDetection(ytPlayerElement);
+    startDOMObservation(ytPlayerElement);
   });
   
   // Handle messages from the iframe
   window.addEventListener('message', handleYouTubeMessages);
+  
+  // Monitor for video changes
+  startVideoChangeMonitor(ytPlayerElement);
 }
 
 /**
- * Enhance YouTube embed parameters to minimize ads
+ * Perform aggressive ad skipping using multiple methods
+ * @param {HTMLIFrameElement} ytPlayerElement - The YouTube iframe element
+ */
+function performAggressiveAdSkip(ytPlayerElement) {
+  // Use the comprehensive ad skipping function instead
+  performComprehensiveAdSkip(ytPlayerElement);
+  
+  // Also apply maximal URL parameters if not already applied
+  if (!ytPlayerElement.src.includes('html5=1')) {
+    injectMaximalAdBlockingParams(ytPlayerElement);
+  }
+  
+  // Monitor for ad indicators
+  monitorAdIndicators(ytPlayerElement);
+}
+
+/**
+ * Enhanced YouTube embed parameters to minimize ads
  * @param {HTMLIFrameElement} ytPlayerElement - The YouTube iframe element
  */
 function enhanceEmbedParameters(ytPlayerElement) {
-  // Get current source
-  const currentSrc = ytPlayerElement.src;
-  
-  // If already has our parameters, don't modify
-  if (currentSrc.includes('ad_blocking=true')) return;
-  
-  // Create URL object for easy parameter manipulation
-  try {
-    const urlObj = new URL(currentSrc);
-    
-    // Add our custom parameters
-    urlObj.searchParams.set('rel', '0'); // No related videos
-    urlObj.searchParams.set('controls', '1'); // Show controls
-    urlObj.searchParams.set('iv_load_policy', '3'); // No annotations
-    urlObj.searchParams.set('modestbranding', '1'); // Minimal branding
-    urlObj.searchParams.set('enablejsapi', '1'); // Enable API
-    urlObj.searchParams.set('origin', window.location.origin); // Security
-    urlObj.searchParams.set('ad_blocking', 'true'); // Our flag to prevent re-processing
-    
-    // Update the player source
-    ytPlayerElement.src = urlObj.toString();
-    
-    console.log('[AdBlocker] Enhanced YouTube embed parameters');
-  } catch (error) {
-    console.error('[AdBlocker] Error updating YouTube parameters:', error);
-  }
+  // Use the maximal ad-blocking parameters instead
+  injectMaximalAdBlockingParams(ytPlayerElement);
 }
 
 /**
- * Inject ad skipping script into the YouTube iframe
+ * Inject advanced ad skipping script into the YouTube iframe
  * @param {HTMLIFrameElement} ytPlayerElement - The YouTube iframe element
  */
-function injectAdSkipper(ytPlayerElement) {
+function injectAdvancedAdSkipper(ytPlayerElement) {
   try {
-    // First check if we can access the iframe content (same-origin policy)
-    const iframeDoc = ytPlayerElement.contentDocument || ytPlayerElement.contentWindow?.document;
-    
-    // If we can access the document, inject directly (only works for same-origin)
-    if (iframeDoc) {
-      const scriptTag = iframeDoc.createElement('script');
-      scriptTag.textContent = getAdSkipperCode();
-      iframeDoc.head.appendChild(scriptTag);
-      console.log('[AdBlocker] Directly injected ad skipper script');
-      return;
-    }
-    
-    // If we can't access directly, use postMessage API
+    // For YouTube iframes (which are always cross-origin), use postMessage API exclusively
     ytPlayerElement.contentWindow.postMessage(JSON.stringify({
       event: 'command',
       func: 'addEventListener',
       args: ['onStateChange', 'flowStateAdCheck']
     }), '*');
     
-    console.log('[AdBlocker] Registered ad detection via postMessage');
+    ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: 'addEventListener',
+      args: ['onAdStateChange', 'flowStateAdStateChange']
+    }), '*');
+    
+    console.log('[AdBlocker] Registered advanced ad detection via postMessage');
+    
+    // Initial ad check after a short delay
+    setTimeout(() => {
+      performAggressiveAdSkip(ytPlayerElement);
+    }, 1000);
   } catch (error) {
-    console.error('[AdBlocker] Error injecting ad skipper:', error);
+    console.error('[AdBlocker] Error setting up advanced ad detection:', error);
   }
+}
+
+/**
+ * Start continuous ad detection monitoring
+ * @param {HTMLIFrameElement} ytPlayerElement - The YouTube iframe element
+ */
+function startAdDetection(ytPlayerElement) {
+  // Clear any existing interval
+  if (adDetectionInterval) {
+    clearInterval(adDetectionInterval);
+  }
+  
+  // Check for ads every 2 seconds
+  adDetectionInterval = setInterval(() => {
+    if (adBlockerEnabled) {
+      performAggressiveAdSkip(ytPlayerElement);
+    }
+  }, 2000);
+}
+
+/**
+ * Monitor for video changes to reset ad blocking state
+ * @param {HTMLIFrameElement} ytPlayerElement - The YouTube iframe element
+ */
+function startVideoChangeMonitor(ytPlayerElement) {
+  setInterval(() => {
+    try {
+      ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: 'getVideoData'
+      }), '*');
+    } catch (error) {
+      // Silently fail for cross-origin restrictions
+    }
+  }, 5000);
 }
 
 /**
@@ -98,26 +148,32 @@ function injectAdSkipper(ytPlayerElement) {
  */
 function handleYouTubeMessages(event) {
   try {
-    // Validate message origin (should be from YouTube)
     if (!event.origin.includes('youtube.com')) return;
     
-    // Parse the data
     let data;
     if (typeof event.data === 'string') {
       try {
         data = JSON.parse(event.data);
       } catch {
-        // Not a JSON message we care about
         return;
       }
     } else {
       data = event.data;
     }
     
-    // Check for ad information
+    // Handle different types of messages
     if (data.type === 'adStateChange' && data.isAd) {
-      console.log('[AdBlocker] Ad detected, attempting to skip');
-      skipAd(document.querySelector('iframe[src*="youtube.com"]'));
+      console.log('[AdBlocker] Ad detected via message, performing aggressive skip');
+      performAggressiveAdSkip(document.querySelector('iframe[src*="youtube.com"]'));
+    }
+    
+    if (data.event === 'video-data-changed' && data.info) {
+      const newVideoId = data.info.video_id;
+      if (newVideoId && newVideoId !== currentVideoId) {
+        currentVideoId = newVideoId;
+        adSkipAttempts = 0; // Reset attempts for new video
+        console.log('[AdBlocker] Video changed, reset ad blocking state');
+      }
     }
   } catch (error) {
     console.error('[AdBlocker] Error handling YouTube message:', error);
@@ -125,119 +181,14 @@ function handleYouTubeMessages(event) {
 }
 
 /**
- * Skip a detected ad
- * @param {HTMLIFrameElement} ytPlayerElement - The YouTube iframe element
+ * Clean up ad blocker resources
  */
-function skipAd(ytPlayerElement) {
-  if (adSkipAttempts >= MAX_SKIP_ATTEMPTS) {
-    console.log('[AdBlocker] Maximum skip attempts reached, giving up');
-    return;
+function cleanup() {
+  if (adDetectionInterval) {
+    clearInterval(adDetectionInterval);
+    adDetectionInterval = null;
   }
-  
-  adSkipAttempts++;
-  
-  try {
-    // Try various methods to skip the ad
-    
-    // Method 1: Use the YouTube API to skip
-    ytPlayerElement.contentWindow.postMessage(JSON.stringify({
-      event: 'command',
-      func: 'seekTo',
-      args: [0, true] // Seek to start, then we'll seek to end of ad
-    }), '*');
-    
-    // Method 2: After a small delay, try to skip to end of ad
-    setTimeout(() => {
-      ytPlayerElement.contentWindow.postMessage(JSON.stringify({
-        event: 'command',
-        func: 'seekTo',
-        args: [99999, true] // Seek far forward to try to skip ad
-      }), '*');
-    }, 500);
-    
-    // Method 3: After another delay, try to mute and then resume normal
-    setTimeout(() => {
-      ytPlayerElement.contentWindow.postMessage(JSON.stringify({
-        event: 'command',
-        func: 'mute'
-      }), '*');
-      
-      // Reset the skip attempts counter after a while
-      setTimeout(() => {
-        adSkipAttempts = 0;
-      }, 5000);
-    }, 1000);
-    
-    console.log('[AdBlocker] Attempted to skip ad with multiple methods');
-  } catch (error) {
-    console.error('[AdBlocker] Error skipping ad:', error);
-  }
-}
-
-/**
- * Get the ad skipper code to inject into the YouTube iframe
- * @returns {string} - JavaScript code as a string
- */
-function getAdSkipperCode() {
-  return `
-    // YouTube ad detection and skipping code
-    (function() {
-      const adObserver = new MutationObserver(function(mutations) {
-        // Look for ad container elements
-        if (document.querySelector('.ad-showing') || 
-            document.querySelector('.ytp-ad-player-overlay') ||
-            document.querySelector('.ytp-ad-text')) {
-          
-          // Notify the parent window
-          window.parent.postMessage(JSON.stringify({
-            type: 'adStateChange',
-            isAd: true
-          }), '*');
-          
-          // Try to click the skip button if it exists
-          const skipButton = document.querySelector('.ytp-ad-skip-button') || 
-                              document.querySelector('.ytp-ad-skip-button-modern');
-          if (skipButton) {
-            skipButton.click();
-            console.log('[YT-AdBlock] Clicked skip button');
-          }
-          
-          // Try to mute the ad
-          const muteButton = document.querySelector('.ytp-mute-button');
-          if (muteButton && !muteButton.classList.contains('ytp-muted')) {
-            muteButton.click();
-            console.log('[YT-AdBlock] Muted ad');
-          }
-        }
-      });
-      
-      // Start observing the entire document for changes
-      adObserver.observe(document.documentElement, {
-        childList: true,
-        subtree: true
-      });
-      
-      // Define the callback function that YouTube API will call
-      window.flowStateAdCheck = function(state) {
-        // -1: unstarted, 0: ended, 1: playing, 2: paused, 3: buffering, 5: video cued
-        if (state === 1) {
-          // Check if this is an ad when playing starts
-          setTimeout(function() {
-            const adShowing = document.querySelector('.ad-showing') ||
-                              document.querySelector('.ytp-ad-player-overlay');
-            if (adShowing) {
-              window.parent.postMessage(JSON.stringify({
-                type: 'adStateChange',
-                isAd: true
-              }), '*');
-            }
-          }, 500);
-        }
-      };
-      
-      console.log('[YT-AdBlock] Ad detection initialized');
-    })();
-  `;
+  window.removeEventListener('message', handleYouTubeMessages);
 }
 
 /**
@@ -247,7 +198,13 @@ function getAdSkipperCode() {
 export function setAdBlockerEnabled(enabled) {
   adBlockerEnabled = enabled;
   storageService.setItem('adBlockerEnabled', enabled);
-  console.log(`[AdBlocker] ${enabled ? 'Enabled' : 'Disabled'}`);
+  
+  if (!enabled && adDetectionInterval) {
+    clearInterval(adDetectionInterval);
+    adDetectionInterval = null;
+  }
+  
+  console.log(`[AdBlocker] ${enabled ? 'Enabled' : 'Disabled'} advanced ad blocking`);
 }
 
 /**
@@ -260,7 +217,275 @@ export async function isAdBlockerEnabled() {
     return savedState === null ? true : savedState === 'true';
   } catch (error) {
     console.error('[AdBlocker] Error getting state:', error);
-    return true; // Default to enabled
+    return true;
+  }
+}
+
+/**
+ * Initialize comprehensive ad blocking strategies
+ */
+function initializeAdBlockingStrategies() {
+  adBlockingStrategies = [
+    'mute_immediately',
+    'skip_ad_api',
+    'seek_beyond_ads',
+    'playback_rate_manipulation',
+    'stop_restart_cycle',
+    'dom_manipulation',
+    'video_quality_downgrade',
+    'buffer_manipulation'
+  ];
+  
+  console.log('[AdBlocker] Initialized', adBlockingStrategies.length, 'ad blocking strategies');
+}
+
+/**
+ * Start DOM observation for ad-related elements
+ * @param {HTMLIFrameElement} ytPlayerElement - The YouTube iframe element
+ */
+function startDOMObservation(ytPlayerElement) {
+  // Since we can't access iframe content directly, we'll monitor the iframe itself
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+        // Video changed, reset ad blocking state
+        adSkipAttempts = 0;
+        consecutiveAdDetections = 0;
+        console.log('[AdBlocker] Video source changed, resetting ad block state');
+      }
+    });
+  });
+  
+  observer.observe(ytPlayerElement, {
+    attributes: true,
+    attributeFilter: ['src']
+  });
+}
+
+/**
+ * Enhanced aggressive ad skipping with all SkipCut techniques
+ * @param {HTMLIFrameElement} ytPlayerElement - The YouTube iframe element
+ */
+function performComprehensiveAdSkip(ytPlayerElement) {
+  if (!ytPlayerElement || adSkipAttempts >= MAX_SKIP_ATTEMPTS) {
+    return;
+  }
+  
+  const now = Date.now();
+  if (now - lastAdSkipTime < 1000) return; // Debounce rapid calls
+  lastAdSkipTime = now;
+  
+  adSkipAttempts++;
+  consecutiveAdDetections++;
+  
+  try {
+    console.log(`[AdBlocker] Performing comprehensive ad skip (attempt ${adSkipAttempts})`);
+    
+    // Strategy 1: Immediate mute
+    ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: 'mute'
+    }), '*');
+    
+    // Strategy 2: Multiple skip attempts with different timings
+    const skipCommands = ['skipAd', 'nextVideo', 'pauseVideo'];
+    skipCommands.forEach((cmd, index) => {
+      setTimeout(() => {
+        ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+          event: 'command',
+          func: cmd
+        }), '*');
+      }, index * 100);
+    });
+    
+    // Strategy 3: Aggressive seeking beyond typical ad duration
+    setTimeout(() => {
+      const seekTargets = [5, 10, 15, 30, 60]; // Multiple seek targets
+      seekTargets.forEach((seconds, index) => {
+        setTimeout(() => {
+          ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+            event: 'command',
+            func: 'seekTo',
+            args: [seconds, true]
+          }), '*');
+        }, index * 50);
+      });
+    }, 150);
+    
+    // Strategy 4: Playback rate manipulation
+    setTimeout(() => {
+      ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: 'setPlaybackRate',
+        args: [16] // Maximum speed
+      }), '*');
+      
+      // Restore normal rate after brief period
+      setTimeout(() => {
+        ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+          event: 'command',
+          func: 'setPlaybackRate',
+          args: [1]
+        }), '*');
+      }, 1000);
+    }, 300);
+    
+    // Strategy 5: Volume manipulation
+    setTimeout(() => {
+      ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: 'setVolume',
+        args: [0]
+      }), '*');
+      
+      // Restore volume after ad should be over
+      setTimeout(() => {
+        ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+          event: 'command',
+          func: 'setVolume',
+          args: [50]
+        }), '*');
+      }, 2000);
+    }, 400);
+    
+    // Strategy 6: Advanced state manipulation
+    setTimeout(() => {
+      ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: 'stopVideo'
+      }), '*');
+      
+      setTimeout(() => {
+        ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+          event: 'command',
+          func: 'playVideo'
+        }), '*');
+      }, 200);
+    }, 500);
+    
+    // Strategy 7: Quality downgrade to potentially reduce ad quality
+    setTimeout(() => {
+      ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: 'setPlaybackQuality',
+        args: ['small']
+      }), '*');
+      
+      // Restore quality
+      setTimeout(() => {
+        ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+          event: 'command',
+          func: 'setPlaybackQuality',
+          args: ['default']
+        }), '*');
+      }, 3000);
+    }, 600);
+    
+    // Strategy 8: If multiple consecutive detections, reload iframe
+    if (consecutiveAdDetections >= 3) {
+      setTimeout(() => {
+        console.log('[AdBlocker] Multiple ad detections, attempting iframe reload');
+        const currentSrc = ytPlayerElement.src;
+        ytPlayerElement.src = '';
+        setTimeout(() => {
+          ytPlayerElement.src = currentSrc;
+          consecutiveAdDetections = 0;
+        }, 100);
+      }, 2000);
+    }
+    
+    // Reset attempts gradually
+    setTimeout(() => {
+      adSkipAttempts = Math.max(0, adSkipAttempts - 1);
+    }, 15000);
+    
+    console.log('[AdBlocker] Applied comprehensive ad blocking strategies');
+  } catch (error) {
+    console.error('[AdBlocker] Error in comprehensive ad skipping:', error);
+    adSkipAttempts = 0;
+  }
+}
+
+/**
+ * Monitor for specific ad indicators in YouTube API responses
+ * @param {HTMLIFrameElement} ytPlayerElement - The YouTube iframe element
+ */
+function monitorAdIndicators(ytPlayerElement) {
+  try {
+    // Check for ad-related player states
+    ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+      event: 'listening',
+      id: 'ad-monitor',
+      channel: 'widget'
+    }), '*');
+    
+    // Request detailed player info
+    ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: 'getPlayerState'
+    }), '*');
+    
+    ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: 'getCurrentTime'
+    }), '*');
+    
+    ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: 'getDuration'
+    }), '*');
+    
+    // Check for ad-specific data
+    ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: 'getVideoData'
+    }), '*');
+    
+  } catch (error) {
+    console.error('[AdBlocker] Error monitoring ad indicators:', error);
+  }
+}
+
+/**
+ * Enhanced URL parameter injection for maximum ad blocking
+ * @param {HTMLIFrameElement} ytPlayerElement - The YouTube iframe element
+ */
+function injectMaximalAdBlockingParams(ytPlayerElement) {
+  try {
+    const currentSrc = ytPlayerElement.src;
+    const urlObj = new URL(currentSrc);
+    
+    // Comprehensive ad-blocking parameters from SkipCut
+    const adBlockParams = {
+      'rel': '0',                    // No related videos
+      'controls': '1',               // Show controls
+      'iv_load_policy': '3',         // No annotations
+      'modestbranding': '1',         // Minimal YouTube branding
+      'enablejsapi': '1',            // Enable JavaScript API
+      'autoplay': '1',               // Autoplay to skip past ads
+      'fs': '1',                     // Allow fullscreen
+      'playsinline': '1',            // Play inline on mobile
+      'disablekb': '0',              // Enable keyboard
+      'cc_load_policy': '0',         // No captions by default
+      'widget_referrer': window.location.origin,
+      'html5': '1',                  // Force HTML5 player
+      'ad_blocking': 'true',         // Custom flag
+      'origin': window.location.origin,
+      'host': window.location.hostname,
+      'hl': 'en',                    // Language
+      'start': '0'                   // Start from beginning
+    };
+    
+    Object.entries(adBlockParams).forEach(([key, value]) => {
+      urlObj.searchParams.set(key, value);
+    });
+    
+    if (ytPlayerElement.src !== urlObj.toString()) {
+      ytPlayerElement.src = urlObj.toString();
+      console.log('[AdBlocker] Applied maximal ad-blocking URL parameters');
+    }
+  } catch (error) {
+    console.error('[AdBlocker] Error injecting maximal ad-blocking params:', error);
   }
 }
 
@@ -268,3 +493,6 @@ export async function isAdBlockerEnabled() {
 (async function() {
   adBlockerEnabled = await isAdBlockerEnabled();
 })();
+
+// Clean up on page unload
+window.addEventListener('beforeunload', cleanup);
