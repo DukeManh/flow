@@ -11,7 +11,7 @@ The site is served from the `gh-pages` branch. Any push to `main` automatically 
 Each pull request automatically deploys a preview of the site using GitHub Pages. The workflow comments a URL in the form:
 
 ```
-https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-<PR number>/
+https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/preview-pr/pr-<PR number>/
 ```
 
 Visit the link from the pull request comments to view a live preview of the changes.
