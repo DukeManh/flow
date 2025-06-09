@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flow - Theme Tester</title>
+  
+  <!-- Theme CSS -->
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/theme.css">
+  
+  <style>
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .theme-card {
+      background-color: var(--bg-alt);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+    
+    h1, h2 {
+      color: var(--fg);
+    }
+    
+    button {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      margin-right: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: var(--accent-secondary);
+    }
+    
+    .color-sample {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    
+    .color-box {
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      border-radius: var(--radius);
+      text-align: center;
+      font-size: 0.8rem;
+      box-shadow: 0 2px 4px var(--shadow);
+    }
+    
+    .bg { background-color: var(--bg); color: var(--fg); }
+    .bg-alt { background-color: var(--bg-alt); color: var(--fg); }
+    .fg { background-color: var(--fg); }
+    .muted { background-color: var(--muted); }
+    .accent { background-color: var(--accent); }
+    .accent-secondary { background-color: var(--accent-secondary); }
+    
+    #currentThemeName {
+      font-weight: bold;
+    }
+    
+    .status {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: var(--radius);
+    }
+    
+    .success {
+      background-color: rgba(0, 255, 0, 0.1);
+      border: 1px solid green;
+    }
+    
+    .error {
+      background-color: rgba(255, 0, 0, 0.1);
+      border: 1px solid red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="theme-card">
+      <h1>Flow Theme Tester</h1>
+      <p>Current theme: <span id="currentThemeName">Loading...</span></p>
+      
+      <div id="status"></div>
+      
+      <h2>Change Theme</h2>
+      <div class="theme-buttons">
+        <button data-theme="default">Light</button>
+        <button data-theme="dark">Dark</button>
+        <button data-theme="nature">Nature</button>
+        <button data-theme="midnight">Midnight</button>
+        <button data-theme="slate">Slate</button>
+        <button data-theme="carbon">Carbon</button>
+        <button data-theme="mocha">Mocha</button>
+      </div>
+      
+      <h2>Theme Color Samples</h2>
+      <div class="color-sample">
+        <div class="color-box bg">--bg</div>
+        <div class="color-box bg-alt">--bg-alt</div>
+        <div class="color-box fg">--fg</div>
+        <div class="color-box muted">--muted</div>
+        <div class="color-box accent">--accent</div>
+        <div class="color-box accent-secondary">--accent-secondary</div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Check if service worker is active
+    const hasServiceWorker = 'serviceWorker' in navigator && navigator.serviceWorker.controller;
+    const statusEl = document.getElementById('status');
+    
+    // Show service worker status
+    if (hasServiceWorker) {
+      statusEl.classList.add('success');
+      statusEl.textContent = '✅ Service Worker is active! Theme switching should work correctly.';
+    } else {
+      statusEl.classList.add('error');
+      statusEl.textContent = '❌ Service Worker not active. Please visit the main app first to activate the service worker.';
+    }
+    
+    // Function to get current theme
+    async function getCurrentTheme() {
+      try {
+        const storage = await caches.open('flow-storage');
+        const themeData = await storage.match(new Request('theme-data'));
+        
+        if (themeData) {
+          const data = await themeData.json();
+          return data.theme;
+        }
+        
+        return 'unknown';
+      } catch (error) {
+        console.error('Error getting theme:', error);
+        return 'unknown';
+      }
+    }
+    
+    // Function to show current theme name
+    async function updateThemeName() {
+      const themeNameEl = document.getElementById('currentThemeName');
+      
+      try {
+        // Get computed style for a reliable check
+        const bgColor = getComputedStyle(document.body).getPropertyValue('--bg').trim();
+        let detectedTheme = 'unknown';
+        
+        // Basic detection based on background color
+        if (bgColor === '#ffffff') detectedTheme = 'Light';
+        else if (bgColor === '#1e1e1e') detectedTheme = 'Dark';
+        else if (bgColor === '#f5f7ed') detectedTheme = 'Nature';
+        else if (bgColor === '#0f1729') detectedTheme = 'Midnight';
+        else if (bgColor === '#1c2431') detectedTheme = 'Slate';
+        else if (bgColor === '#121212') detectedTheme = 'Carbon';
+        else if (bgColor === '#272220') detectedTheme = 'Mocha';
+        
+        themeNameEl.textContent = detectedTheme;
+      } catch (error) {
+        console.error('Error updating theme name:', error);
+        themeNameEl.textContent = 'Error detecting theme';
+      }
+    }
+    
+    // Handle theme button clicks
+    document.querySelectorAll('.theme-buttons button').forEach(button => {
+      button.addEventListener('click', async () => {
+        const theme = button.dataset.theme;
+        
+        if (hasServiceWorker) {
+          try {
+            // Create a message channel for communication
+            const messageChannel = new MessageChannel();
+            
+            // Set up promise to wait for response
+            const responsePromise = new Promise(resolve => {
+              messageChannel.port1.onmessage = event => resolve(event.data);
+            });
+            
+            // Send message to service worker
+            navigator.serviceWorker.controller.postMessage({
+              type: 'SET_THEME',
+              theme: theme
+            }, [messageChannel.port2]);
+            
+            // Wait for response
+            const response = await responsePromise;
+            console.log('Theme set response:', response);
+            
+            if (response.success) {
+              // Theme was set successfully, reload to see changes
+              window.location.reload();
+            }
+          } catch (error) {
+            console.error('Error setting theme:', error);
+            alert('Failed to set theme. See console for details.');
+          }
+        } else {
+          alert('Service Worker is not active. Cannot change theme.');
+        }
+      });
+    });
+    
+    // Update theme name when page loads
+    document.addEventListener('DOMContentLoaded', updateThemeName);
+  </script>
+</body>
+</html>
