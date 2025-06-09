@@ -1,0 +1,12 @@
+/* Midnight theme variables */
+:root {
+  --bg: #0f1729;
+  --bg-alt: #1a2238;
+  --card-bg: #1a2238;
+  --fg: #e1e6fa;
+  --muted: #9ca8d3;
+  --accent: #5d5fef;
+  --shadow: rgba(93, 95, 239, 0.1);
+  --accent-rgb: 93, 95, 239;
+  --accent-secondary: #7879f1;
+}
