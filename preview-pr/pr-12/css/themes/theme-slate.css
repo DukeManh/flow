@@ -1,0 +1,12 @@
+/* Slate theme variables */
+:root {
+  --bg: #1c2431;
+  --bg-alt: #2c3347;
+  --card-bg: #2c3347;
+  --fg: #e9ecef;
+  --muted: #9299a8;
+  --accent: #3f80ea;
+  --shadow: rgba(63, 128, 234, 0.1);
+  --accent-rgb: 63, 128, 234;
+  --accent-secondary: #5b93ed;
+}
