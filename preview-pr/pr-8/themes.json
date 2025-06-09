@@ -1,0 +1,13 @@
+{
+  "themes": {
+    "default": "./css/themes/theme-light.css",
+    "light": "./css/themes/theme-light.css",
+    "dark": "./css/themes/theme-dark.css",
+    "nature": "./css/themes/theme-nature.css",
+    "midnight": "./css/themes/theme-midnight.css",
+    "slate": "./css/themes/theme-slate.css",
+    "carbon": "./css/themes/theme-carbon.css",
+    "mocha": "./css/themes/theme-mocha.css"
+  },
+  "defaultTheme": "midnight"
+}
