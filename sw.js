@@ -1,6 +1,6 @@
 // Service Worker for Flow PWA
-const CACHE_NAME = 'flow-cache-v2.0'; // Incremented version to force update
-const SW_VERSION = '2025-05-10-2'; // Version identifier with date
+const CACHE_NAME = 'flow-cache-v2.1.4'; // Incremented version to force update with ad blocker
+const SW_VERSION = '2025-05-17'; // Version identifier with date updated
 const DEV_HOSTNAMES = ['localhost', 'dev.local']; // Development hostnames to bypass caching
 
 // Check if we're on a development environment
@@ -68,14 +68,25 @@ async function loadThemesConfig() {
   if (themesConfig !== null) return themesConfig;
   
   try {
+    // Try to get from cache first in case we're offline
+    const cacheResponse = await caches.match('./themes.json');
+    if (cacheResponse) {
+      themesConfig = await cacheResponse.json();
+      return themesConfig;
+    }
+    
+    // If not in cache, try fetching from network
     const response = await fetch('./themes.json');
     themesConfig = await response.json();
     return themesConfig;
   } catch (error) {
     console.error('Error loading themes config:', error);
+    // Provide a default configuration when offline
     return {
       themes: {
-        'midnight': './css/themes/theme-midnight.css'
+        'midnight': './css/themes/theme-midnight.css',
+        'slate': './css/themes/theme-slate.css',
+        'light': './css/themes/theme-light.css'
       },
       defaultTheme: 'midnight'
     };
@@ -274,7 +285,13 @@ async function handleThemeRequest(request) {
     // Get the theme CSS file path based on current theme
     const themePath = await getThemeCssPath(currentTheme);
     
-    // Fetch the theme CSS content
+    // Try to get from cache first
+    const cacheResponse = await caches.match(themePath);
+    if (cacheResponse) {
+      return cacheResponse;
+    }
+    
+    // If not in cache, try fetching from network
     const themeResponse = await fetch(new Request(themePath));
     
     // Create a new response with the theme CSS content
@@ -287,7 +304,28 @@ async function handleThemeRequest(request) {
   } catch (error) {
     console.error('Error handling theme request:', error);
     
-    // Fallback to default theme if there's an error
-    return fetch('./css/themes/theme-midnight.css');
+    // Try to get the default theme from cache
+    try {
+      const defaultThemeCache = await caches.match('./css/themes/theme-midnight.css');
+      if (defaultThemeCache) {
+        return defaultThemeCache;
+      }
+    } catch (e) {
+      console.error('Failed to get default theme from cache:', e);
+    }
+    
+    // Last resort fallback - return a minimal theme definition 
+    return new Response(
+      `:root {
+        --bg: #1c2431;
+        --surface: #2d3748;
+        --text: #e9ecef;
+        --text-secondary: #b8c2cc;
+        --accent: #3f80ea;
+        --error: #e73d4a;
+        --success: #28a745;
+      }`, 
+      { headers: { 'Content-Type': 'text/css' } }
+    );
   }
 }

@@ -6,6 +6,7 @@ import { initAnimations, cleanupAnimations } from './animations.js';
 import storageService from './storage.js';
 import { TimerCore } from './timerCore.js';
 import { initSounds } from './sound.js';
+import { initAdBlocker } from './adBlocker.js'; // Import our ad blocker
 
 // DOM elements
 let timerEl, circularProgressEl;
@@ -222,8 +223,11 @@ async function continueMusicPlayback() {
   try {
     const videoID = await storageService.getItem('lastVideoID');
     if (videoID) {
-      // Enable JS API for postMessage control but don't autoplay
-      ytPlayer.src = `https://www.youtube.com/embed/${videoID}?autoplay=0&loop=1&playlist=${videoID}&mute=0&enablejsapi=1&origin=${window.location.origin}`;
+      // Enable JS API with ad-blocking parameters
+      ytPlayer.src = `https://www.youtube.com/embed/${videoID}?autoplay=0&loop=1&playlist=${videoID}&mute=0&enablejsapi=1&origin=${window.location.origin}&rel=0&controls=1&iv_load_policy=3&modestbranding=1`;
+      
+      // Initialize ad blocker for the focus mode YouTube player
+      initAdBlocker(ytPlayer);
       
       // Add a play button to the YouTube container
       const playButtonContainer = document.createElement('div');

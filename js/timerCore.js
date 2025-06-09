@@ -168,12 +168,16 @@ export class TimerCore {
       this.callbacks.updateUI(this.state);
     }
   }
+
+  // Backwards compatibility with older API
+  changePreset(presetKey) {
+    this.updatePreset(presetKey);
+  }
   
   // Update timer controls
   updateControls(running) {
-    if (!this.elements.startBtn) return;
-    
     this.state.isRunning = running;
+    if (!this.elements.startBtn) return;
     
     if (this.state.onBreak) {
       if (this.elements.startBtn) {
@@ -192,7 +196,8 @@ export class TimerCore {
       }
       
       if (this.elements.endBtn) {
-        // this.elements.endBtn.disabled = !running;
+        // Always enable the end button during break
+        this.elements.endBtn.disabled = false;
         this.elements.endBtn.textContent = "Skip Break";
       }
     } else {
@@ -207,12 +212,14 @@ export class TimerCore {
       }
       
       if (this.elements.endBtn) {
-        this.elements.endBtn.disabled = !running;
+        // Always enable the end button regardless of running state
+        this.elements.endBtn.disabled = false;
         this.elements.endBtn.textContent = "End";
       }
       
       if (this.elements.resetBtn) {
-        this.elements.resetBtn.disabled = !running;
+        // Always enable the reset button regardless of running state
+        this.elements.resetBtn.disabled = false;
         this.elements.resetBtn.style.display = '';
       }
     }
@@ -396,8 +403,6 @@ export class TimerCore {
   // End session
   endSession() {
     if (this.state.onBreak) {
-      // Skip break
-      if (!confirm('Skip the rest of your break?')) return;
       clearInterval(this.state.interval);
       this.endBreak();
     } else {

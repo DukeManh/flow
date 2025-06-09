@@ -262,10 +262,11 @@
       <iframe id="ytPlayer" src="https://www.youtube.com/embed/wL8DVHuWI7Y?autoplay=1&loop=1&playlist=wL8DVHuWI7Y"
         allow="autoplay; encrypted-media"></iframe>
       <div class="controls" style="margin-top: 10px;">
-        <button id="bBtn">Binaural Beats</button>
+        <button id="b4Btn">40Hz Binaural</button>
+        <button id="b6Btn">60Hz Binaural</button>
         <button id="lBtn">Lofi</button>
         <button id="wBtn">White Noise</button>
-        <button id="tBtn">Ticking</button>
+        <button id="tBtn">Clock Ticking</button>
         <button id="vBtn">Memory Reboot</button>
         <input type="text" id="customVidInput" class="input" placeholder="YouTube ID…">
         <button id="loadBtn">Load</button>
@@ -396,9 +397,18 @@
 
         <div class="form-group">
           <h3>Sound Notifications</h3>
-          <div class="sound-controls">
+          <div class="settings-option">
             <input type="checkbox" id="soundToggle" checked>
             <label for="soundToggle">Enable sound notifications</label>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <h3>YouTube Ad Blocking</h3>
+          <div class="settings-option">
+            <input type="checkbox" id="adBlockToggle" checked>
+            <label for="adBlockToggle">Block YouTube ads during focus sessions</label>
+            <div class="settings-description">Turn off if you prefer to support content creators with ad views.</div>
           </div>
         </div>
         

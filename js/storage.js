@@ -357,7 +357,12 @@ class StorageService {
    */
   async getItem(key) {
     const provider = this.getCurrentProvider();
-    return await provider.getItem(key);
+    try {
+      return await provider.getItem(key);
+    } catch (err) {
+      console.error(`Error getting item '${key}':`, err);
+      return null;
+    }
   }
 
   /**

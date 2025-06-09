@@ -2,17 +2,19 @@
 import { setCurrentVideo } from './history.js';
 import { 
   REBOOT_VIDEO_ID,
-  BEATS_VIDEO_ID, 
+  BINAURAL_40HZ_VIDEO_ID, 
+  BINAURAL_60HZ_VIDEO_ID, 
   LOFI_VIDEO_ID,
   WHITE_NOISE_VIDEO_ID,
   TICKING_VIDEO_ID,
   musicLabels
 } from './constants.js';
 import storageService from './storage.js';
+import { initAdBlocker } from './adBlocker.js'; // Import our new ad blocker
 
 // Music elements
 let ytPlayer, customVidInput;
-let vBtn, bBtn, lBtn, wBtn, tBtn, loadBtn;
+let vBtn, b4Btn, b6Btn, lBtn, wBtn, tBtn, loadBtn;
 let currentVideoID;
 
 // Storage keys
@@ -46,7 +48,8 @@ export async function initMusic() {
   ytPlayer = document.getElementById('ytPlayer');
   customVidInput = document.getElementById('customVidInput');
   vBtn = document.getElementById('vBtn');
-  bBtn = document.getElementById('bBtn');
+  b4Btn = document.getElementById('b4Btn');
+  b6Btn = document.getElementById('b6Btn');
   lBtn = document.getElementById('lBtn');
   wBtn = document.getElementById('wBtn');
   tBtn = document.getElementById('tBtn');
@@ -58,14 +61,18 @@ export async function initMusic() {
   
   // Set up event listeners
   vBtn.addEventListener('click', () => changeVideo(REBOOT_VIDEO_ID));
-  bBtn.addEventListener('click', () => changeVideo(BEATS_VIDEO_ID));
+  b4Btn.addEventListener('click', () => changeVideo(BINAURAL_40HZ_VIDEO_ID));
+  b6Btn.addEventListener('click', () => changeVideo(BINAURAL_60HZ_VIDEO_ID));
   lBtn.addEventListener('click', () => changeVideo(LOFI_VIDEO_ID));
   wBtn.addEventListener('click', () => changeVideo(WHITE_NOISE_VIDEO_ID));
   tBtn.addEventListener('click', () => changeVideo(TICKING_VIDEO_ID));
   loadBtn.addEventListener('click', () => changeVideo(customVidInput.value.trim()));
   
   // Initialize YouTube player with the remembered video
-  ytPlayer.src = `https://www.youtube.com/embed/${currentVideoID}?autoplay=0&loop=1&playlist=${currentVideoID}`;
+  ytPlayer.src = `https://www.youtube.com/embed/${currentVideoID}?autoplay=0&loop=1&playlist=${currentVideoID}&rel=0&controls=1&iv_load_policy=3&modestbranding=1&enablejsapi=1&origin=${window.location.origin}`;
+  
+  // Initialize the ad blocker for the YouTube player
+  initAdBlocker(ytPlayer);
   
   // Update button labels
   updateButtonLabels();
@@ -77,7 +84,12 @@ export async function initMusic() {
 async function changeVideo(id) { 
   if (!id) return; 
   currentVideoID = id; 
-  ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}`;
+  
+  // Updated YouTube embed URL with ad-blocking parameters
+  ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}&rel=0&controls=1&iv_load_policy=3&modestbranding=1&enablejsapi=1&origin=${window.location.origin}`;
+  
+  // Re-initialize the ad blocker for the new video
+  setTimeout(() => initAdBlocker(ytPlayer), 500);
   
   await saveLastVideoIDToStorage(id);
   setCurrentVideo(id);
@@ -88,10 +100,10 @@ export function getCurrentVideoID() {
   return currentVideoID;
 }
 
-// Update button labels from constants
 function updateButtonLabels() {
   const buttonMap = {
-    [BEATS_VIDEO_ID]: bBtn,
+    [BINAURAL_40HZ_VIDEO_ID]: b4Btn,
+    [BINAURAL_60HZ_VIDEO_ID]: b6Btn,
     [LOFI_VIDEO_ID]: lBtn,
     [WHITE_NOISE_VIDEO_ID]: wBtn,
     [TICKING_VIDEO_ID]: tBtn,

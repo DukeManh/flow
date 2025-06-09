@@ -33,6 +33,7 @@
   overflow-y: auto;
   flex: 1;
   min-height: 100px; /* Ensure a minimum height even when empty */
+  max-height: 500px; /* Ensure a minimum height even when empty */
   margin: 0;
   padding: 0;
 }
@@ -190,4 +191,57 @@
 /* Adjust cursor when dragging */
 #todoList li:active {
   cursor: grabbing;
+}
+
+/* Edit mode styling */
+.todo-edit-input {
+  flex: 1;
+  padding: 4px 8px;
+  margin-right: 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--accent);
+  background-color: var(--bg);
+  color: var(--fg);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.todo-edit-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.3);
+}
+
+/* Hide certain elements when in edit mode */
+#todoList li.editing {
+  cursor: default;
+}
+
+#todoList li.editing .todo-text {
+  display: none;
+}
+
+/* Edit button styling */
+.todo-btn.edit-btn:hover {
+  color: #3498db;
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Save edit button styling */
+.todo-btn.save-edit-btn {
+  color: #2ecc71;
+}
+
+.todo-btn.save-edit-btn:hover {
+  color: #27ae60;
+  background-color: rgba(46, 204, 113, 0.1);
+}
+
+/* Cancel edit button styling */
+.todo-btn.cancel-edit-btn {
+  color: #e74c3c;
+}
+
+.todo-btn.cancel-edit-btn:hover {
+  color: #c0392b;
+  background-color: rgba(231, 76, 60, 0.1);
 }
