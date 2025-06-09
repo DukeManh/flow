@@ -1,0 +1,12 @@
+/* Nature theme variables */
+:root {
+  --bg: #f5f7ed;
+  --bg-alt: #e8eadc;
+  --card-bg: #ffffff;
+  --fg: #2c3e2e;
+  --muted: #6b8069;
+  --accent: #4a7c59;
+  --shadow: rgba(74, 124, 89, 0.1);
+  --accent-rgb: 74, 124, 89;
+  --accent-secondary: #6b8069;
+}
