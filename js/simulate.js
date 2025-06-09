@@ -418,7 +418,7 @@ localStorage.setItem('sessionHistory', JSON.stringify(simulatedData));
 
 // Generate streak data based on the session history
 const streakData = generateProjectStreaks(simulatedData);
-localStorage.setItem('projectStreaks', JSON.stringify(streakData));
+localStorage.setItem('streakData', JSON.stringify(streakData));
 
 console.log('Simulated data has been loaded!');
 console.log('Projects:', simulatedProjects.length);

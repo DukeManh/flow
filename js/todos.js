@@ -283,13 +283,145 @@ function createTodoItem(text, status = TODO_STATUSES.NOT_STARTED) {
   dragHandleBtn.title = 'Drag to reorder';
   dragHandleBtn.className = 'todo-btn drag-handle';
   
-  btnContainer.append(upBtn, downBtn, removeBtn, dragHandleBtn);
+  // Create edit button
+  const editBtn = document.createElement('button');
+  editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+  editBtn.title = 'Edit';
+  editBtn.className = 'todo-btn edit-btn';
+  editBtn.addEventListener('click', () => enterEditMode(li));
+  
+  btnContainer.append(upBtn, downBtn, editBtn, removeBtn, dragHandleBtn);
   li.append(checkbox, statusIndicator, statusContainer, span, btnContainer); 
   
   // Apply initial status class without saving (passing false as the third parameter)
   updateTodoStatus(li, status, false);
   
+  // Add double click event to enter edit mode
+  li.addEventListener('dblclick', () => {
+    enterEditMode(li);
+  });
+  
   return li;
+}
+
+// Helper to put a todo item in edit mode
+function enterEditMode(li) {
+  // Prevent editing if already in edit mode
+  if (li.classList.contains('editing')) return;
+
+  // Add editing class to the li
+  li.classList.add('editing');
+  
+  // Get the current todo text
+  const todoTextElement = li.querySelector('.todo-text');
+  const currentText = todoTextElement.textContent;
+  
+  // Create edit input
+  const editInput = document.createElement('input');
+  editInput.type = 'text';
+  editInput.className = 'todo-edit-input';
+  editInput.value = currentText;
+  
+  // Insert the input before the text element
+  li.insertBefore(editInput, todoTextElement);
+  
+  // Focus on the input
+  editInput.focus();
+  editInput.select();
+  
+  // Get button container and normal buttons
+  const btnContainer = li.querySelector('.todo-buttons');
+  const normalButtons = Array.from(btnContainer.children);
+  
+  // Hide normal buttons
+  normalButtons.forEach(btn => btn.style.display = 'none');
+  
+  // Create save and cancel buttons
+  const saveBtn = document.createElement('button');
+  saveBtn.innerHTML = '<i class="fas fa-check"></i>';
+  saveBtn.title = 'Save';
+  saveBtn.className = 'todo-btn save-edit-btn';
+  saveBtn.addEventListener('click', () => saveEdit(li, editInput.value));
+  
+  const cancelBtn = document.createElement('button');
+  cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
+  cancelBtn.title = 'Cancel';
+  cancelBtn.className = 'todo-btn cancel-edit-btn';
+  cancelBtn.addEventListener('click', () => cancelEdit(li));
+  
+  // Add save and cancel buttons to the container
+  btnContainer.appendChild(saveBtn);
+  btnContainer.appendChild(cancelBtn);
+  
+  // Make the todo item temporarily not draggable
+  li.draggable = false;
+  
+  // Handle enter key to save and escape to cancel
+  editInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      saveEdit(li, editInput.value);
+    } else if (e.key === 'Escape') {
+      cancelEdit(li);
+    }
+  });
+}
+
+// Helper to save the edited todo text
+function saveEdit(li, newText) {
+  // Trim the text to make sure it's not empty
+  const trimmedText = newText.trim();
+  
+  // Don't save if empty
+  if (!trimmedText) {
+    cancelEdit(li);
+    return;
+  }
+  
+  // Get the todo text element
+  const todoTextElement = li.querySelector('.todo-text');
+  
+  // Update the text content
+  todoTextElement.textContent = trimmedText;
+  
+  // Exit edit mode
+  exitEditMode(li);
+  
+  // Save todos to storage
+  saveTodos();
+}
+
+// Helper to cancel editing and restore original text
+function cancelEdit(li) {
+  // Exit edit mode without saving
+  exitEditMode(li);
+}
+
+// Helper to exit edit mode
+function exitEditMode(li) {
+  // Remove editing class
+  li.classList.remove('editing');
+  
+  // Remove the edit input
+  const editInput = li.querySelector('.todo-edit-input');
+  if (editInput) {
+    editInput.remove();
+  }
+  
+  // Get button container
+  const btnContainer = li.querySelector('.todo-buttons');
+  
+  // Remove save and cancel buttons
+  const saveBtn = btnContainer.querySelector('.save-edit-btn');
+  const cancelBtn = btnContainer.querySelector('.cancel-edit-btn');
+  if (saveBtn) saveBtn.remove();
+  if (cancelBtn) cancelBtn.remove();
+  
+  // Show normal buttons
+  const normalButtons = Array.from(btnContainer.children);
+  normalButtons.forEach(btn => btn.style.display = '');
+  
+  // Make the todo item draggable again
+  li.draggable = true;
 }
 
 // Save todos to the current project

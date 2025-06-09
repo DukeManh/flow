@@ -2,6 +2,7 @@
 import { TIMER_PRESETS } from './constants.js';
 import { updateTimerPreset, saveTimerState } from './timer.js';
 import storageService from './storage.js';
+import { setAdBlockerEnabled } from './adBlocker.js'; // Import our ad blocker module
 
 // DOM elements
 let settingsModal;
@@ -16,7 +17,8 @@ const STORAGE_KEYS = {
 // Current settings state
 let currentSettings = {
   timerPreset: 'default',
-  soundNotifications: true
+  soundNotifications: true,
+  adBlockerEnabled: true // Add default value for ad blocker
 };
 
 // Storage utility functions
@@ -84,6 +86,11 @@ function openSettings() {
   const soundToggle = document.getElementById('soundToggle');
   soundToggle.checked = currentSettings.soundNotifications;
   
+  const adBlockToggle = document.getElementById('adBlockToggle');
+  if (adBlockToggle) {
+    adBlockToggle.checked = currentSettings.adBlockerEnabled; // Initialize ad blocker toggle
+  }
+  
   // Show modal with explicit display and flexbox properties
   settingsModal.style.display = 'flex';
   settingsModal.style.justifyContent = 'center';
@@ -111,12 +118,18 @@ async function saveSettings() {
   // Get selected sound notification setting
   const soundEnabled = document.getElementById('soundToggle').checked;
   
+  // Get selected ad blocker setting
+  const adBlockToggle = document.getElementById('adBlockToggle');
+  const adBlockerEnabled = adBlockToggle ? adBlockToggle.checked : true;
+  
   // Update settings state
   currentSettings.timerPreset = selectedPreset;
   currentSettings.soundNotifications = soundEnabled;
+  currentSettings.adBlockerEnabled = adBlockerEnabled; // Update ad blocker setting
   
   // Apply settings
   updateTimerPreset(selectedPreset);
+  setAdBlockerEnabled(adBlockerEnabled); // Apply ad blocker setting
   
   // Save settings to storage
   const success = await saveSettingsToStorage(currentSettings);
@@ -146,5 +159,11 @@ async function loadSettings() {
   const soundToggle = document.getElementById('soundToggle');
   if (soundToggle) {
     soundToggle.checked = currentSettings.soundNotifications;
+  }
+  
+  // Update the ad blocker toggle in the settings modal to match settings
+  const adBlockerToggle = document.getElementById('adBlockToggle');
+  if (adBlockerToggle) {
+    adBlockerToggle.checked = currentSettings.adBlockerEnabled;
   }
 }
