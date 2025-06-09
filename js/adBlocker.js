@@ -7,6 +7,7 @@ import storageService from './storage.js';
 let adBlockerEnabled = true;
 let adSkipAttempts = 0;
 const MAX_SKIP_ATTEMPTS = 5;
+let listenerRegistered = false;
 
 /**
  * Add parameters to reduce ads and enable the YouTube JS API.
@@ -153,7 +154,10 @@ function applyAdBlocker(iframe) {
   iframe.src = enhanceEmbedUrl(iframe.src);
   iframe.dataset.adblockerManaged = 'true';
   iframe.addEventListener('load', () => injectAdSkipper(iframe), { once: true });
-  window.addEventListener('message', handleYouTubeMessages);
+  if (!listenerRegistered) {
+    window.addEventListener('message', handleYouTubeMessages);
+    listenerRegistered = true;
+  }
 }
 
 /** Restore the original iframe source if replaced. */
