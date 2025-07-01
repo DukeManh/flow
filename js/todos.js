@@ -54,9 +54,21 @@ export function initTodos() {
   addTodoBtn.addEventListener('click', async () => { 
     const text = todoInput.value.trim(); 
     if (!text) return; 
-    todoList.append(createTodoItem(text)); 
+    
+    // Add new todo to the top of the list instead of bottom
+    const newTodoItem = createTodoItem(text);
+    if (todoList.firstChild) {
+      todoList.insertBefore(newTodoItem, todoList.firstChild);
+    } else {
+      todoList.appendChild(newTodoItem);
+    }
+    
     todoInput.value = ''; 
     todoInput.focus(); 
+    
+    // Scroll the new item into view
+    newTodoItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
     await saveTodos(); 
   });
   
