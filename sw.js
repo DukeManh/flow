@@ -1,6 +1,6 @@
 // Service Worker for Flow PWA
-const CACHE_NAME = 'flow-cache-v2.1.4'; // Incremented version to force update with ad blocker
-const SW_VERSION = '2025-05-17'; // Version identifier with date updated
+const CACHE_NAME = 'flow-cache-v2.1.5'; // Incremented version to force update with ad blocker
+const SW_VERSION = '2025-07-01'; // Version identifier with date updated
 const DEV_HOSTNAMES = ['localhost', 'dev.local']; // Development hostnames to bypass caching
 
 // Check if we're on a development environment
