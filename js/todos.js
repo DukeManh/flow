@@ -1,6 +1,13 @@
 // Todo list management for the Flow State app
 import { getCurrentProject, saveProjectTodos } from './projects.js';
 import storageService from './storage.js';
+import { 
+  parsers, 
+  autoConvertToStandard, 
+  converters, 
+  exportCurrentTodos, 
+  generateSampleFiles
+} from './todoUpload.js';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -8,7 +15,7 @@ const STORAGE_KEYS = {
 };
 
 // Todo status options
-const TODO_STATUSES = {
+export const TODO_STATUSES = {
   NOT_STARTED: 'Not Started',
   IN_PROGRESS: 'In Progress',
   BLOCKED: 'Blocked',
@@ -20,6 +27,10 @@ const TODO_STATUSES = {
 let todoInput, addTodoBtn, todoList;
 // Track dragged element and drop position
 let draggedItem = null;
+
+// Todo upload and import state
+let currentImportData = null;
+let selectedImportItems = new Set();
 
 // Storage utility functions
 async function getOldTodosFromStorage() {
@@ -78,6 +89,9 @@ export function initTodos() {
 
   // Initialize drag and drop container
   initDragAndDrop();
+
+  // Initialize upload functionality
+  initTodoUpload();
 
   // Load todos for current project
   loadTodos();
@@ -499,4 +513,421 @@ export async function migrateTodosToProject() {
   } catch (error) {
     console.error('Error migrating todos:', error);
   }
+}
+
+// Initialize todo upload functionality
+function initTodoUpload() {
+  const uploadBtn = document.getElementById('uploadTodosBtn');
+  const exportBtn = document.getElementById('exportTodosBtn');
+  const fileInput = document.getElementById('todoFileInput');
+  const importModal = document.getElementById('todoImportModal');
+  const closeModalBtns = importModal.querySelectorAll('.close-modal');
+  
+  // Upload button click - show modal immediately
+  uploadBtn?.addEventListener('click', () => {
+    showImportModal();
+  });
+
+  // Export button click - export as CSV
+  exportBtn?.addEventListener('click', async () => {
+    try {
+      const exportData = await exportCurrentTodos();
+      downloadFile(
+        exportData.content,
+        exportData.filename,
+        exportData.contentType
+      );
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export todos. Please try again.');
+    }
+  });
+
+  // File input change
+  fileInput?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      await handleFileUpload(file);
+      // Clear the input so the same file can be uploaded again
+      fileInput.value = '';
+    } catch (error) {
+      console.error('File upload failed:', error);
+      alert(`Failed to process file: ${error.message}`);
+    }
+  });
+
+  // Modal close events
+  closeModalBtns.forEach(btn => {
+    btn.addEventListener('click', closeImportModal);
+  });
+
+  // Click outside modal to close
+  importModal?.addEventListener('click', (e) => {
+    if (e.target === importModal) {
+      closeImportModal();
+    }
+  });
+
+  // Initialize import modal functionality
+  initImportModal();
+}
+
+// Show import modal (initially showing format help)
+function showImportModal(file = null, importData = null) {
+  const modal = document.getElementById('todoImportModal');
+  const formatHelp = document.getElementById('formatHelp');
+  const importInfo = document.getElementById('importInfo');
+  const importPreview = document.getElementById('importPreview');
+  const importOptions = document.getElementById('importOptions');
+  const importActions = document.getElementById('importActions');
+
+  if (file && importData) {
+    // Show file info and preview
+    formatHelp.style.display = 'none';
+    importInfo.style.display = 'block';
+    importPreview.style.display = 'block';
+    importOptions.style.display = 'block';
+    importActions.style.display = 'block';
+
+    // Update file info
+    const fileName = document.getElementById('importFileName');
+    const fileStats = document.getElementById('importFileStats');
+    fileName.textContent = file.name;
+    const stats = [
+      `${importData.todos.length} items`,
+      `${(file.size / 1024).toFixed(1)} KB`,
+      importData.source.replace('_', ' ')
+    ];
+    fileStats.textContent = stats.join(' • ');
+
+    // Generate preview
+    const previewList = document.getElementById('importPreviewList');
+    generatePreview(importData.todos, previewList);
+
+    // Reset selections
+    selectedImportItems.clear();
+    updateSelectedCount();
+  } else {
+    // Show format help
+    formatHelp.style.display = 'block';
+    importInfo.style.display = 'none';
+    importPreview.style.display = 'none';
+    importOptions.style.display = 'none';
+    importActions.style.display = 'none';
+  }
+
+  // Show modal
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+// Generate preview list with multi-select support
+function generatePreview(todos, container) {
+  if (!todos.length) {
+    container.innerHTML = '<p class="no-preview">No items to import</p>';
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  
+  // Add selection help text
+  const helpText = document.createElement('div');
+  helpText.className = 'selection-help';
+  helpText.textContent = 'Click to select items. Hold Shift and click to select ranges.';
+  fragment.appendChild(helpText);
+  
+  todos.forEach((todo, index) => {
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    item.dataset.index = index;
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'preview-checkbox';
+    checkbox.checked = true; // Default to selected
+    
+    const content = document.createElement('div');
+    content.className = 'preview-content';
+    
+    const text = document.createElement('div');
+    text.className = 'preview-text';
+    text.textContent = todo.text;
+    
+    const meta = document.createElement('div');
+    meta.className = 'preview-meta';
+    
+    // Add category tag
+    if (todo.category) {
+      const categoryTag = document.createElement('span');
+      categoryTag.className = 'preview-tag category';
+      categoryTag.textContent = todo.category;
+      meta.appendChild(categoryTag);
+    }
+    
+    // Add due date if available
+    if (todo.dueDate) {
+      const dueDateTag = document.createElement('span');
+      dueDateTag.className = 'preview-tag';
+      dueDateTag.textContent = new Date(todo.dueDate).toLocaleDateString();
+      meta.appendChild(dueDateTag);
+    }
+    
+    content.appendChild(text);
+    if (meta.children.length > 0) {
+      content.appendChild(meta);
+    }
+    
+    item.appendChild(checkbox);
+    item.appendChild(content);
+    
+    // Initially select all items
+    selectedImportItems.add(index);
+    item.classList.add('selected');
+    
+    // Add multi-select event handlers
+    setupMultiSelectHandlers(item, checkbox, index);
+    
+    fragment.appendChild(item);
+  });
+  
+  container.innerHTML = '';
+  container.appendChild(fragment);
+}
+
+// Multi-select state
+let lastSelectedIndex = -1;
+let isShiftSelecting = false;
+
+// Setup multi-select handlers for preview items
+function setupMultiSelectHandlers(item, checkbox, index) {
+  // Checkbox change handler
+  checkbox.addEventListener('change', (e) => {
+    e.stopPropagation();
+    updateItemSelection(index, checkbox.checked);
+    lastSelectedIndex = index;
+    updateSelectedCount();
+  });
+  
+  // Item click handler for multi-select
+  item.addEventListener('click', (e) => {
+    if (e.target === checkbox) return; // Skip if clicking checkbox directly
+    
+    const isShiftPressed = e.shiftKey;
+    
+    if (isShiftPressed && lastSelectedIndex !== -1) {
+      // Range selection
+      const start = Math.min(lastSelectedIndex, index);
+      const end = Math.max(lastSelectedIndex, index);
+      
+      // Clear previous range selection styles
+      document.querySelectorAll('.preview-item.range-selected').forEach(item => {
+        item.classList.remove('range-selected');
+      });
+      
+      // Select range
+      for (let i = start; i <= end; i++) {
+        const targetCheckbox = document.querySelector(`.preview-item[data-index="${i}"] .preview-checkbox`);
+        if (targetCheckbox) {
+          targetCheckbox.checked = true;
+          updateItemSelection(i, true);
+          
+          // Add range selection styling
+          const targetItem = document.querySelector(`.preview-item[data-index="${i}"]`);
+          if (targetItem && i !== index) {
+            targetItem.classList.add('range-selected');
+          }
+        }
+      }
+    } else {
+      // Single selection toggle
+      checkbox.checked = !checkbox.checked;
+      updateItemSelection(index, checkbox.checked);
+    }
+    
+    // Update last selected and add styling
+    document.querySelectorAll('.preview-item.last-selected').forEach(item => {
+      item.classList.remove('last-selected');
+    });
+    item.classList.add('last-selected');
+    lastSelectedIndex = index;
+    
+    updateSelectedCount();
+  });
+}
+
+// Update item selection state
+function updateItemSelection(index, isSelected) {
+  const item = document.querySelector(`.preview-item[data-index="${index}"]`);
+  
+  if (isSelected) {
+    selectedImportItems.add(index);
+    item.classList.add('selected');
+  } else {
+    selectedImportItems.delete(index);
+    item.classList.remove('selected');
+  }
+}
+
+// Update selected count and button state
+function updateSelectedCount() {
+  const countElement = document.getElementById('selectedCount');
+  const confirmBtn = document.getElementById('confirmImportBtn');
+  
+  const count = selectedImportItems.size;
+  countElement.textContent = count;
+  confirmBtn.disabled = count === 0;
+}
+
+// Perform the actual import
+async function performImport() {
+  if (!currentImportData || selectedImportItems.size === 0) {
+    throw new Error('No items selected for import');
+  }
+
+  const importMode = document.querySelector('input[name="importMode"]:checked')?.value || 'append';
+  const selectedTodos = Array.from(selectedImportItems).map(index => currentImportData.todos[index]);
+  
+  // Convert to current todo format
+  const newTodos = converters.toCurrentTodos({ todos: selectedTodos });
+  
+  if (importMode === 'replace') {
+    // Replace all current todos
+    todoList.innerHTML = '';
+    newTodos.forEach(todo => {
+      const li = createTodoItem(todo.text, todo.status);
+      todoList.appendChild(li);
+    });
+  } else {
+    // Append to existing todos
+    newTodos.forEach(todo => {
+      const li = createTodoItem(todo.text, todo.status);
+      todoList.appendChild(li);
+    });
+  }
+  
+  // Save to storage
+  await saveTodos();
+  
+  // Show success message
+  const importedCount = selectedTodos.length;
+  const message = importMode === 'replace' 
+    ? `Replaced all todos with ${importedCount} imported items`
+    : `Added ${importedCount} new todos`;
+    
+  console.log(message);
+}
+
+// Close import modal
+function closeImportModal() {
+  const modal = document.getElementById('todoImportModal');
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+  
+  // Clear data
+  currentImportData = null;
+  selectedImportItems.clear();
+  lastSelectedIndex = -1;
+}
+
+// Initialize import modal event handlers
+function initImportModal() {
+  const browseFileBtn = document.getElementById('browseFileBtn');
+  const downloadSampleBtn = document.getElementById('downloadSampleBtn');
+  const fileInput = document.getElementById('todoFileInput');
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  const selectNoneBtn = document.getElementById('selectNoneBtn');
+  const cancelBtn = document.getElementById('cancelImportBtn');
+  const confirmBtn = document.getElementById('confirmImportBtn');
+  
+  // Browse file button
+  browseFileBtn?.addEventListener('click', () => {
+    fileInput.click();
+  });
+  
+  // Download sample button
+  downloadSampleBtn?.addEventListener('click', () => {
+    const sampleFiles = generateSampleFiles();
+    downloadFile(
+      sampleFiles.csv,
+      'sample-todos.csv',
+      'text/csv'
+    );
+  });
+  
+  selectAllBtn?.addEventListener('click', () => {
+    const checkboxes = document.querySelectorAll('.preview-checkbox');
+    checkboxes.forEach((checkbox, index) => {
+      checkbox.checked = true;
+      selectedImportItems.add(index);
+      checkbox.closest('.preview-item').classList.add('selected');
+    });
+    updateSelectedCount();
+  });
+  
+  selectNoneBtn?.addEventListener('click', () => {
+    const checkboxes = document.querySelectorAll('.preview-checkbox');
+    checkboxes.forEach((checkbox, index) => {
+      checkbox.checked = false;
+      selectedImportItems.delete(index);
+      checkbox.closest('.preview-item').classList.remove('selected');
+    });
+    updateSelectedCount();
+  });
+  
+  cancelBtn?.addEventListener('click', closeImportModal);
+  
+  confirmBtn?.addEventListener('click', async () => {
+    try {
+      await performImport();
+      closeImportModal();
+    } catch (error) {
+      console.error('Import failed:', error);
+      alert(`Import failed: ${error.message}`);
+    }
+  });
+}
+
+// Handle file upload and processing
+async function handleFileUpload(file) {
+  try {
+    let data;
+    
+    // Parse file based on type
+    if (file.name.endsWith('.json')) {
+      data = await parsers.parseJSON(file);
+    } else if (file.name.endsWith('.csv')) {
+      data = await parsers.parseCSV(file);
+    } else {
+      throw new Error('Unsupported file format. Please use CSV files.');
+    }
+
+    // Convert to standard format
+    const standardData = await autoConvertToStandard(data, file.name);
+    
+    // Store for import
+    currentImportData = standardData;
+    
+    // Show import modal with preview
+    showImportModal(file, standardData);
+    
+  } catch (error) {
+    throw new Error(`Error processing file: ${error.message}`);
+  }
+}
+
+// Utility function to download files
+function downloadFile (content, filename, contentType) {
+  const blob = new Blob([content], { type: contentType });
+  const url = URL.createObjectURL(blob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  URL.revokeObjectURL(url);
 }

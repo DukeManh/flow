@@ -255,6 +255,15 @@
         <input type="text" id="todoInput" class="input" placeholder="Add a task…">
         <button id="addTodoBtn">Add</button>
       </div>
+      <div class="todo-actions">
+        <button id="uploadTodosBtn" class="todo-action-btn" title="Upload todos from file">
+          <i class="fas fa-upload"></i> Upload
+        </button>
+        <button id="exportTodosBtn" class="todo-action-btn" title="Export current todos">
+          <i class="fas fa-download"></i> Export
+        </button>
+        <input type="file" id="todoFileInput" accept=".json,.csv" style="display: none;">
+      </div>
       <ul id="todoList"></ul>
     </div>
     <div class="card" id="musicCard">
@@ -413,6 +422,109 @@
         </div>
         
         <button id="saveSettingsBtn" class="modal-save-btn">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Todo Import Modal -->
+  <div id="todoImportModal" class="modal">
+    <div class="modal-content todo-import-modal">
+      <span class="close-modal">&times;</span>
+      <h2>Import Todos</h2>
+      <div class="modal-form">
+        <!-- File format help section -->
+        <div class="format-help" id="formatHelp">
+          <div class="format-header">
+            <h3>Expected File Format</h3>
+            <p>Upload a CSV file with the following columns (column names are flexible):</p>
+          </div>
+          <div class="format-example">
+            <div class="csv-example">
+              <strong>CSV Example:</strong>
+              <pre>Task,Category,Priority,Due Date,Notes
+"Complete project proposal","Work","high","2025-08-01","Include budget"
+"Review code changes","Development","normal","","Team review needed"
+"Schedule team meeting","Management","low","2025-07-30","Discuss Q3 goals"</pre>
+            </div>
+            <div class="column-info">
+              <h4>Supported Columns:</h4>
+              <ul>
+                <li><strong>Task/Todo/Item:</strong> Task description (required)</li>
+                <li><strong>Category/Type:</strong> Task category (optional)</li>
+                <li><strong>Priority:</strong> low, normal, high, urgent (optional)</li>
+                <li><strong>Due Date:</strong> Date in any common format (optional)</li>
+                <li><strong>Notes:</strong> Additional information (optional)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="file-actions">
+            <button id="browseFileBtn" class="browse-btn">
+              <i class="fas fa-folder-open"></i> Browse Files
+            </button>
+            <button id="downloadSampleBtn" class="sample-btn">
+              <i class="fas fa-download"></i> Download Sample CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- File info section (hidden initially) -->
+        <div class="import-info" id="importInfo" style="display: none;">
+          <div class="file-info">
+            <div class="file-icon">
+              <i class="fas fa-file-import"></i>
+            </div>
+            <div class="file-details">
+              <div class="file-name" id="importFileName">No file selected</div>
+              <div class="file-stats" id="importFileStats"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview section (hidden initially) -->
+        <div class="import-preview" id="importPreview" style="display: none;">
+          <div class="preview-header">
+            <h3>Preview</h3>
+            <div class="preview-actions">
+              <button id="selectAllBtn" class="preview-action-btn">Select All</button>
+              <button id="selectNoneBtn" class="preview-action-btn">Select None</button>
+            </div>
+          </div>
+          <div class="preview-list" id="importPreviewList">
+            <p class="no-preview">Upload a file to see preview</p>
+          </div>
+        </div>
+
+        <!-- Import options (hidden initially) -->
+        <div class="import-options" id="importOptions" style="display: none;">
+          <div class="option-group">
+            <h4>Import Options</h4>
+            <div class="import-option">
+              <input type="radio" id="importModeReplace" name="importMode" value="replace">
+              <label for="importModeReplace">
+                <strong>Replace All</strong>
+                <span class="option-description">Replace all current todos with imported ones</span>
+              </label>
+            </div>
+            <div class="import-option">
+              <input type="radio" id="importModeAppend" name="importMode" value="append" checked>
+              <label for="importModeAppend">
+                <strong>Add to Existing</strong>
+                <span class="option-description">Add imported todos to current list</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Import actions (hidden initially) -->
+        <div class="import-actions" id="importActions" style="display: none;">
+          <div class="selected-count">
+            <span id="selectedCount">0</span> items selected
+          </div>
+          <div class="action-buttons">
+            <button id="cancelImportBtn" class="modal-cancel-btn">Cancel</button>
+            <button id="confirmImportBtn" class="modal-save-btn" disabled>Import Selected</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
