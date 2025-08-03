@@ -7,7 +7,8 @@
     "midnight": "./css/themes/theme-midnight.css",
     "slate": "./css/themes/theme-slate.css",
     "carbon": "./css/themes/theme-carbon.css",
-    "mocha": "./css/themes/theme-mocha.css"
+    "mocha": "./css/themes/theme-mocha.css",
+    "retro": "./css/themes/theme-retro.css"
   },
   "defaultTheme": "midnight"
 }
