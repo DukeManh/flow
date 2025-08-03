@@ -205,7 +205,7 @@ export async function loadTheme(forceReload = false) {
     const savedTheme = await getSelectedThemeFromStorage();
     
     // Remove any existing theme classes
-    document.body.classList.remove('dark', 'nature', 'midnight', 'slate', 'carbon', 'mocha');
+    document.body.classList.remove('dark', 'nature', 'midnight', 'slate', 'carbon', 'mocha', 'retro');
     
     // If the theme is not default, add the class
     if (savedTheme !== 'default') {
@@ -307,6 +307,9 @@ function updateThemeColorMetaTag(theme) {
     case 'mocha':
       themeColor = '#272220';
       break;
+    case 'retro':
+      themeColor = '#14031e';
+      break;
     default:
       themeColor = '#ffffff';
   }
@@ -349,6 +352,9 @@ function updateThemeIcon(theme) {
       break;
     case 'mocha':
       icon.className += 'fa-coffee';
+      break;
+    case 'retro':
+      icon.className += 'fa-bolt';
       break;
     default:
       icon.className += 'fa-palette';

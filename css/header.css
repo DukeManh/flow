@@ -90,7 +90,7 @@
   background: var(--bg-alt);
   border-radius: var(--radius);
   box-shadow: 0 3px 8px var(--shadow);
-  z-index: 100;
+  z-index: 1001;
   overflow: hidden;
   visibility: hidden;
   opacity: 0;
