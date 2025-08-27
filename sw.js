@@ -1,6 +1,6 @@
 // Service Worker for Flow PWA
-const CACHE_NAME = 'flow-cache-v1.2.0'; // Updated for todo upload improvements
-const SW_VERSION = '2025-07-25'; // Version identifier updated for todo upload features
+const CACHE_NAME = 'flow-cache-v1.2.1'; // Updated for todo upload improvements
+const SW_VERSION = '2025-08-26'; // Version identifier updated for todo upload features
 const DEV_HOSTNAMES = ['localhost', 'dev.local']; // Development hostnames to bypass caching
 
 // Check if we're on a development environment
@@ -55,6 +55,7 @@ const urlsToCache = [
   './js/simulate.js',
   './assets/sounds/button.wav',
   './assets/sounds/alarm-bell.wav',
+  './assets/sounds/chime.wav',
   './assets/images/favicon.ico',
   './assets/images/icon-square-192.png',
   './assets/images/icon-square-512.png'
