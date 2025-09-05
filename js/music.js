@@ -69,10 +69,12 @@ export async function initMusic() {
   loadBtn.addEventListener('click', () => changeVideo(customVidInput.value.trim()));
   
   // Initialize YouTube player with the remembered video
-  ytPlayer.src = `https://www.youtube.com/embed/${currentVideoID}?autoplay=0&loop=1&playlist=${currentVideoID}&rel=0&controls=1&iv_load_policy=3&modestbranding=1&enablejsapi=1&origin=${window.location.origin}`;
+  ytPlayer.src = `https://www.youtube.com/embed/${currentVideoID}?autoplay=0&loop=1&playlist=${currentVideoID}&rel=0&controls=1&iv_load_policy=3&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&fs=1&playsinline=1&disablekb=0&cc_load_policy=0&widget_referrer=${encodeURIComponent(window.location.origin)}&html5=1`;
   
-  // Initialize the ad blocker for the YouTube player
-  initAdBlocker(ytPlayer);
+  // Initialize the ad blocker for the YouTube player with a delay to ensure iframe is loaded
+  setTimeout(() => {
+    initAdBlocker(ytPlayer);
+  }, 1000);
   
   // Update button labels
   updateButtonLabels();
@@ -85,11 +87,18 @@ async function changeVideo(id) {
   if (!id) return; 
   currentVideoID = id; 
   
-  // Updated YouTube embed URL with ad-blocking parameters
-  ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}&rel=0&controls=1&iv_load_policy=3&modestbranding=1&enablejsapi=1&origin=${window.location.origin}`;
+  // Enhanced YouTube embed URL with comprehensive ad-blocking parameters
+  ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}&rel=0&controls=1&iv_load_policy=3&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&fs=1&playsinline=1&disablekb=0&cc_load_policy=0&widget_referrer=${encodeURIComponent(window.location.origin)}&html5=1&ad_blocking=true`;
   
-  // Re-initialize the ad blocker for the new video
-  setTimeout(() => initAdBlocker(ytPlayer), 500);
+  // Re-initialize the ad blocker for the new video with proper timing
+  setTimeout(() => {
+    initAdBlocker(ytPlayer);
+  }, 500);
+  
+  // Additional aggressive ad blocking attempt after longer delay
+  setTimeout(() => {
+    initAdBlocker(ytPlayer);
+  }, 2000);
   
   await saveLastVideoIDToStorage(id);
   setCurrentVideo(id);
