@@ -23,6 +23,8 @@ export function getPresetDisplayName(presetKey) {
       return 'Pomodoro';
     case 'deepWork':
       return 'Deep Work';
+    case 'custom':
+      return 'Custom';
     default:
       return '52/17 Rule';
   }

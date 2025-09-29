@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, viewport-fit=cover">
   <link rel="icon" href="./assets/images/favicon.ico" type="image/ico">
   <title>Flow - 52/17 Technique</title>
   
@@ -401,6 +401,25 @@
                 <div class="preset-description">Extended focus time for complex tasks requiring deep concentration.</div>
               </label>
             </div>
+            <div class="preset-option" data-preset="custom">
+              <input type="radio" id="preset-custom" name="timer-preset" value="custom">
+              <label for="preset-custom">
+                <strong>Custom</strong>
+                <div class="preset-description">Set your own work and break durations.</div>
+                <div class="custom-timer-inputs" id="customTimerInputs">
+                  <div class="timer-input-group">
+                    <label for="customWorkTime">Work Time:</label>
+                    <input type="number" id="customWorkTime" min="1" max="180" value="25" placeholder="25">
+                    <span>minutes</span>
+                  </div>
+                  <div class="timer-input-group">
+                    <label for="customBreakTime">Break Time:</label>
+                    <input type="number" id="customBreakTime" min="1" max="60" value="5" placeholder="5">
+                    <span>minutes</span>
+                  </div>
+                </div>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -420,8 +439,6 @@
             <div class="settings-description">Turn off if you prefer to support content creators with ad views.</div>
           </div>
         </div>
-        
-        <button id="saveSettingsBtn" class="modal-save-btn">Save Settings</button>
       </div>
     </div>
   </div>

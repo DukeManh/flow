@@ -164,6 +164,58 @@ body.distraction #insightsCard {
   margin-top: 3px;
 }
 
+/* Custom timer inputs styling */
+.custom-timer-inputs {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--shadow);
+  display: none; /* Hidden by default */
+}
+
+.preset-option input[type="radio"]:checked + label .custom-timer-inputs {
+  display: block; /* Show when custom preset is selected */
+}
+
+.timer-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.timer-input-group:last-child {
+  margin-bottom: 0;
+}
+
+.timer-input-group label {
+  min-width: 80px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.timer-input-group input[type="number"] {
+  width: 72px;
+  padding: 10px 6px;
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+  background: var(--bg-alt);
+  color: var(--fg);
+  font-size: 0.9em;
+  text-align: center;
+}
+
+.timer-input-group input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.timer-input-group span {
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
 .settings-description {
   color: var(--text-secondary, #999);
   font-size: 0.85em;
