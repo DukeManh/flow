@@ -10,7 +10,7 @@ let timerCore;
 
 // Timer elements
 let timerEl, progressEl;
-let startBtn, pauseBtn, endBtn, resetBtn;
+let startBtn, pauseBtn, endBtn, resetBtn, addTimeBtn;
 
 export function initTimer() {
   // Get DOM elements
@@ -20,6 +20,7 @@ export function initTimer() {
   pauseBtn = document.getElementById('pauseBtn');
   endBtn = document.getElementById('endBtn');
   resetBtn = document.getElementById('resetBtn');
+  addTimeBtn = document.getElementById('addTimeBtn');
 
   // Show initial value while timer is initializing
   if (timerEl) {
@@ -51,6 +52,7 @@ export function initTimer() {
     pauseBtn: pauseBtn,
     endBtn: endBtn,
     resetBtn: resetBtn,
+    addTimeBtn: addTimeBtn,
     timerLabel: document.getElementById('timerLabel')
   });
 }

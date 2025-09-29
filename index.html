@@ -187,6 +187,7 @@
       <div class="controls">
         <button id="startBtn">Lock In</button>
         <button id="pauseBtn">Pause</button>
+        <button id="addTimeBtn" title="Add 5 minutes to current session">+5 min</button>
         <button id="endBtn">End</button>
         <button id="resetBtn">Reset</button>
       </div>
@@ -377,67 +378,73 @@
       <span class="close-modal">&times;</span>
       <h2>Settings</h2>
       <div class="modal-form">
-        <div class="form-group">
-          <h3>Timer Presets</h3>
-          <div class="timer-presets">
-            <div class="preset-option" data-preset="default">
-              <input type="radio" id="preset-default" name="timer-preset" value="default" checked>
-              <label for="preset-default">
-                <strong>52/17 (Recommended)</strong>
-                <div class="preset-description">The 52/17 rule.</div>
-              </label>
-            </div>
-            <div class="preset-option" data-preset="pomodoro">
-              <input type="radio" id="preset-pomodoro" name="timer-preset" value="pomodoro">
-              <label for="preset-pomodoro">
-                <strong>25/5 (Pomodoro)</strong>
-                <div class="preset-description">Pomodoro technique with shorter cycles.</div>
-              </label>
-            </div>
-            <div class="preset-option" data-preset="deepWork">
-              <input type="radio" id="preset-deepWork" name="timer-preset" value="deepWork">
-              <label for="preset-deepWork">
-                <strong>90/20 (Deep Work)</strong>
-                <div class="preset-description">Extended focus time for complex tasks requiring deep concentration.</div>
-              </label>
-            </div>
-            <div class="preset-option" data-preset="custom">
-              <input type="radio" id="preset-custom" name="timer-preset" value="custom">
-              <label for="preset-custom">
-                <strong>Custom</strong>
-                <div class="preset-description">Set your own work and break durations.</div>
-                <div class="custom-timer-inputs" id="customTimerInputs">
-                  <div class="timer-input-group">
-                    <label for="customWorkTime">Work Time:</label>
-                    <input type="number" id="customWorkTime" min="1" max="180" value="25" placeholder="25">
-                    <span>minutes</span>
+        <div class="modal-body">
+          <div class="form-group">
+            <h3>Timer Presets</h3>
+            <div class="timer-presets">
+              <div class="preset-option" data-preset="default">
+                <input type="radio" id="preset-default" name="timer-preset" value="default" checked>
+                <label for="preset-default">
+                  <strong>52/17 (Recommended)</strong>
+                  <div class="preset-description">The 52/17 rule.</div>
+                </label>
+              </div>
+              <div class="preset-option" data-preset="pomodoro">
+                <input type="radio" id="preset-pomodoro" name="timer-preset" value="pomodoro">
+                <label for="preset-pomodoro">
+                  <strong>25/5 (Pomodoro)</strong>
+                  <div class="preset-description">Pomodoro technique with shorter cycles.</div>
+                </label>
+              </div>
+              <div class="preset-option" data-preset="deepWork">
+                <input type="radio" id="preset-deepWork" name="timer-preset" value="deepWork">
+                <label for="preset-deepWork">
+                  <strong>90/20 (Deep Work)</strong>
+                  <div class="preset-description">Extended focus time for complex tasks requiring deep concentration.</div>
+                </label>
+              </div>
+              <div class="preset-option" data-preset="custom">
+                <input type="radio" id="preset-custom" name="timer-preset" value="custom">
+                <label for="preset-custom">
+                  <strong>Custom</strong>
+                  <div class="preset-description">Set your own work and break durations.</div>
+                  <div class="custom-timer-inputs" id="customTimerInputs">
+                    <div class="timer-input-group">
+                      <label for="customWorkTime">Work Time:</label>
+                      <input type="number" id="customWorkTime" min="1" max="180" value="25" placeholder="25">
+                      <span>minutes</span>
+                    </div>
+                    <div class="timer-input-group">
+                      <label for="customBreakTime">Break Time:</label>
+                      <input type="number" id="customBreakTime" min="1" max="60" value="5" placeholder="5">
+                      <span>minutes</span>
+                    </div>
                   </div>
-                  <div class="timer-input-group">
-                    <label for="customBreakTime">Break Time:</label>
-                    <input type="number" id="customBreakTime" min="1" max="60" value="5" placeholder="5">
-                    <span>minutes</span>
-                  </div>
-                </div>
-              </label>
+                </label>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="form-group">
-          <h3>Sound Notifications</h3>
-          <div class="settings-option">
-            <input type="checkbox" id="soundToggle" checked>
-            <label for="soundToggle">Enable sound notifications</label>
+          <div class="form-group">
+            <h3>Sound Notifications</h3>
+            <div class="settings-option">
+              <input type="checkbox" id="soundToggle" checked>
+              <label for="soundToggle">Enable sound notifications</label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <h3>YouTube Ad Blocking</h3>
+            <div class="settings-option">
+              <input type="checkbox" id="adBlockToggle" checked>
+              <label for="adBlockToggle">Block YouTube ads during focus sessions</label>
+              <div class="settings-description">Turn off if you prefer to support content creators with ad views.</div>
+            </div>
           </div>
         </div>
         
-        <div class="form-group">
-          <h3>YouTube Ad Blocking</h3>
-          <div class="settings-option">
-            <input type="checkbox" id="adBlockToggle" checked>
-            <label for="adBlockToggle">Block YouTube ads during focus sessions</label>
-            <div class="settings-description">Turn off if you prefer to support content creators with ad views.</div>
-          </div>
+        <div class="modal-footer">
+          <button id="saveSettingsBtn" class="modal-save-btn">Save Settings</button>
         </div>
       </div>
     </div>

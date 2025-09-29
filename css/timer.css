@@ -45,6 +45,24 @@
   font-size: 0.9rem;
 }
 
+/* Style for the +5 min button */
+#addTimeBtn {
+  background-color: var(--accent);
+  color: var(--bg);
+  border: 1px solid var(--accent);
+  transition: all var(--transition);
+}
+
+#addTimeBtn:hover:not(:disabled) {
+  background-color: var(--bg);
+  color: var(--accent);
+}
+
+#addTimeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Sound notification control styles */
 #soundSettings {
   margin-top: 12px;
