@@ -138,7 +138,7 @@ function updateTimerTitle(presetKey) {
       // Get the custom preset values to display in the title
       const workMinutes = Math.floor(TIMER_PRESETS.custom.work / 60);
       const breakMinutes = Math.floor(TIMER_PRESETS.custom.break / 60);
-      titleElement.innerHTML = `<i class="fas fa-stopwatch"></i> ${workMinutes}/${breakMinutes} Custom<span class="tooltip" title="Custom work and break durations"><i class="fas fa-info-circle"></i></span>`;
+      titleElement.innerHTML = `<i class="fas fa-stopwatch"></i> ${workMinutes}/${breakMinutes} Split<span class="tooltip" title="Custom work and break durations"><i class="fas fa-info-circle"></i></span>`;
       break;
     default: // default is 52/17
       titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 52/17 Rule<span class="tooltip" title="52 minutes of concentrated work time followed by a 17-minute break"><i class="fas fa-info-circle"></i></span>';

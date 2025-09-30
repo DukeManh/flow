@@ -442,3 +442,329 @@ Object.entries(projectCounts).forEach(([project, count]) => {
 const oldestDate = new Date(simulatedData[simulatedData.length - 1].start);
 const newestDate = new Date(simulatedData[0].start);
 console.log(`Date range: ${oldestDate.toLocaleDateString()} to ${newestDate.toLocaleDateString()}`);
+
+// Generate test data for Task Planner
+function generatePlannerTestData() {
+  const plannerTasks = [];
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  
+  // Sample tasks for today
+  const sampleTasks = [
+    {
+      id: 'task_' + Date.now() + '_1',
+      date: todayStr,
+      title: 'Morning Standup',
+      description: 'Daily team sync meeting',
+      startTime: '09:00',
+      durationMinutes: 30,
+      endTime: '09:30',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_2', 
+      date: todayStr,
+      title: 'Code Review',
+      description: 'Review PRs from team members',
+      startTime: '09:30',
+      durationMinutes: 60,
+      endTime: '10:30',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_3',
+      date: todayStr,
+      title: 'Feature Development',
+      description: 'Implement user authentication',
+      startTime: '10:30',
+      durationMinutes: 120,
+      endTime: '12:30',
+      completed: false
+    },
+    {
+      id: 'task_' + Date.now() + '_4',
+      date: todayStr,
+      title: 'Lunch Break',
+      description: '',
+      startTime: '12:30',
+      durationMinutes: 60,
+      endTime: '13:30',
+      completed: false
+    },
+    {
+      id: 'task_' + Date.now() + '_5',
+      date: todayStr,
+      title: 'Documentation',
+      description: 'Update API documentation',
+      startTime: '13:30',
+      durationMinutes: 90,
+      endTime: '15:00',
+      completed: false
+    },
+    {
+      id: 'task_' + Date.now() + '_6',
+      date: todayStr,
+      title: 'Client Meeting',
+      description: 'Project review and feedback',
+      startTime: '15:00',
+      durationMinutes: 60,
+      endTime: '16:00',
+      completed: false
+    },
+    {
+      id: 'task_' + Date.now() + '_7',
+      date: todayStr,
+      title: 'Bug Fixes',
+      description: 'Address issues from QA testing',
+      startTime: '16:00',
+      durationMinutes: 90,
+      endTime: '17:30',
+      completed: false
+    }
+  ];
+
+  // Add sample tasks for tomorrow as well
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  
+  const tomorrowTasks = [
+    {
+      id: 'task_' + Date.now() + '_tomorrow_1',
+      date: tomorrowStr,
+      title: 'Design Review',
+      description: 'Review UI mockups with design team',
+      startTime: '09:00',
+      durationMinutes: 60,
+      endTime: '10:00',
+      completed: false
+    },
+    {
+      id: 'task_' + Date.now() + '_tomorrow_2',
+      date: tomorrowStr,
+      title: 'Sprint Planning',
+      description: 'Plan next sprint with product team',
+      startTime: '10:00',
+      durationMinutes: 120,
+      endTime: '12:00',
+      completed: false
+    },
+    {
+      id: 'task_' + Date.now() + '_tomorrow_3',
+      date: tomorrowStr,
+      title: 'Deep Work Session',
+      description: 'Focus time for complex feature implementation',
+      startTime: '14:00',
+      durationMinutes: 180,
+      endTime: '17:00',
+      completed: false
+    }
+  ];
+
+  // Add sample tasks for yesterday
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  
+  const yesterdayTasks = [
+    {
+      id: 'task_' + Date.now() + '_yesterday_1',
+      date: yesterdayStr,
+      title: 'Morning Workout',
+      description: 'Cardio and strength training',
+      startTime: '07:00',
+      durationMinutes: 60,
+      endTime: '08:00',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_yesterday_2',
+      date: yesterdayStr,
+      title: 'Project Planning',
+      description: 'Plan upcoming features and milestones',
+      startTime: '09:00',
+      durationMinutes: 90,
+      endTime: '10:30',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_yesterday_3',
+      date: yesterdayStr,
+      title: 'Database Migration',
+      description: 'Migrate user data to new schema',
+      startTime: '10:30',
+      durationMinutes: 180,
+      endTime: '13:30',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_yesterday_4',
+      date: yesterdayStr,
+      title: 'Team Retrospective',
+      description: 'Discuss what went well and areas for improvement',
+      startTime: '14:00',
+      durationMinutes: 60,
+      endTime: '15:00',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_yesterday_5',
+      date: yesterdayStr,
+      title: 'Testing',
+      description: 'End-to-end testing of new features',
+      startTime: '15:30',
+      durationMinutes: 120,
+      endTime: '17:30',
+      completed: true
+    }
+  ];
+
+  // Add sample tasks for 2 days ago
+  const twoDaysAgo = new Date(today);
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  const twoDaysAgoStr = twoDaysAgo.toISOString().split('T')[0];
+  
+  const twoDaysAgoTasks = [
+    {
+      id: 'task_' + Date.now() + '_2days_1',
+      date: twoDaysAgoStr,
+      title: 'Architecture Review',
+      description: 'Review system architecture for new modules',
+      startTime: '09:00',
+      durationMinutes: 120,
+      endTime: '11:00',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_2days_2',
+      date: twoDaysAgoStr,
+      title: 'API Development',
+      description: 'Build REST endpoints for user management',
+      startTime: '11:00',
+      durationMinutes: 150,
+      endTime: '13:30',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_2days_3',
+      date: twoDaysAgoStr,
+      title: 'Learning Session',
+      description: 'Study new JavaScript frameworks',
+      startTime: '14:30',
+      durationMinutes: 90,
+      endTime: '16:00',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_2days_4',
+      date: twoDaysAgoStr,
+      title: 'Portfolio Update',
+      description: 'Add recent projects to personal portfolio',
+      startTime: '16:30',
+      durationMinutes: 60,
+      endTime: '17:30',
+      completed: true
+    }
+  ];
+
+  // Add sample tasks for 3 days ago
+  const threeDaysAgo = new Date(today);
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const threeDaysAgoStr = threeDaysAgo.toISOString().split('T')[0];
+  
+  const threeDaysAgoTasks = [
+    {
+      id: 'task_' + Date.now() + '_3days_1',
+      date: threeDaysAgoStr,
+      title: 'Client Presentation',
+      description: 'Present project progress to stakeholders',
+      startTime: '10:00',
+      durationMinutes: 90,
+      endTime: '11:30',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_3days_2',
+      date: threeDaysAgoStr,
+      title: 'Security Audit',
+      description: 'Review application security vulnerabilities',
+      startTime: '13:00',
+      durationMinutes: 120,
+      endTime: '15:00',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_3days_3',
+      date: threeDaysAgoStr,
+      title: 'Performance Optimization',
+      description: 'Optimize database queries and API responses',
+      startTime: '15:00',
+      durationMinutes: 120,
+      endTime: '17:00',
+      completed: true
+    }
+  ];
+
+  // Add sample tasks for last week
+  const lastWeek = new Date(today);
+  lastWeek.setDate(lastWeek.getDate() - 7);
+  const lastWeekStr = lastWeek.toISOString().split('T')[0];
+  
+  const lastWeekTasks = [
+    {
+      id: 'task_' + Date.now() + '_lastweek_1',
+      date: lastWeekStr,
+      title: 'Weekly Planning',
+      description: 'Plan tasks and priorities for the week',
+      startTime: '09:00',
+      durationMinutes: 60,
+      endTime: '10:00',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_lastweek_2',
+      date: lastWeekStr,
+      title: 'Code Refactoring',
+      description: 'Clean up legacy code and improve structure',
+      startTime: '10:30',
+      durationMinutes: 180,
+      endTime: '13:30',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_lastweek_3',
+      date: lastWeekStr,
+      title: 'Knowledge Sharing',
+      description: 'Tech talk about new development practices',
+      startTime: '14:00',
+      durationMinutes: 60,
+      endTime: '15:00',
+      completed: true
+    },
+    {
+      id: 'task_' + Date.now() + '_lastweek_4',
+      date: lastWeekStr,
+      title: 'Bug Hunting',
+      description: 'Find and fix critical production issues',
+      startTime: '15:30',
+      durationMinutes: 90,
+      endTime: '17:00',
+      completed: true
+    }
+  ];
+
+  plannerTasks.push(...sampleTasks, ...tomorrowTasks, ...yesterdayTasks, ...twoDaysAgoTasks, ...threeDaysAgoTasks, ...lastWeekTasks);
+  return plannerTasks;
+}
+
+// Generate and store planner test data
+const plannerTestData = generatePlannerTestData();
+localStorage.setItem('flowPlannerTasks', JSON.stringify(plannerTestData));
+
+console.log('Task Planner test data generated!');
+console.log('Today\'s tasks:', plannerTestData.filter(t => t.date === new Date().toISOString().split('T')[0]).length);
+console.log('Tomorrow\'s tasks:', plannerTestData.filter(t => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return t.date === tomorrow.toISOString().split('T')[0];
+}).length);

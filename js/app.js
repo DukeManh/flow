@@ -10,6 +10,7 @@ import { initAnimations, cleanupAnimations } from './animations.js';
 import { initProjects, cleanupDuplicateProjects } from './projects.js';
 import { initSettings } from './settings.js';
 import storageService from './storage.js';
+import { initPlanner } from './planner.js';
 
 // Initialize scrolling header effect
 function initScrollingHeader() {
@@ -60,7 +61,7 @@ function initMobileNavigation() {
   // Map sections to their corresponding cards
   const sectionMap = {
     'timer': ['#timerCard', '#goalCard'],
-    'tasks': ['#todoCard'],
+    'tasks': ['#todoCard', '#taskPlannerCard'],
     'music': ['#musicCard'],
     'stats': ['#insightsCard', '#checkInCard', '#historyCard']
   };
@@ -576,6 +577,7 @@ async function init() {
   // Initialize goals and todos after projects
   initGoals();
   initTodos();
+  initPlanner();
   
   const currentVideoID = initMusic();
   initHistory(currentVideoID);
