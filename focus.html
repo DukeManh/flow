@@ -23,7 +23,34 @@
   <meta name="twitter:card" content="summary_large_image">
   
   <!-- Font Awesome for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> -->
+  
+  <!-- Fallback for offline: Use basic CSS icons when Font Awesome fails -->
+  <style>
+    .fas, .fa {
+      font-style: normal;
+      font-variant: normal;
+      text-rendering: auto;
+      line-height: 1;
+    }
+    
+    /* Basic icon fallbacks using Unicode characters */
+    .fa-expand-arrows-alt::before { content: "⤢"; }
+    .fa-volume-up::before { content: "🔊"; }
+    .fa-volume-down::before { content: "🔉"; }
+  </style>
+  
+  <!-- Try to load Font Awesome with fallback -->
+  <script>
+    // Load Font Awesome with graceful degradation
+    const fontAwesome = document.createElement('link');
+    fontAwesome.rel = 'stylesheet';
+    fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+    fontAwesome.onerror = function() {
+      console.log('Font Awesome failed to load - using fallback icons');
+    };
+    document.head.appendChild(fontAwesome);
+  </script>
   
   <!-- Initial theme loader - must be loaded before other CSS to prevent FART -->
   <script src="./js/theme-loader.js"></script>
