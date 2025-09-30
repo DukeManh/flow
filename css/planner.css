@@ -142,7 +142,6 @@
 }
 
 .timeline-task.completed {
-  background-color: var(--success); /* Green for completed tasks */
   opacity: 0.7; /* Slightly dimmed but still solid */
 }
 
@@ -159,7 +158,7 @@
 /* Past task styling */
 .timeline-task.past-task {
   opacity: 0.6;
-  background-color: var(--text-secondary) !important; /* Grey for past tasks */
+  /* background-color: var(--text-secondary) !important; Grey for past tasks */
   cursor: default !important;
 }
 
@@ -261,7 +260,6 @@
 }
 
 .planner-task.completed {
-  background-color: var(--surface);
   opacity: 0.8; /* Slightly dimmed but still solid */
   border-left: 3px solid var(--success);
 }

@@ -1,5 +1,5 @@
 // Service Worker for Flow PWA
-const CACHE_NAME = 'flow-cache-v1.3.1'; // Updated for todo upload improvements
+const CACHE_NAME = 'flow-cache-v1.3.2'; // Updated for todo upload improvements
 const SW_VERSION = '2025-09-30'; // Version identifier updated for todo upload features
 const DEV_HOSTNAMES = ['localhost', 'dev.local', '127.0.0.1']; // Development hostnames to bypass caching
 
@@ -152,14 +152,25 @@ async function matchFromCache(request) {
 // Install event - cache app shell resources
 self.addEventListener('install', event => {
   console.log(`[SW] Installing new service worker version ${SW_VERSION}`);
+  
+  // Skip caching in development environments
+  if (isDevEnvironment()) {
+    console.log('[SW] Development environment detected - skipping cache installation');
+    self.skipWaiting();
+    return;
+  }
+  
   // Force the waiting service worker to become the active service worker
   self.skipWaiting();
   
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Opened cache');
+        console.log('[SW] Opened cache and caching resources');
         return cache.addAll(urlsToCache);
+      })
+      .catch(error => {
+        console.error('[SW] Failed to cache resources:', error);
       })
   );
 });
@@ -269,8 +280,6 @@ self.addEventListener('fetch', event => {
   
   // In development environments (localhost, dev.local), always go to network first
   // This ensures you're always seeing the latest changes during development
-  // TEMPORARILY DISABLED FOR OFFLINE TESTING
-  /*
   if (isDevEnvironment()) {
     console.log(`[SW] Development environment detected - bypassing cache for: ${url.pathname}`);
     event.respondWith(
@@ -286,7 +295,6 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
-  */
   
   // Special handling for theme.css
   if (url.pathname.endsWith('/css/theme.css')) {
