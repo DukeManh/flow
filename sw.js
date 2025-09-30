@@ -55,12 +55,18 @@ const urlsToCache = [
   './js/focus.js',
   './js/simulate.js',
   './js/planner.js',
+  './js/adBlocker.js',
+  './js/pwa.js',
+  './js/theme-loader.js',
   './assets/sounds/button.wav',
   './assets/sounds/alarm-bell.wav',
   './assets/sounds/chime.wav',
   './assets/images/favicon.ico',
   './assets/images/icon-square-192.png',
-  './assets/images/icon-square-512.png'
+  './assets/images/icon-square-512.png',
+  './assets/images/icon-192.png',
+  './assets/images/icon-512.png',
+  './assets/images/og-image.png'
 ];
 
 // Variable to store themes configuration
@@ -101,6 +107,46 @@ async function loadThemesConfig() {
 async function getThemeCssPath(theme) {
   const config = await loadThemesConfig();
   return config.themes[theme] || config.themes[config.defaultTheme];
+}
+
+// Helper function to normalize URLs for better cache matching
+function normalizeUrl(url) {
+  const urlObj = new URL(url);
+  // Remove query parameters and fragments for cache matching
+  return urlObj.origin + urlObj.pathname;
+}
+
+// Enhanced cache matching function
+async function matchFromCache(request) {
+  const cache = await caches.open(CACHE_NAME);
+  
+  // Try exact match first
+  let response = await cache.match(request);
+  if (response) return response;
+  
+  // Try normalized URL match
+  const normalizedUrl = normalizeUrl(request.url);
+  response = await cache.match(normalizedUrl);
+  if (response) return response;
+  
+  // Try with different URL formats for the same resource
+  const url = new URL(request.url);
+  const pathname = url.pathname;
+  
+  // If requesting from root, try with explicit index.html
+  if (pathname === '/' || pathname === '') {
+    response = await cache.match('./index.html');
+    if (response) return response;
+  }
+  
+  // If requesting index.html, try with root
+  if (pathname.endsWith('/index.html')) {
+    const rootPath = pathname.replace('/index.html', '/');
+    response = await cache.match(rootPath);
+    if (response) return response;
+  }
+  
+  return null;
 }
 
 // Install event - cache app shell resources
@@ -215,8 +261,16 @@ self.addEventListener('fetch', event => {
     return;
   }
   
+  // Skip external requests (different origins) - let them go to network
+  if (url.origin !== self.location.origin) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
   // In development environments (localhost, dev.local), always go to network first
   // This ensures you're always seeing the latest changes during development
+  // TEMPORARILY DISABLED FOR OFFLINE TESTING
+  /*
   if (isDevEnvironment()) {
     console.log(`[SW] Development environment detected - bypassing cache for: ${url.pathname}`);
     event.respondWith(
@@ -227,11 +281,12 @@ self.addEventListener('fetch', event => {
         .catch(error => {
           console.error('Network fetch failed in dev mode:', error);
           // If network fetch fails, try cache as fallback
-          return caches.match(event.request);
+          return matchFromCache(event.request);
         })
     );
     return;
   }
+  */
   
   // Special handling for theme.css
   if (url.pathname.endsWith('/css/theme.css')) {
@@ -239,14 +294,17 @@ self.addEventListener('fetch', event => {
     return;
   }
   
-  // Default handling for other requests
+  // Default handling for other requests - Cache First strategy
   event.respondWith(
-    caches.match(event.request)
+    matchFromCache(event.request)
       .then(response => {
         // Cache hit - return response
         if (response) {
+          console.log(`[SW] Cache hit for: ${url.pathname}`);
           return response;
         }
+        
+        console.log(`[SW] Cache miss for: ${url.pathname}, fetching from network`);
         
         // No cache match - fetch from network
         return fetch(event.request).then(
@@ -259,10 +317,11 @@ self.addEventListener('fetch', event => {
             // Clone the response since it can only be consumed once
             const responseToCache = response.clone();
 
-            // Cache the fetched response
+            // Cache the fetched response for future use
             caches.open(CACHE_NAME)
               .then(cache => {
                 cache.put(event.request, responseToCache);
+                console.log(`[SW] Cached new resource: ${url.pathname}`);
               })
               .catch(error => {
                 console.error('Cache put error:', error);
@@ -271,14 +330,78 @@ self.addEventListener('fetch', event => {
             return response;
           }
         ).catch(error => {
-          console.error('Fetch failed:', error);
-          // For HTML requests, try to return the index page as fallback
-          if (event.request.headers.get('Accept') && 
-              event.request.headers.get('Accept').includes('text/html')) {
-            return caches.match('./index.html');
+          console.error(`[SW] Network fetch failed for ${url.pathname}:`, error);
+          
+          // Enhanced offline fallbacks
+          if (event.request.headers.get('Accept')) {
+            const accept = event.request.headers.get('Accept');
+            
+            // For HTML requests, return the cached index page
+            if (accept.includes('text/html')) {
+              console.log('[SW] Serving offline HTML fallback');
+              return matchFromCache(new Request('./index.html')) || 
+                     caches.match('./index.html');
+            }
+            
+            // For CSS requests, try to find any cached CSS file
+            if (accept.includes('text/css')) {
+              console.log('[SW] CSS request failed, trying cached alternatives');
+              return matchFromCache(event.request);
+            }
+            
+            // For JS requests, try the enhanced cache matching
+            if (accept.includes('application/javascript') || accept.includes('text/javascript')) {
+              console.log('[SW] JS request failed, trying cached alternatives');
+              return matchFromCache(event.request);
+            }
           }
-          throw error;
+          
+          // If no specific fallback, try one more time with enhanced matching
+          return matchFromCache(event.request).then(cachedResponse => {
+            if (cachedResponse) {
+              console.log(`[SW] Found cached fallback for: ${url.pathname}`);
+              return cachedResponse;
+            }
+            
+            // No fallback available, throw the original error
+            throw error;
+          });
         });
+      })
+      .catch(error => {
+        console.error(`[SW] Final fallback failed for ${url.pathname}:`, error);
+        // Return a basic offline page response for HTML requests
+        if (event.request.headers.get('Accept') && 
+            event.request.headers.get('Accept').includes('text/html')) {
+          return new Response(
+            `<!DOCTYPE html>
+            <html>
+            <head>
+              <title>Offline - Flow App</title>
+              <style>
+                body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                .offline-message { max-width: 400px; margin: 0 auto; }
+              </style>
+            </head>
+            <body>
+              <div class="offline-message">
+                <h1>You're Offline</h1>
+                <p>This page isn't available offline. Please check your connection and try again.</p>
+                <button onclick="window.history.back()">Go Back</button>
+              </div>
+            </body>
+            </html>`,
+            { 
+              headers: { 
+                'Content-Type': 'text/html',
+                'Cache-Control': 'no-cache'
+              } 
+            }
+          );
+        }
+        
+        // For non-HTML requests, throw the error
+        throw error;
       })
   );
 });
