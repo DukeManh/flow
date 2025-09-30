@@ -191,12 +191,12 @@ async function handleCustomTimerChange() {
   const customWorkTime = parseInt(document.getElementById('customWorkTime').value);
   const customBreakTime = parseInt(document.getElementById('customBreakTime').value);
   
-  // Validate inputs
-  if (!customWorkTime || customWorkTime < 1 || customWorkTime > 180) {
+  // Basic validation - only check if values are valid numbers within bounds
+  if (isNaN(customWorkTime) || customWorkTime < 5 || customWorkTime > 180) {
     return; // Don't save invalid values
   }
   
-  if (!customBreakTime || customBreakTime < 1 || customBreakTime > 60) {
+  if (isNaN(customBreakTime) || customBreakTime < 1 || customBreakTime > 60) {
     return; // Don't save invalid values
   }
   

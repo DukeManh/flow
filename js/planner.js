@@ -720,7 +720,10 @@ function renderTasks() {
     }
     
     // Add tooltip with task details
-    taskBlock.title = `${task.title} (${task.startTime} - ${task.endTime})`;
+    const tooltipText = task.description ? 
+      `${task.title}\n${task.startTime} - ${task.endTime} (${task.durationMinutes} min)\n\nDescription: ${task.description}` :
+      `${task.title}\n${task.startTime} - ${task.endTime} (${task.durationMinutes} min)`;
+    taskBlock.title = tooltipText;
     
     // Add click handler
     taskBlock.addEventListener('click', () => {
@@ -779,6 +782,9 @@ function renderTasks() {
       </div>
       ${actionsHtml}
     `;
+    
+    // Add tooltip to task list item
+    taskItem.title = tooltipText;
     
     // Add event listeners only for non-past tasks
     if (!isPastTask) {

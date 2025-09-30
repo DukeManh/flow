@@ -194,81 +194,6 @@
       </div>
     </div>
 
-    <div class="card" id="goalCard">
-      <h2><i class="fas fa-bullseye"></i> Projects</h2>
-      
-      <!-- Project selector (moved to goal card) - updated to dropdown style -->
-      <div class="project-header">
-        <!-- Theme-style dropdown for project selection -->
-        <div class="project-dropdown">
-          <button class="project-dropdown-btn" id="projectDropdownBtn">
-            <div class="project-name-display">
-              <span class="project-color-dot"></span>
-              <span class="current-project-name">Select Project</span>
-            </div>
-            <i class="fas fa-chevron-down"></i>
-          </button>
-          <div class="project-dropdown-content" id="projectDropdownContent">
-            <!-- Project options will be populated by JavaScript -->
-          </div>
-        </div>
-        
-        <!-- Old selector (hidden but kept for compatibility) -->
-        <div class="project-selector-container">
-          <select id="projectSelector"></select>
-        </div>
-        
-        <button id="newProjectBtn">
-          <i class="fas fa-plus"></i> New Project
-        </button>
-      </div>
-      
-      <!-- Goal input with header like focus target -->
-      <div class="goal-settings">
-        <div class="goal-header-group">
-          <h3>What are your goals today?</h3>
-        </div>
-        <div id="goalContainer"></div>
-      </div>
-      
-      <!-- Focus target setting directly in HTML -->
-      <div id="targetSettings" class="target-settings">
-        <div class="target-header-group">
-          <h3>Project Focus Target</h3>
-          <div class="target-progress">
-            <span id="targetProgressText">0 / 0 min</span>
-          </div>
-        </div>
-        <div class="compact-target-input">
-          <input type="number" id="targetFocusInput" class="target-input" placeholder="Minutes" min="1" max="480">
-          <button id="saveTargetBtn" class="target-save-btn">Set</button>
-        </div>
-        <p class="target-description">Set a daily focus target for this project</p>
-      </div>
-    </div>
-    
-    <div class="card" id="todoCard">
-      <h2><i class="fas fa-tasks"></i> Todos</h2>
-      <div class="focus-tips" style="margin-bottom: 15px;">
-        <p class="note"><i class="fas fa-bullseye"></i> Focus on one task at a time.</p>
-        <p class="note"><i class="fas fa-hourglass-half"></i> Set clear, bite-sized goals.</p>
-      </div>
-      <div class="todo-input">
-        <input type="text" id="todoInput" class="input" placeholder="Add a task…">
-        <button id="addTodoBtn">Add</button>
-      </div>
-      <div class="todo-actions">
-        <button id="uploadTodosBtn" class="todo-action-btn" title="Upload todos from file">
-          <i class="fas fa-upload"></i> Upload
-        </button>
-        <button id="exportTodosBtn" class="todo-action-btn" title="Export current todos">
-          <i class="fas fa-download"></i> Export
-        </button>
-        <input type="file" id="todoFileInput" accept=".json,.csv" style="display: none;">
-      </div>
-      <ul id="todoList"></ul>
-    </div>
-
     <div class="card" id="taskPlannerCard">
       <h2><i class="fas fa-calendar-day"></i> Task Planner</h2>
       <div class="planner-header">
@@ -316,7 +241,82 @@
         </button>
       </div>
     </div>
+
+    <div class="card" id="goalCard">
+      <h2><i class="fas fa-bullseye"></i> Projects</h2>
+      
+      <!-- Project selector (moved to goal card) - updated to dropdown style -->
+      <div class="project-header">
+        <!-- Theme-style dropdown for project selection -->
+        <div class="project-dropdown">
+          <button class="project-dropdown-btn" id="projectDropdownBtn">
+            <div class="project-name-display">
+              <span class="project-color-dot"></span>
+              <span class="current-project-name">Select Project</span>
+            </div>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="project-dropdown-content" id="projectDropdownContent">
+            <!-- Project options will be populated by JavaScript -->
+          </div>
+        </div>
+        
+        <!-- Old selector (hidden but kept for compatibility) -->
+        <div class="project-selector-container">
+          <select id="projectSelector"></select>
+        </div>
+        
+        <button id="newProjectBtn">
+          <i class="fas fa-plus"></i> New Project
+        </button>
+      </div>
+      
+      <!-- Goal input with header like focus target -->
+      <div class="goal-settings">
+        <div class="goal-header-group">
+          <h3>What are your goals today?</h3>
+        </div>
+        <div id="goalContainer"></div>
+      </div>
+      
+      <!-- Focus target setting directly in HTML -->
+      <div id="targetSettings" class="target-settings">
+        <div class="target-header-group">
+          <h3>Project Focus Target</h3>
+          <div class="target-progress">
+            <span id="targetProgressText">0 / 0 min</span>
+          </div>
+        </div>
+        <div class="compact-target-input">
+          <input type="number" id="targetFocusInput" class="target-input" placeholder="Minutes" min="1" max="480" step="15">
+          <button id="saveTargetBtn" class="target-save-btn">Set</button>
+        </div>
+        <p class="target-description">Set a daily focus target for this project</p>
+      </div>
+    </div>
     
+    <div class="card" id="todoCard">
+      <h2><i class="fas fa-tasks"></i> Todos</h2>
+      <div class="focus-tips" style="margin-bottom: 15px;">
+        <p class="note"><i class="fas fa-bullseye"></i> Focus on one task at a time.</p>
+        <p class="note"><i class="fas fa-hourglass-half"></i> Set clear, bite-sized goals.</p>
+      </div>
+      <div class="todo-input">
+        <input type="text" id="todoInput" class="input" placeholder="Add a task…">
+        <button id="addTodoBtn">Add</button>
+      </div>
+      <div class="todo-actions">
+        <button id="uploadTodosBtn" class="todo-action-btn" title="Upload todos from file">
+          <i class="fas fa-upload"></i> Upload
+        </button>
+        <button id="exportTodosBtn" class="todo-action-btn" title="Export current todos">
+          <i class="fas fa-download"></i> Export
+        </button>
+        <input type="file" id="todoFileInput" accept=".json,.csv" style="display: none;">
+      </div>
+      <ul id="todoList"></ul>
+    </div>
+
     <div class="card" id="musicCard">
       <h2><i class="fas fa-music"></i> Tunes</h2>
       <iframe id="ytPlayer" src="https://www.youtube.com/embed/wL8DVHuWI7Y?autoplay=1&loop=1&playlist=wL8DVHuWI7Y"
@@ -461,12 +461,12 @@
                   <div class="custom-timer-inputs" id="customTimerInputs">
                     <div class="timer-input-group">
                       <label for="customWorkTime">Work Time:</label>
-                      <input type="number" id="customWorkTime" min="1" max="180" value="25" placeholder="25">
+                      <input type="number" id="customWorkTime" min="5" max="180" value="25" placeholder="25" step="15">
                       <span>minutes</span>
                     </div>
                     <div class="timer-input-group">
                       <label for="customBreakTime">Break Time:</label>
-                      <input type="number" id="customBreakTime" min="1" max="60" value="5" placeholder="5">
+                      <input type="number" id="customBreakTime" min="1" max="60" value="5" placeholder="5" step="5">
                       <span>minutes</span>
                     </div>
                   </div>
@@ -626,7 +626,7 @@
             </div>
             <div class="time-input-group">
               <label for="taskMinutes">Duration (minutes):</label>
-              <input type="number" id="taskMinutes" min="5" max="480" value="30">
+              <input type="number" id="taskMinutes" min="5" max="480" value="30" step="15">
             </div>
           </div>
           <div class="end-time-display">

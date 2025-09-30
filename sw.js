@@ -1,5 +1,5 @@
 // Service Worker for Flow PWA
-const CACHE_NAME = 'flow-cache-v1.3.0'; // Updated for todo upload improvements
+const CACHE_NAME = 'flow-cache-v1.3.1'; // Updated for todo upload improvements
 const SW_VERSION = '2025-09-30'; // Version identifier updated for todo upload features
 const DEV_HOSTNAMES = ['localhost', 'dev.local', '127.0.0.1']; // Development hostnames to bypass caching
 
