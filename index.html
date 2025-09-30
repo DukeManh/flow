@@ -42,6 +42,7 @@
   <link rel="stylesheet" href="./css/responsive.css">
   <link rel="stylesheet" href="./css/animations.css">
   <link rel="stylesheet" href="./css/projects.css">
+  <link rel="stylesheet" href="./css/planner.css">
   
   <!-- Inline splash screen styles -->
   <style>
@@ -247,7 +248,7 @@
     </div>
     
     <div class="card" id="todoCard">
-      <h2><i class="fas fa-tasks"></i> Tasks</h2>
+      <h2><i class="fas fa-tasks"></i> Todos</h2>
       <div class="focus-tips" style="margin-bottom: 15px;">
         <p class="note"><i class="fas fa-bullseye"></i> Focus on one task at a time.</p>
         <p class="note"><i class="fas fa-hourglass-half"></i> Set clear, bite-sized goals.</p>
@@ -267,6 +268,55 @@
       </div>
       <ul id="todoList"></ul>
     </div>
+
+    <div class="card" id="taskPlannerCard">
+      <h2><i class="fas fa-calendar-day"></i> Task Planner</h2>
+      <div class="planner-header">
+        <div class="planner-date">
+          <span id="plannerDate">Today</span>
+        </div>
+        <div class="planner-navigation">
+          <button id="prevDayBtn" class="nav-btn" title="Previous day">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button id="todayBtn" class="nav-btn" title="Go to today">Today</button>
+          <button id="nextDayBtn" class="nav-btn" title="Next day">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="planner-status">
+          <span id="plannerStatusIcon"><i class="fas fa-circle"></i></span>
+          <span id="plannerStatusText">No active plan</span>
+        </div>
+      </div>
+
+      <div class="planner-controls">
+        <div class="planner-time">
+          <span id="plannerCurrentTime">--:--</span>
+          <span class="planner-end-time">End: <span id="plannerEndTime">--:--</span></span>
+        </div>
+        <button id="addPlannerTaskBtn" class="primary-btn">
+          <i class="fas fa-plus"></i> Add Block
+        </button>
+      </div>
+
+      <div class="planner-timeline">
+        <div class="timeline-now-indicator" id="timelineNowIndicator"></div>
+        <div id="plannerTimeline" class="timeline-container"></div>
+      </div>
+
+      <div id="plannerTaskList" class="planner-tasks"></div>
+
+      <div class="planner-actions">
+        <button id="clearPlannerBtn" class="planner-action-btn" title="Clear all tasks">
+          <i class="fas fa-trash-alt"></i> Clear Plan
+        </button>
+        <button id="exportPlannerBtn" class="planner-action-btn" title="Export plan">
+          <i class="fas fa-download"></i> Export
+        </button>
+      </div>
+    </div>
+    
     <div class="card" id="musicCard">
       <h2><i class="fas fa-music"></i> Tunes</h2>
       <iframe id="ytPlayer" src="https://www.youtube.com/embed/wL8DVHuWI7Y?autoplay=1&loop=1&playlist=wL8DVHuWI7Y"
@@ -548,6 +598,47 @@
             <button id="cancelImportBtn" class="modal-cancel-btn">Cancel</button>
             <button id="confirmImportBtn" class="modal-save-btn" disabled>Import Selected</button>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Planner Modal -->
+  <div id="taskPlannerModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2 id="taskModalTitle">Add Task Block</h2>
+      <div class="modal-form">
+        <div class="task-form-group">
+          <label for="taskTitle">Task Title:</label>
+          <input type="text" id="taskTitle" placeholder="Enter task title...">
+        </div>
+        <div class="task-form-group">
+          <label for="taskDescription">Description (optional):</label>
+          <textarea id="taskDescription" rows="2" placeholder="Add any notes or details..."></textarea>
+        </div>
+        <div class="task-form-group">
+          <label>Estimated Time:</label>
+          <div class="task-time-inputs">
+            <div class="time-input-group">
+              <label for="taskStartTime">Start Time:</label>
+              <input type="time" id="taskStartTime">
+            </div>
+            <div class="time-input-group">
+              <label for="taskMinutes">Duration (minutes):</label>
+              <input type="number" id="taskMinutes" min="5" max="480" value="30">
+            </div>
+          </div>
+          <div class="end-time-display">
+            End Time: <span id="taskEndTime">--:--</span>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <input type="hidden" id="taskId" value="">
+          <button id="deleteTaskBtn" class="modal-delete-btn" style="display: none;">Delete</button>
+          <button id="cancelTaskBtn" class="modal-cancel-btn">Cancel</button>
+          <button id="saveTaskBtn" class="modal-save-btn">Save Task</button>
         </div>
       </div>
     </div>
