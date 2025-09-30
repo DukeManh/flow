@@ -10,7 +10,7 @@ let timerCore;
 
 // Timer elements
 let timerEl, progressEl;
-let startBtn, pauseBtn, endBtn, resetBtn;
+let startBtn, pauseBtn, endBtn, resetBtn, addTimeBtn;
 
 export function initTimer() {
   // Get DOM elements
@@ -20,6 +20,7 @@ export function initTimer() {
   pauseBtn = document.getElementById('pauseBtn');
   endBtn = document.getElementById('endBtn');
   resetBtn = document.getElementById('resetBtn');
+  addTimeBtn = document.getElementById('addTimeBtn');
 
   // Show initial value while timer is initializing
   if (timerEl) {
@@ -51,6 +52,7 @@ export function initTimer() {
     pauseBtn: pauseBtn,
     endBtn: endBtn,
     resetBtn: resetBtn,
+    addTimeBtn: addTimeBtn,
     timerLabel: document.getElementById('timerLabel')
   });
 }
@@ -69,6 +71,54 @@ export function updateTimerPreset(presetKey) {
   updateTimerTitle(presetKey);
 }
 
+// Update timer preset without interrupting active sessions
+export function updateTimerPresetWithoutInterruption(presetKey) {
+  if (!TIMER_PRESETS[presetKey]) {
+    console.error('Invalid timer preset:', presetKey);
+    return;
+  }
+  
+  // Check if timer is currently running
+  const isRunning = timerCore && timerCore.state.isRunning;
+  
+  if (isRunning) {
+    // Timer is running - only update the preset for future sessions
+    // Don't change the current session
+    console.log(`Timer is running - preset "${presetKey}" will apply to next session`);
+    
+    // Update the current preset in state but don't apply it yet
+    if (timerCore) {
+      timerCore.state.currentPreset = presetKey;
+      // Save the state with new preset
+      timerCore.saveState();
+    }
+  } else {
+    // Timer is not running - safe to update immediately
+    updateTimerPreset(presetKey);
+  }
+  
+  // Always update the timer title to reflect the new preset selection
+  updateTimerTitle(presetKey);
+}
+
+// Update custom preset values in TIMER_PRESETS
+export function updateCustomPreset(workMinutes, breakMinutes) {
+  if (!TIMER_PRESETS.custom) {
+    console.error('Custom preset not found in TIMER_PRESETS');
+    return;
+  }
+  
+  // Update the custom preset with new values (convert minutes to seconds)
+  TIMER_PRESETS.custom.work = workMinutes * 60;
+  TIMER_PRESETS.custom.break = breakMinutes * 60;
+  TIMER_PRESETS.custom.name = `${workMinutes}/${breakMinutes} (Custom)`;
+  
+  // If the current preset is custom, update the timer
+  if (timerCore && timerCore.state.currentPreset === 'custom') {
+    timerCore.updatePreset('custom');
+  }
+}
+
 // Update timer title based on preset
 function updateTimerTitle(presetKey) {
   const timerLabel = document.getElementById('timerLabel');
@@ -83,6 +133,12 @@ function updateTimerTitle(presetKey) {
       break;
     case 'deepWork':
       titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 90/20 Deep Work<span class="tooltip" title="Extended focus time for complex tasks requiring deep concentration"><i class="fas fa-info-circle"></i></span>';
+      break;
+    case 'custom':
+      // Get the custom preset values to display in the title
+      const workMinutes = Math.floor(TIMER_PRESETS.custom.work / 60);
+      const breakMinutes = Math.floor(TIMER_PRESETS.custom.break / 60);
+      titleElement.innerHTML = `<i class="fas fa-stopwatch"></i> ${workMinutes}/${breakMinutes} Custom<span class="tooltip" title="Custom work and break durations"><i class="fas fa-info-circle"></i></span>`;
       break;
     default: // default is 52/17
       titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 52/17 Rule<span class="tooltip" title="52 minutes of concentrated work time followed by a 17-minute break"><i class="fas fa-info-circle"></i></span>';

@@ -1,12 +1,11 @@
 // Settings management for Flow State app
 import { TIMER_PRESETS } from './constants.js';
-import { updateTimerPreset, saveTimerState } from './timer.js';
+import { updateTimerPreset, saveTimerState, updateCustomPreset } from './timer.js';
 import storageService from './storage.js';
-import { setAdBlockerEnabled } from './adBlocker.js'; // Import our ad blocker module
+import { setAdBlockerEnabled } from './adBlocker.js';
 
 // DOM elements
 let settingsModal;
-let saveSettingsBtn;
 let closeModalBtn;
 
 // Storage keys
@@ -18,7 +17,9 @@ const STORAGE_KEYS = {
 let currentSettings = {
   timerPreset: 'default',
   soundNotifications: true,
-  adBlockerEnabled: true // Add default value for ad blocker
+  adBlockerEnabled: true,
+  customWorkTime: 25, // Default custom work time in minutes
+  customBreakTime: 5  // Default custom break time in minutes
 };
 
 // Storage utility functions
@@ -44,7 +45,6 @@ async function saveSettingsToStorage(settings) {
 export function initSettings() {
   // Get DOM elements
   settingsModal = document.getElementById('settingsModal');
-  saveSettingsBtn = document.getElementById('saveSettingsBtn');
   closeModalBtn = settingsModal.querySelector('.close-modal');
   
   // Get settings button
@@ -55,8 +55,34 @@ export function initSettings() {
   
   // Add event listeners
   settingsBtn.addEventListener('click', openSettings);
-  saveSettingsBtn.addEventListener('click', saveSettings);
   closeModalBtn.addEventListener('click', closeSettings);
+  
+  // Add event listeners for auto-save functionality
+  const presetRadios = document.querySelectorAll('input[name="timer-preset"]');
+  presetRadios.forEach(radio => {
+    radio.addEventListener('change', handlePresetChange);
+  });
+  
+  // Add auto-save listeners for other settings
+  const soundToggle = document.getElementById('soundToggle');
+  if (soundToggle) {
+    soundToggle.addEventListener('change', autoSaveSettings);
+  }
+  
+  const adBlockToggle = document.getElementById('adBlockToggle');
+  if (adBlockToggle) {
+    adBlockToggle.addEventListener('change', autoSaveSettings);
+  }
+  
+  // Add auto-save listeners for custom timer inputs
+  const customWorkTime = document.getElementById('customWorkTime');
+  const customBreakTime = document.getElementById('customBreakTime');
+  if (customWorkTime) {
+    customWorkTime.addEventListener('input', debounce(handleCustomTimerChange, 500));
+  }
+  if (customBreakTime) {
+    customBreakTime.addEventListener('input', debounce(handleCustomTimerChange, 500));
+  }
   
   // Close modal when clicking outside
   window.addEventListener('click', (e) => {
@@ -72,7 +98,7 @@ export function initSettings() {
     }
   });
   
-  console.log('Settings module initialized'); // Add logging to verify initialization
+  console.log('Settings module initialized');
 }
 
 // Open settings modal
@@ -88,7 +114,20 @@ function openSettings() {
   
   const adBlockToggle = document.getElementById('adBlockToggle');
   if (adBlockToggle) {
-    adBlockToggle.checked = currentSettings.adBlockerEnabled; // Initialize ad blocker toggle
+    adBlockToggle.checked = currentSettings.adBlockerEnabled;
+  }
+  
+  // Handle custom timer inputs visibility and values
+  const customInputs = document.getElementById('customTimerInputs');
+  const customWorkTime = document.getElementById('customWorkTime');
+  const customBreakTime = document.getElementById('customBreakTime');
+  
+  if (currentSettings.timerPreset === 'custom') {
+    customInputs.style.display = 'block';
+    customWorkTime.value = currentSettings.customWorkTime;
+    customBreakTime.value = currentSettings.customBreakTime;
+  } else {
+    customInputs.style.display = 'none';
   }
   
   // Show modal with explicit display and flexbox properties
@@ -110,36 +149,88 @@ function closeSettings() {
   document.body.style.overflow = '';
 }
 
-// Save settings
-async function saveSettings() {
-  // Get selected timer preset
-  const selectedPreset = document.querySelector('input[name="timer-preset"]:checked').value;
+// Handle preset radio button changes to show/hide custom inputs and auto-save
+function handlePresetChange(event) {
+  const customInputs = document.getElementById('customTimerInputs');
+  if (event.target.value === 'custom') {
+    customInputs.style.display = 'block';
+    // Load current custom values into the inputs
+    document.getElementById('customWorkTime').value = currentSettings.customWorkTime;
+    document.getElementById('customBreakTime').value = currentSettings.customBreakTime;
+  } else {
+    customInputs.style.display = 'none';
+  }
   
-  // Get selected sound notification setting
-  const soundEnabled = document.getElementById('soundToggle').checked;
-  
-  // Get selected ad blocker setting
+  // Auto-save the preset change
+  autoSaveSettings();
+}
+
+// Auto-save settings when any setting changes
+async function autoSaveSettings() {
+  // Get current values from UI
+  const selectedPreset = document.querySelector('input[name="timer-preset"]:checked')?.value || 'default';
+  const soundEnabled = document.getElementById('soundToggle')?.checked || true;
   const adBlockToggle = document.getElementById('adBlockToggle');
   const adBlockerEnabled = adBlockToggle ? adBlockToggle.checked : true;
   
   // Update settings state
   currentSettings.timerPreset = selectedPreset;
   currentSettings.soundNotifications = soundEnabled;
-  currentSettings.adBlockerEnabled = adBlockerEnabled; // Update ad blocker setting
+  currentSettings.adBlockerEnabled = adBlockerEnabled;
   
-  // Apply settings
-  updateTimerPreset(selectedPreset);
-  setAdBlockerEnabled(adBlockerEnabled); // Apply ad blocker setting
+  // Apply settings (but don't interrupt active sessions)
+  applySettingsWithoutInterruption(selectedPreset);
+  setAdBlockerEnabled(adBlockerEnabled);
   
-  // Save settings to storage
-  const success = await saveSettingsToStorage(currentSettings);
+  // Save to storage
+  await saveSettingsToStorage(currentSettings);
+}
+
+// Handle custom timer input changes with validation
+async function handleCustomTimerChange() {
+  const customWorkTime = parseInt(document.getElementById('customWorkTime').value);
+  const customBreakTime = parseInt(document.getElementById('customBreakTime').value);
   
-  if (success) {
-    // Close modal
-    closeSettings();
-  } else {
-    alert('Failed to save settings. Please try again.');
+  // Validate inputs
+  if (!customWorkTime || customWorkTime < 1 || customWorkTime > 180) {
+    return; // Don't save invalid values
   }
+  
+  if (!customBreakTime || customBreakTime < 1 || customBreakTime > 60) {
+    return; // Don't save invalid values
+  }
+  
+  // Update custom values in settings
+  currentSettings.customWorkTime = customWorkTime;
+  currentSettings.customBreakTime = customBreakTime;
+  
+  // Update the custom preset with new values
+  updateCustomPreset(customWorkTime, customBreakTime);
+  
+  // If custom preset is currently selected, apply the changes (but don't interrupt active sessions)
+  if (currentSettings.timerPreset === 'custom') {
+    applySettingsWithoutInterruption('custom');
+  }
+  
+  // Save to storage
+  await saveSettingsToStorage(currentSettings);
+}
+
+// Apply settings without interrupting active timer sessions
+function applySettingsWithoutInterruption(presetKey) {
+  // Import timer functions to check if timer is running
+  import('./timer.js').then(({ updateTimerPresetWithoutInterruption }) => {
+    updateTimerPresetWithoutInterruption(presetKey);
+  }).catch(console.error);
+}
+
+// Debounce utility function to limit rapid input changes
+function debounce(func, delay) {
+  let timeoutId;
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
 }
 
 // Load settings from storage
@@ -147,7 +238,12 @@ async function loadSettings() {
   const savedSettings = await getSettingsFromStorage();
   
   if (savedSettings) {
-    currentSettings = savedSettings;
+    currentSettings = { ...currentSettings, ...savedSettings };
+    
+    // If custom preset is saved, update the TIMER_PRESETS with saved custom values
+    if (currentSettings.timerPreset === 'custom' && currentSettings.customWorkTime && currentSettings.customBreakTime) {
+      updateCustomPreset(currentSettings.customWorkTime, currentSettings.customBreakTime);
+    }
     
     // Apply saved timer preset
     if (currentSettings.timerPreset && TIMER_PRESETS[currentSettings.timerPreset]) {

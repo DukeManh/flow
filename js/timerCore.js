@@ -10,6 +10,7 @@ export const createTimerState = () => ({
   workDuration: TIMER_PRESETS.default.work,
   breakDuration: TIMER_PRESETS.default.break,
   remainingTime: TIMER_PRESETS.default.work,
+  originalWorkDuration: TIMER_PRESETS.default.work, // Track original duration for progress calculation
   onBreak: false,
   interval: null,
   startTime: null,
@@ -71,6 +72,10 @@ export class TimerCore {
       this.elements.resetBtn.addEventListener('click', () => this.reset());
     }
     
+    if (this.elements.addTimeBtn) {
+      this.elements.addTimeBtn.addEventListener('click', () => this.addTime());
+    }
+    
     // Load previous state
     this.loadState();
   }
@@ -87,9 +92,10 @@ export class TimerCore {
       this.state.currentPreset = savedState.currentPreset || 'default';
       this.state.startTime = savedState.startTime;
       this.state.isRunning = savedState.isRunning;
+      this.state.workDuration = savedState.workDuration || TIMER_PRESETS[savedState.currentPreset || 'default'].work;
+      this.state.originalWorkDuration = savedState.originalWorkDuration || TIMER_PRESETS[savedState.currentPreset || 'default'].work;
       
       // Ensure we're using the correct durations from the preset
-      this.state.workDuration = TIMER_PRESETS[this.state.currentPreset].work;
       this.state.breakDuration = TIMER_PRESETS[this.state.currentPreset].break;
       
       // If the timer was running, validate the start time
@@ -132,7 +138,9 @@ export class TimerCore {
         onBreak: this.state.onBreak,
         startTime: this.state.startTime,
         isRunning: this.state.isRunning,
-        currentPreset: this.state.currentPreset
+        currentPreset: this.state.currentPreset,
+        workDuration: this.state.workDuration,
+        originalWorkDuration: this.state.originalWorkDuration
       };
       
       await storageService.setJSON(this.storageKey, stateToSave);
@@ -150,6 +158,7 @@ export class TimerCore {
     
     this.state.currentPreset = presetKey;
     this.state.workDuration = TIMER_PRESETS[presetKey].work;
+    this.state.originalWorkDuration = TIMER_PRESETS[presetKey].work;
     this.state.breakDuration = TIMER_PRESETS[presetKey].break;
     
     // Reset the timer if not currently running
@@ -186,6 +195,11 @@ export class TimerCore {
         this.elements.pauseBtn.style.display = 'none';
       }
       
+      if (this.elements.addTimeBtn) {
+        this.elements.addTimeBtn.disabled = true;
+        this.elements.addTimeBtn.style.display = 'none';
+      }
+      
       if (this.elements.resetBtn) {
         this.elements.resetBtn.disabled = true;
         this.elements.resetBtn.style.display = 'none';
@@ -205,6 +219,12 @@ export class TimerCore {
       if (this.elements.pauseBtn) {
         this.elements.pauseBtn.disabled = !running;
         this.elements.pauseBtn.style.display = '';
+      }
+      
+      if (this.elements.addTimeBtn) {
+        // Only show and enable the +5 min button during active focus sessions
+        this.elements.addTimeBtn.disabled = !running;
+        this.elements.addTimeBtn.style.display = running ? '' : 'none';
       }
       
       if (this.elements.endBtn) {
@@ -258,9 +278,17 @@ export class TimerCore {
         widthPercentage = 100 * (this.state.breakDuration - this.state.remainingTime) / this.state.breakDuration;
       }
     } else {
-      // For work, show progress of work time used
-      if (this.state.workDuration > 0) {
-        widthPercentage = 100 * (this.state.workDuration - this.state.remainingTime) / this.state.workDuration;
+      // For work, calculate progress based on time elapsed from the original duration
+      // This ensures progress bar shows correct progress even when time is extended
+      const timeElapsed = this.state.originalWorkDuration - (this.state.remainingTime - (this.state.workDuration - this.state.originalWorkDuration));
+      if (this.state.originalWorkDuration > 0) {
+        widthPercentage = 100 * Math.max(0, timeElapsed) / this.state.originalWorkDuration;
+        // Cap at 100% for the original duration, but allow visual indication of extension
+        if (this.state.workDuration > this.state.originalWorkDuration) {
+          // If we've extended the session, show progress beyond 100% with a different calculation
+          const totalTimeElapsed = this.state.workDuration - this.state.remainingTime;
+          widthPercentage = 100 * totalTimeElapsed / this.state.workDuration;
+        }
       }
     }
     
@@ -309,6 +337,9 @@ export class TimerCore {
   endBreak() {
     this.state.onBreak = false;
     this.state.remainingTime = this.state.workDuration;
+    // Reset both durations to the preset value for a fresh session
+    this.state.workDuration = TIMER_PRESETS[this.state.currentPreset].work;
+    this.state.originalWorkDuration = TIMER_PRESETS[this.state.currentPreset].work;
     this.state.startTime = null;
     clearInterval(this.state.interval);
     this.updateBreakUI();
@@ -422,10 +453,37 @@ export class TimerCore {
     }
   }
   
+  // Add 5 minutes to current session
+  addTime() {
+    // Only allow adding time during active focus sessions (not breaks)
+    if (!this.state.isRunning || this.state.onBreak) {
+      return;
+    }
+    
+    // Add 5 minutes (300 seconds) to remaining time
+    this.state.remainingTime += 300;
+    
+    // Also update the work duration to reflect the extended session
+    // This ensures progress bar calculations remain accurate
+    this.state.workDuration += 300;
+    
+    // Update display immediately
+    this.updateDisplay();
+    
+    // Play a sound to confirm the action
+    playSound(getPauseSound());
+    
+    // Save the updated state
+    this.saveState();
+  }
+
   // Reset timer
   reset() {
     if (!confirm('Reset session?')) return;
     clearInterval(this.state.interval);
+    // Reset both durations to the preset value
+    this.state.workDuration = TIMER_PRESETS[this.state.currentPreset].work;
+    this.state.originalWorkDuration = TIMER_PRESETS[this.state.currentPreset].work;
     this.state.remainingTime = this.state.workDuration;
     this.state.startTime = null;
     this.updateControls(false);

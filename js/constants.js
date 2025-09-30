@@ -4,7 +4,8 @@
 export const TIMER_PRESETS = {
   default: { name: '52/17 (Recommended)', work: 52 * 60, break: 17 * 60 },
   pomodoro: { name: '25/5 (Pomodoro)', work: 25 * 60, break: 5 * 60 },
-  deepWork: { name: '90/20 (Deep Work)', work: 90 * 60, break: 20 * 60 }
+  deepWork: { name: '90/20 (Deep Work)', work: 90 * 60, break: 20 * 60 },
+  custom: { name: 'Custom', work: 25 * 60, break: 5 * 60 } // Default values for custom preset
 };
 
 // Default timer values
