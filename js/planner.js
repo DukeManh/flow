@@ -272,7 +272,7 @@ function openAddTaskModal() {
     const minutes = lastTaskEndMinutes % 60;
     defaultStartTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   } else {
-    // No existing tasks, use next 15-min interval from current time
+    // No existing tasks, use next 15-min interval
     const now = new Date();
     const minutes = Math.ceil(now.getMinutes() / 15) * 15;
     now.setMinutes(minutes, 0, 0);
@@ -676,8 +676,55 @@ function renderTasks() {
     timelineNowIndicator.style.display = 'none';
   }
   
+  // Function to detect overlapping tasks and assign stack levels
+  function calculateTaskLevels(tasks, timelineStartMinutes, timelineWidth) {
+    const taskLevels = [];
+    const levels = []; // Array to track occupied time ranges for each level
+    
+    // Sort tasks by start time for processing
+    const sortedTasks = [...tasks].sort((a, b) => getTimeInMinutes(a.startTime) - getTimeInMinutes(b.startTime));
+    
+    sortedTasks.forEach((task, index) => {
+      const taskStart = getTimeInMinutes(task.startTime);
+      const taskEnd = taskStart + Number(task.durationMinutes);
+      
+      // Find the first level where this task doesn't overlap
+      let assignedLevel = 0;
+      while (assignedLevel < levels.length) {
+        const levelRanges = levels[assignedLevel];
+        const hasOverlap = levelRanges.some(range => 
+          (taskStart < range.end && taskEnd > range.start)
+        );
+        
+        if (!hasOverlap) {
+          break;
+        }
+        assignedLevel++;
+      }
+      
+      // Create new level if needed
+      if (assignedLevel >= levels.length) {
+        levels.push([]);
+      }
+      
+      // Add this task's time range to the assigned level
+      levels[assignedLevel].push({ start: taskStart, end: taskEnd });
+      
+      // Store the level assignment
+      taskLevels.push({
+        task: task,
+        level: assignedLevel,
+        originalIndex: tasks.indexOf(task)
+      });
+    });
+    
+    return taskLevels;
+  }
+
   // Render tasks on timeline and in list
-  plannerTasks.forEach(task => {
+  const taskLevels = calculateTaskLevels(plannerTasks, timelineStartMinutes, timelineWidth);
+  
+  taskLevels.forEach(({ task, level }) => {
     // Create timeline block
     const taskBlock = document.createElement('div');
     taskBlock.className = 'timeline-task';
@@ -689,6 +736,12 @@ function renderTasks() {
     
     taskBlock.style.left = `${startPos}%`;
     taskBlock.style.width = `${taskWidth}%`;
+    
+    // Position vertically based on stack level
+    const taskHeight = 25; // Height of each task block
+    const stackSpacing = 2; // Space between stacked tasks
+    const topOffset = 5; // Initial offset from top
+    taskBlock.style.top = `${topOffset + level * (taskHeight + stackSpacing)}px`;
     
     // Check if task is in the past
     const taskDateParts = task.date.split('-');
@@ -731,6 +784,16 @@ function renderTasks() {
     });
     
     plannerTimeline.appendChild(taskBlock);
+  });
+
+  // Render task list items (unchanged from original logic)
+  plannerTasks.forEach(task => {
+    // Check if task is in the past (calculate for each task in list)
+    const taskDateParts = task.date.split('-');
+    const taskDate = new Date(parseInt(taskDateParts[0]), parseInt(taskDateParts[1]) - 1, parseInt(taskDateParts[2]));
+    const todayStr = formatDateForStorage(today);
+    const taskDateStr = formatDateForStorage(taskDate);
+    const isPastTask = taskDateStr < todayStr;
     
     // Create list item
     const taskItem = document.createElement('div');
@@ -783,7 +846,10 @@ function renderTasks() {
       ${actionsHtml}
     `;
     
-    // Add tooltip to task list item
+    // Add tooltip to task list item (define tooltipText here)
+    const tooltipText = task.description ? 
+      `${task.title}\n${task.startTime} - ${task.endTime} (${task.durationMinutes} min)\n\nDescription: ${task.description}` :
+      `${task.title}\n${task.startTime} - ${task.endTime} (${task.durationMinutes} min)`;
     taskItem.title = tooltipText;
     
     // Add event listeners only for non-past tasks
