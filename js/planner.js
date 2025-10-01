@@ -903,15 +903,20 @@ function scrollToFirstUnfinishedTask() {
   });
 
   if (firstUnfinishedTask) {
-    // Scroll the first unfinished task into view with smooth animation
-    firstUnfinishedTask.scrollIntoView({ 
-      behavior: 'smooth', 
-      block: 'start',
-      inline: 'nearest'
+    // Calculate the scroll position within the task list container
+    const scrollTop = firstUnfinishedTask.offsetTop - plannerTaskList.offsetTop;
+    
+    // Smooth scroll within the task list container only
+    plannerTaskList.scrollTo({
+      top: scrollTop,
+      behavior: 'smooth'
     });
   } else {
-    // If all tasks are completed or in the past, scroll to the top
-    plannerTaskList.scrollTop = 0;
+    // If all tasks are completed or in the past, scroll to the top of the task list
+    plannerTaskList.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   }
 }
 
