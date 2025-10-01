@@ -479,9 +479,33 @@ export async function loadTodos() {
         const li = createTodoItem(item.text, status); 
         todoList.append(li); 
       });
+
+      // Scroll to first unfinished todo after rendering
+      scrollToFirstUnfinishedTodo();
     }
   } catch (error) {
     console.error('Error loading todos:', error);
+  }
+}
+
+// Helper function to scroll to the first unfinished todo
+function scrollToFirstUnfinishedTodo() {
+  // Find the first todo that is not completed
+  const firstUnfinishedTodo = Array.from(todoList.children).find(li => {
+    const checkbox = li.querySelector('input[type="checkbox"]');
+    return checkbox && !checkbox.checked;
+  });
+
+  if (firstUnfinishedTodo) {
+    // Scroll the first unfinished todo into view with smooth animation
+    firstUnfinishedTodo.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'start',
+      inline: 'nearest'
+    });
+  } else {
+    // If all todos are completed, scroll to the top
+    todoList.scrollTop = 0;
   }
 }
 

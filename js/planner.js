@@ -887,6 +887,29 @@ function renderTasks() {
   if (plannerTimelineContainer) {
     plannerTimelineContainer.appendChild(timeMarkersContainer);
   }
+
+  // Scroll to first unfinished task after rendering
+  scrollToFirstUnfinishedTask();
+}
+
+// Helper function to scroll to the first unfinished task
+function scrollToFirstUnfinishedTask() {
+  // Find the first task that is not completed
+  const firstUnfinishedTask = Array.from(plannerTaskList.children).find(taskItem => {
+    return !taskItem.classList.contains('completed') && !taskItem.classList.contains('past-task');
+  });
+
+  if (firstUnfinishedTask) {
+    // Scroll the first unfinished task into view with smooth animation
+    firstUnfinishedTask.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'start',
+      inline: 'nearest'
+    });
+  } else {
+    // If all tasks are completed or in the past, scroll to the top
+    plannerTaskList.scrollTop = 0;
+  }
 }
 
 // Toggle task completion status
