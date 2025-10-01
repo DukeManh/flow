@@ -380,3 +380,58 @@
     gap: 5px;
   }
 }
+
+/* Empty state styling */
+.empty-state {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state p {
+  margin: 8px 0;
+}
+
+.empty-state strong {
+  color: var(--text);
+}
+
+.empty-state-hint {
+  font-size: 0.9rem;
+  margin-top: 15px !important;
+  opacity: 0.8;
+}
+
+/* Timeline placeholder styling */
+.timeline-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.timeline-placeholder-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.placeholder-icon {
+  font-size: 1.2rem;
+}
+
+.placeholder-text {
+  white-space: nowrap;
+}
+
+/* General time markers styling */
+.timeline-time-marker.general-marker {
+  opacity: 0.6;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}

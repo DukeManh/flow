@@ -585,11 +585,9 @@ function renderTasks() {
   }
   
   if (plannerTasks.length === 0) {
-    // Show empty state
     plannerTaskList.innerHTML = `
       <div class="empty-state">
-        <p>No tasks planned for this day yet.</p>
-        <p>Click "Add Block" to start planning your day.</p>
+        <p><strong>No tasks planned.</strong></p>
       </div>
     `;
     
@@ -597,6 +595,9 @@ function renderTasks() {
     if (plannerEndTime) {
       plannerEndTime.textContent = '--:--';
     }
+    
+    // Show general time markers even when no tasks
+    showGeneralTimeMarkers(plannerTimelineContainer);
     
     return;
   }
@@ -1022,4 +1023,79 @@ function updateClock() {
   // Update timeline and task status
   renderTasks();
   updatePlannerStatus();
+}
+
+// Function to show general time markers when no tasks are present
+function showGeneralTimeMarkers(plannerTimelineContainer) {
+  if (!plannerTimelineContainer) return;
+  
+  // Create time markers container
+  const timeMarkersContainer = document.createElement('div');
+  timeMarkersContainer.className = 'timeline-time-markers';
+  
+  // Show a general 12-hour timeline (6 AM to 10 PM)
+  const startHour = 6;  // 6 AM
+  const endHour = 22;   // 10 PM
+  
+  // Calculate total width for positioning
+  const totalHours = endHour - startHour;
+  
+  for (let hour = startHour; hour <= endHour; hour += 2) { // Every 2 hours
+    const position = ((hour - startHour) / totalHours) * 100;
+    
+    const marker = document.createElement('div');
+    marker.className = 'timeline-time-marker general-marker';
+    marker.style.left = `${position}%`;
+    
+    // Format hour display (12-hour format with AM/PM)
+    let displayHour = hour;
+    let ampm = 'AM';
+    
+    if (hour === 0) {
+      displayHour = 12;
+      ampm = 'AM';
+    } else if (hour < 12) {
+      ampm = 'AM';
+    } else if (hour === 12) {
+      ampm = 'PM';
+    } else {
+      displayHour = hour - 12;
+      ampm = 'PM';
+    }
+    
+    marker.textContent = `${displayHour}${ampm}`;
+    timeMarkersContainer.appendChild(marker);
+  }
+  
+  // Position the now indicator for today
+  const now = new Date();
+  const today = new Date();
+  
+  if (currentDate.toDateString() === today.toDateString() && timelineNowIndicator) {
+    const currentHour = now.getHours() + (now.getMinutes() / 60);
+    
+    // Only show indicator if current time is within our general timeline range
+    if (currentHour >= startHour && currentHour <= endHour) {
+      const position = ((currentHour - startHour) / totalHours) * 100;
+      timelineNowIndicator.style.left = `${position}%`;
+      timelineNowIndicator.style.display = 'block';
+    } else {
+      timelineNowIndicator.style.display = 'none';
+    }
+  } else if (timelineNowIndicator) {
+    timelineNowIndicator.style.display = 'none';
+  }
+  
+  // Add placeholder text in the timeline area
+  const placeholderText = document.createElement('div');
+  placeholderText.className = 'timeline-placeholder';
+  placeholderText.innerHTML = `
+    <div class="timeline-placeholder-content">
+      <span class="placeholder-icon">📅</span>
+      <span class="placeholder-text">Click "Add Block" to schedule your first task</span>
+    </div>
+  `;
+  
+  plannerTimeline.appendChild(placeholderText);
+  plannerTimelineContainer.appendChild(timeMarkersContainer);
 }
