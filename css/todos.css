@@ -475,6 +475,164 @@
   }
 }
 
+/* Mobile-specific todo list improvements */
+@media (max-width: 600px) {
+  /* Improve todo item layout on mobile */
+  #todoList li {
+    flex-wrap: wrap;
+    padding: 12px 8px;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  /* Mobile-specific: Stack main content and controls vertically */
+  .todo-main-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .todo-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 4px;
+  }
+  
+  /* Make todo text take full width on mobile */
+  .todo-text {
+    flex: 1;
+    margin-right: 0;
+    word-wrap: break-word;
+    line-height: 1.3;
+  }
+  
+  /* Compact status dropdown on mobile */
+  .todo-status-select {
+    font-size: 0.7rem;
+    padding: 2px 4px;
+    max-width: 120px;
+  }
+  
+  /* Adjust button sizing for mobile */
+  .todo-buttons {
+    gap: 2px;
+  }
+  
+  .todo-btn {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Hide button text on very small screens, keep only icons */
+  .todo-btn i {
+    margin: 0;
+  }
+  
+  /* Edit input takes full width on mobile */
+  .todo-edit-input {
+    margin-right: 0;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+  }
+  
+  /* Adjust input field on mobile */
+  #todoCard .todo-input {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  #todoInput {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  
+  #addTodoBtn {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.9rem;
+    min-width: auto;
+  }
+  
+  /* Compact todo list on mobile */
+  #todoList {
+    max-height: 400px;
+  }
+  
+  /* Status indicator slightly larger on mobile for touch targets */
+  .todo-status-indicator {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+  }
+}
+
+/* Very small screens (phones in portrait) */
+@media (max-width: 480px) {
+  #todoList li {
+    padding: 10px 6px;
+  }
+  
+  .todo-text {
+    font-size: 0.9rem;
+  }
+  
+  .todo-buttons {
+    flex-wrap: wrap;
+    gap: 1px;
+  }
+  
+  .todo-btn {
+    padding: 5px 6px;
+    font-size: 0.7rem;
+    min-width: 28px;
+    height: 28px;
+  }
+  
+  .todo-status-select {
+    font-size: 0.65rem;
+    max-width: 100px;
+  }
+}
+
+/* Desktop layout: Keep original horizontal layout */
+@media (min-width: 601px) {
+  /* Desktop: Use horizontal layout with wrapper divs as flex containers */
+  .todo-main-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 8px;
+  }
+  
+  .todo-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  
+  /* Ensure todo text still gets proper spacing */
+  .todo-text {
+    flex: 1;
+    margin-right: 10px;
+  }
+  
+  /* Keep original desktop styling for status dropdown */
+  .todo-status {
+    margin-right: 8px;
+  }
+}
+
 /* Import info section */
 .import-info {
   margin-bottom: 20px;
