@@ -497,15 +497,24 @@ function scrollToFirstUnfinishedTodo() {
   });
 
   if (firstUnfinishedTodo) {
-    // Scroll the first unfinished todo into view with smooth animation
-    firstUnfinishedTodo.scrollIntoView({ 
-      behavior: 'smooth', 
-      block: 'start',
-      inline: 'nearest'
+    // Calculate the position within the todo list container
+    const todoListRect = todoList.getBoundingClientRect();
+    const todoItemRect = firstUnfinishedTodo.getBoundingClientRect();
+    
+    // Calculate the scroll position within the todo list
+    const scrollTop = firstUnfinishedTodo.offsetTop - todoList.offsetTop;
+    
+    // Smooth scroll within the todo list container only
+    todoList.scrollTo({
+      top: scrollTop,
+      behavior: 'smooth'
     });
   } else {
-    // If all todos are completed, scroll to the top
-    todoList.scrollTop = 0;
+    // If all todos are completed, scroll to the top of the todo list
+    todoList.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   }
 }
 

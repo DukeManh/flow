@@ -14,7 +14,22 @@ const simulatedProjects = [
       { text: "Fix login authentication bug", completed: true },
       { text: "Implement user profile page", completed: false },
       { text: "Write unit tests for new features", completed: false },
-      { text: "Code review for team members", completed: false }
+      { text: "Code review for team members", completed: false },
+      { text: "Set up CI/CD pipeline", completed: true },
+      { text: "Configure monitoring and alerting", completed: true },
+      { text: "Optimize database performance", completed: false },
+      { text: "Implement caching layer", completed: false },
+      { text: "Add error tracking and logging", completed: false },
+      { text: "Create user onboarding flow", completed: false },
+      { text: "Build admin dashboard", completed: false },
+      { text: "Implement two-factor authentication", completed: false },
+      { text: "Add email notification system", completed: false },
+      { text: "Create API rate limiting", completed: false },
+      { text: "Write integration tests", completed: false },
+      { text: "Implement search functionality", completed: false },
+      { text: "Add file upload feature", completed: false },
+      { text: "Create backup and recovery system", completed: false },
+      { text: "Implement user roles and permissions", completed: false }
     ]
   },
   {
@@ -28,7 +43,22 @@ const simulatedProjects = [
       { text: "Add new portfolio projects", completed: true },
       { text: "Update resume PDF", completed: true },
       { text: "Add dark mode toggle", completed: false },
-      { text: "Optimize images for faster loading", completed: false }
+      { text: "Optimize images for faster loading", completed: false },
+      { text: "Implement contact form", completed: false },
+      { text: "Add blog section", completed: false },
+      { text: "Create about page", completed: false },
+      { text: "Add testimonials section", completed: false },
+      { text: "Implement SEO optimization", completed: false },
+      { text: "Add social media links", completed: false },
+      { text: "Create services page", completed: false },
+      { text: "Add project case studies", completed: false },
+      { text: "Implement analytics tracking", completed: false },
+      { text: "Add newsletter signup", completed: false },
+      { text: "Create pricing page", completed: false },
+      { text: "Add FAQ section", completed: false },
+      { text: "Implement live chat widget", completed: false },
+      { text: "Add client portal", completed: false },
+      { text: "Create documentation site", completed: false }
     ]
   },
   {
@@ -42,7 +72,22 @@ const simulatedProjects = [
       { text: "Practice with React context", completed: true },
       { text: "Learn about React performance optimization", completed: false },
       { text: "Build a small project with Next.js", completed: false },
-      { text: "Study TypeScript integration with React", completed: false }
+      { text: "Study TypeScript integration with React", completed: false },
+      { text: "Learn Redux Toolkit", completed: false },
+      { text: "Master React Testing Library", completed: false },
+      { text: "Understand React Server Components", completed: false },
+      { text: "Practice with React Query", completed: false },
+      { text: "Learn Framer Motion animations", completed: false },
+      { text: "Study Webpack configuration", completed: false },
+      { text: "Learn GraphQL with Apollo", completed: false },
+      { text: "Practice with Storybook", completed: false },
+      { text: "Understand micro-frontends", completed: false },
+      { text: "Learn Zustand state management", completed: false },
+      { text: "Study React Native development", completed: false },
+      { text: "Practice with Tailwind CSS", completed: false },
+      { text: "Learn Vite build tool", completed: false },
+      { text: "Study Progressive Web Apps", completed: false },
+      { text: "Complete advanced algorithms course", completed: false }
     ]
   },
   {
@@ -56,7 +101,22 @@ const simulatedProjects = [
       { text: "Set up project repository", completed: true },
       { text: "Create database schema", completed: true },
       { text: "Implement authentication system", completed: false },
-      { text: "Deploy demo to staging environment", completed: false }
+      { text: "Deploy demo to staging environment", completed: false },
+      { text: "Create user registration flow", completed: false },
+      { text: "Build payment integration", completed: false },
+      { text: "Implement email templates", completed: false },
+      { text: "Create admin panel", completed: false },
+      { text: "Add analytics dashboard", completed: false },
+      { text: "Implement subscription management", completed: false },
+      { text: "Create customer support system", completed: false },
+      { text: "Add multi-language support", completed: false },
+      { text: "Implement data export features", completed: false },
+      { text: "Create mobile app prototype", completed: false },
+      { text: "Add social login options", completed: false },
+      { text: "Implement notification system", completed: false },
+      { text: "Create API documentation", completed: false },
+      { text: "Add automated testing", completed: false },
+      { text: "Implement performance monitoring", completed: false }
     ]
   },
   {
@@ -70,7 +130,22 @@ const simulatedProjects = [
       { text: "Research nutrition plan", completed: true },
       { text: "Set up progress tracking system", completed: false },
       { text: "Find workout buddy", completed: false },
-      { text: "Buy new exercise equipment", completed: false }
+      { text: "Buy new exercise equipment", completed: false },
+      { text: "Join a gym or fitness center", completed: false },
+      { text: "Track daily water intake", completed: false },
+      { text: "Plan healthy meal prep", completed: false },
+      { text: "Set up sleep tracking", completed: false },
+      { text: "Research supplements", completed: false },
+      { text: "Schedule regular health checkups", completed: false },
+      { text: "Create morning routine", completed: false },
+      { text: "Learn proper exercise form", completed: false },
+      { text: "Set fitness goals and milestones", completed: false },
+      { text: "Track body measurements", completed: false },
+      { text: "Find healthy recipes", completed: false },
+      { text: "Plan active recovery days", completed: false },
+      { text: "Create workout playlist", completed: false },
+      { text: "Research injury prevention", completed: false },
+      { text: "Plan outdoor activities", completed: false }
     ]
   }
 ];
