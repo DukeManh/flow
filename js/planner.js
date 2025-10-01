@@ -645,9 +645,12 @@ function renderTasks() {
       
       if (hour === 0) {
         displayHour = 12;
+        ampm = 'AM'; // Midnight should be 12AM
+      } else if (hour < 12) {
+        ampm = 'AM';
       } else if (hour === 12) {
         ampm = 'PM';
-      } else if (hour > 12) {
+      } else {
         displayHour = hour - 12;
         ampm = 'PM';
       }
