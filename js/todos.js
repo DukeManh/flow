@@ -229,6 +229,10 @@ function createTodoItem(text, status = TODO_STATUSES.NOT_STARTED) {
     clearDropTargetClasses();
     draggedItem = null;
   });
+
+  // Create main content wrapper for better mobile layout
+  const mainContent = document.createElement('div');
+  mainContent.className = 'todo-main-content';
   
   const checkbox = document.createElement('input'); 
   checkbox.type = 'checkbox'; 
@@ -241,6 +245,17 @@ function createTodoItem(text, status = TODO_STATUSES.NOT_STARTED) {
   // Create status indicator
   const statusIndicator = document.createElement('span');
   statusIndicator.className = 'todo-status-indicator';
+  
+  const span = document.createElement('span'); 
+  span.className = 'todo-text'; 
+  span.textContent = text;
+
+  // Add main content elements
+  mainContent.append(checkbox, statusIndicator, span);
+
+  // Create controls wrapper for mobile layout
+  const controls = document.createElement('div');
+  controls.className = 'todo-controls';
   
   // Create status dropdown
   const statusContainer = document.createElement('div');
@@ -266,10 +281,6 @@ function createTodoItem(text, status = TODO_STATUSES.NOT_STARTED) {
   });
   
   statusContainer.appendChild(statusSelect);
-  
-  const span = document.createElement('span'); 
-  span.className = 'todo-text'; 
-  span.textContent = text;
   
   const btnContainer = document.createElement('div');
   btnContainer.className = 'todo-buttons';
@@ -317,7 +328,12 @@ function createTodoItem(text, status = TODO_STATUSES.NOT_STARTED) {
   editBtn.addEventListener('click', () => enterEditMode(li));
   
   btnContainer.append(upBtn, downBtn, editBtn, removeBtn, dragHandleBtn);
-  li.append(checkbox, statusIndicator, statusContainer, span, btnContainer); 
+  
+  // Add controls elements
+  controls.append(statusContainer, btnContainer);
+  
+  // Add everything to the li
+  li.append(mainContent, controls);
   
   // Apply initial status class without saving (passing false as the third parameter)
   updateTodoStatus(li, status, false);
