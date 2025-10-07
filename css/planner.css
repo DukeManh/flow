@@ -56,7 +56,7 @@
 }
 
 .planner-status.on-track i {
-  color: var(--success);
+  color: var(--accent);
 }
 
 /* .planner-status.behind i {
@@ -137,7 +137,6 @@
 }
 
 .timeline-task.current {
-  background-color: var(--success); /* Green for current tasks */
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--success);
 }
 
@@ -252,11 +251,10 @@
 }
 
 .planner-task.current {
-  border-left: 3px solid var(--success);
+  border-left: 3px solid var(--accent);
 }
 
 .planner-task.overdue {
-  border-left: 3px solid var(--error);
 }
 
 .planner-task.completed {

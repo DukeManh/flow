@@ -144,14 +144,10 @@ export function initPlanner() {
 // Load tasks from storage
 async function loadTasks() {
   try {
-    // Get stored date or default to today
-    const storedDate = await storageService.getItem(STORAGE_KEYS.PLANNER_DATE);
-    
-    if (storedDate) {
-      currentDate = new Date(storedDate);
-    } else {
+    // Only default to today if currentDate hasn't been set by navigation
+    // This allows navigation to work while still defaulting to today on initial load
+    if (!currentDate || currentDate.getTime() === 0) {
       currentDate = new Date();
-      // Don't reset time - keep the full date for proper comparison
     }
     
     // Format and display date
@@ -173,6 +169,7 @@ async function loadTasks() {
     
     renderTasks();
     updatePlannerStatus();
+    updateAddTaskButtonState();
     
   } catch (error) {
     console.error('Error loading tasks:', error);
@@ -243,8 +240,38 @@ function updateEndTime() {
   }
 }
 
+// Update the Add Task button state based on current date
+function updateAddTaskButtonState() {
+  if (!addPlannerTaskBtn) return;
+  
+  const today = new Date();
+  const todayStr = formatDateForStorage(today);
+  const currentDateStr = formatDateForStorage(currentDate);
+  
+  if (currentDateStr < todayStr) {
+    // Disable button for past days
+    addPlannerTaskBtn.disabled = true;
+    addPlannerTaskBtn.style.opacity = '0.5';
+    addPlannerTaskBtn.style.cursor = 'not-allowed';
+  } else {
+    // Enable button for today and future days
+    addPlannerTaskBtn.disabled = false;
+    addPlannerTaskBtn.style.opacity = '1';
+    addPlannerTaskBtn.style.cursor = 'pointer';
+  }
+}
+
 // Open the Add Task modal
 function openAddTaskModal() {
+  // Check if we're viewing a past date
+  const today = new Date();
+  const todayStr = formatDateForStorage(today);
+  const currentDateStr = formatDateForStorage(currentDate);
+  
+  if (currentDateStr < todayStr) {
+    return;
+  }
+  
   editingTaskId = null;
   taskId.value = '';
   
@@ -529,6 +556,9 @@ async function navigateToDate(newDate) {
     
     // Load tasks for the new date
     await loadTasks();
+    
+    // Update add task button state after navigation
+    updateAddTaskButtonState();
     
   } catch (error) {
     console.error('Error navigating to date:', error);
