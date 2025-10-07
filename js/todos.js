@@ -364,8 +364,12 @@ function enterEditMode(li) {
   editInput.className = 'todo-edit-input';
   editInput.value = currentText;
   
-  // Insert the input before the text element
-  li.insertBefore(editInput, todoTextElement);
+  // Insert the input in the main content area, replacing the text element temporarily
+  const mainContent = li.querySelector('.todo-main-content');
+  mainContent.insertBefore(editInput, todoTextElement);
+  
+  // Hide the text element instead of removing it
+  todoTextElement.style.display = 'none';
   
   // Focus on the input
   editInput.focus();
@@ -447,6 +451,12 @@ function exitEditMode(li) {
   const editInput = li.querySelector('.todo-edit-input');
   if (editInput) {
     editInput.remove();
+  }
+  
+  // Show the text element
+  const todoTextElement = li.querySelector('.todo-text');
+  if (todoTextElement) {
+    todoTextElement.style.display = '';
   }
   
   // Get button container
