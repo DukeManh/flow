@@ -10,7 +10,10 @@ let timerCore;
 
 // Timer elements
 let timerEl, progressEl;
-let startBtn, pauseBtn, endBtn, resetBtn, addTimeBtn;
+let startBtn, pauseBtn, endBtn, resetBtn, addTimeBtn, starterBtn;
+
+// Track preset to restore after starter sessions
+let pendingPresetRestore = null;
 
 export function initTimer() {
   // Get DOM elements
@@ -21,6 +24,7 @@ export function initTimer() {
   endBtn = document.getElementById('endBtn');
   resetBtn = document.getElementById('resetBtn');
   addTimeBtn = document.getElementById('addTimeBtn');
+  starterBtn = document.getElementById('starterBtn');
 
   // Show initial value while timer is initializing
   if (timerEl) {
@@ -30,7 +34,39 @@ export function initTimer() {
   // Initialize timer core
   timerCore = new TimerCore({
     // Set up callbacks
-    onSessionEnd: recordSession,
+    onSessionEnd: (session) => {
+      recordSession(session);
+
+      // Skip break after a starter run and immediately restore the user's preset
+      if (timerCore?.state.currentPreset === 'starter' && pendingPresetRestore) {
+        const presetToRestore = pendingPresetRestore;
+        pendingPresetRestore = null;
+
+        // Restore the preset so durations reset correctly
+        updateTimerPreset(presetToRestore);
+
+        // Ensure we remain in focus mode and start fresh
+        timerCore.state.onBreak = false;
+        timerCore.state.remainingTime = timerCore.state.workDuration;
+        timerCore.updateBreakUI();
+        timerCore.updateDisplay();
+
+        // Immediately begin the restored focus session
+        timerCore.start();
+        return { skipBreak: true };
+      }
+
+      return null;
+    },
+    onBreakEnd: () => {
+      if (pendingPresetRestore && timerCore) {
+        const presetToRestore = pendingPresetRestore;
+        pendingPresetRestore = null;
+
+        updateTimerPreset(presetToRestore);
+        timerCore.start();
+      }
+    },
     getTodos: getTodos,
     // Add a custom UI update callback to handle the timer title updates
     updateUI: (state) => {
@@ -54,7 +90,26 @@ export function initTimer() {
     endBtn: endBtn,
     resetBtn: resetBtn,
     addTimeBtn: addTimeBtn,
+    starterBtn: starterBtn,
     timerLabel: document.getElementById('timerLabel')
+  });
+
+  // Handle quick starter session
+  starterBtn?.addEventListener('click', () => {
+    if (!timerCore || timerCore.state.isRunning) return;
+
+    pendingPresetRestore = timerCore.state.currentPreset !== 'starter'
+      ? timerCore.state.currentPreset
+      : null;
+
+    updateTimerPreset('starter');
+
+    // Ensure we start from focus mode with the new preset
+    timerCore.state.onBreak = false;
+    timerCore.state.remainingTime = timerCore.state.workDuration;
+    timerCore.updateBreakUI();
+    timerCore.updateDisplay();
+    timerCore.start();
   });
 }
 
@@ -141,6 +196,9 @@ function updateTimerTitle(presetKey) {
       break;
     case 'deepWork':
       titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 90/20 Deep Work<span class="tooltip" title="Extended focus time for complex tasks requiring deep concentration"><i class="fas fa-info-circle"></i></span>';
+      break;
+    case 'starter':
+      titleElement.innerHTML = '<i class="fas fa-stopwatch"></i> 5/5 Starter<span class="tooltip" title="Kick off with a quick 5-minute focus and short reset"><i class="fas fa-info-circle"></i></span>';
       break;
     case 'custom':
       // Get the custom preset values to display in the title

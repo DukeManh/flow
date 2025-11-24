@@ -192,6 +192,10 @@ export class TimerCore {
     
     this.state.isRunning = running;
     
+    if (this.elements.starterBtn) {
+      this.elements.starterBtn.disabled = running;
+    }
+
     if (this.state.onBreak) {
       if (this.elements.startBtn) {
         this.elements.startBtn.disabled = running;
@@ -221,7 +225,7 @@ export class TimerCore {
     } else {
       if (this.elements.startBtn) {
         this.elements.startBtn.disabled = running;
-        this.elements.startBtn.textContent = "Lock In";
+        this.elements.startBtn.textContent = "Start";
       }
       
       if (this.elements.pauseBtn) {
@@ -395,14 +399,24 @@ export class TimerCore {
           this.endBreak();
         } else {
           // Work session ended
+          // Mark timer as stopped before running callbacks or scheduling next steps
+          this.state.isRunning = false;
+
           if (this.callbacks.onSessionEnd) {
             const sessionDuration = this.state.workDuration;
-            this.callbacks.onSessionEnd({
+            const sessionResult = this.callbacks.onSessionEnd({
               startTime: this.state.startTime,
               duration: sessionDuration,
               isBreak: false,
               todos: this.callbacks.getTodos ? this.callbacks.getTodos() : []
             });
+
+            // Allow consumer to skip break flow after a session
+            if (sessionResult && sessionResult.skipBreak) {
+              this.updateControls(false);
+              this.saveState();
+              return;
+            }
           }
           playSound(getEndSound());
           this.startBreak();
