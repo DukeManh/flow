@@ -41,7 +41,8 @@ export function initTimer() {
     onSessionStart: () => {
       // Trigger the flow animation when a new session starts
       triggerFlowAnimation(4000); // Animation will last for 4 seconds
-    }
+    },
+    autoStartBreak: false
   });
   
   // Provide DOM elements to timer core
@@ -55,6 +56,13 @@ export function initTimer() {
     addTimeBtn: addTimeBtn,
     timerLabel: document.getElementById('timerLabel')
   });
+}
+
+// Update break auto-start preference
+export function setAutoStartBreak(enabled) {
+  if (timerCore) {
+    timerCore.setAutoStartBreak(enabled);
+  }
 }
 
 // Update timer preset based on settings
