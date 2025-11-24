@@ -64,12 +64,13 @@ export function initTimer() {
     endBtn: endBtn,
     resetBtn: resetBtn,
     addTimeBtn: addTimeBtn,
+    starterBtn: starterBtn,
     timerLabel: document.getElementById('timerLabel')
   });
 
   // Handle quick starter session
   starterBtn?.addEventListener('click', () => {
-    if (!timerCore) return;
+    if (!timerCore || timerCore.state.isRunning) return;
 
     pendingPresetRestore = timerCore.state.currentPreset !== 'starter'
       ? timerCore.state.currentPreset
