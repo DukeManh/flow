@@ -1,6 +1,6 @@
 // Settings management for Flow State app
 import { TIMER_PRESETS } from './constants.js';
-import { updateTimerPreset, saveTimerState, updateCustomPreset } from './timer.js';
+import { updateTimerPreset, saveTimerState, updateCustomPreset, setAutoStartBreak } from './timer.js';
 import storageService from './storage.js';
 import { setAdBlockerEnabled } from './adBlocker.js';
 
@@ -18,6 +18,7 @@ let currentSettings = {
   timerPreset: 'default',
   soundNotifications: true,
   adBlockerEnabled: true,
+  autoStartBreak: false,
   customWorkTime: 25, // Default custom work time in minutes
   customBreakTime: 5  // Default custom break time in minutes
 };
@@ -73,6 +74,11 @@ export function initSettings() {
   if (adBlockToggle) {
     adBlockToggle.addEventListener('change', autoSaveSettings);
   }
+
+  const autoStartBreakToggle = document.getElementById('autoStartBreakToggle');
+  if (autoStartBreakToggle) {
+    autoStartBreakToggle.addEventListener('change', autoSaveSettings);
+  }
   
   // Add auto-save listeners for custom timer inputs
   const customWorkTime = document.getElementById('customWorkTime');
@@ -115,6 +121,11 @@ function openSettings() {
   const adBlockToggle = document.getElementById('adBlockToggle');
   if (adBlockToggle) {
     adBlockToggle.checked = currentSettings.adBlockerEnabled;
+  }
+
+  const autoStartBreakToggle = document.getElementById('autoStartBreakToggle');
+  if (autoStartBreakToggle) {
+    autoStartBreakToggle.checked = currentSettings.autoStartBreak;
   }
   
   // Handle custom timer inputs visibility and values
@@ -172,15 +183,19 @@ async function autoSaveSettings() {
   const soundEnabled = document.getElementById('soundToggle')?.checked || true;
   const adBlockToggle = document.getElementById('adBlockToggle');
   const adBlockerEnabled = adBlockToggle ? adBlockToggle.checked : true;
+  const autoStartBreakToggle = document.getElementById('autoStartBreakToggle');
+  const autoStartBreakEnabled = autoStartBreakToggle ? autoStartBreakToggle.checked : currentSettings.autoStartBreak;
   
   // Update settings state
   currentSettings.timerPreset = selectedPreset;
   currentSettings.soundNotifications = soundEnabled;
   currentSettings.adBlockerEnabled = adBlockerEnabled;
+  currentSettings.autoStartBreak = autoStartBreakEnabled;
   
   // Apply settings (but don't interrupt active sessions)
   applySettingsWithoutInterruption(selectedPreset);
   setAdBlockerEnabled(adBlockerEnabled);
+  setAutoStartBreak(autoStartBreakEnabled);
   
   // Save to storage
   await saveSettingsToStorage(currentSettings);
@@ -262,4 +277,7 @@ async function loadSettings() {
   if (adBlockerToggle) {
     adBlockerToggle.checked = currentSettings.adBlockerEnabled;
   }
+
+  // Update auto-start break preference on the timer
+  setAutoStartBreak(currentSettings.autoStartBreak);
 }

@@ -43,6 +43,9 @@ export class TimerCore {
       updateUI: options.updateUI || (() => {}),
       onSessionStart: options.onSessionStart || (() => {}) // Add new callback for session start
     };
+
+    // Behavior flags
+    this.autoStartBreak = options.autoStartBreak || false;
     
     // Initialize timer state
     this.state = createTimerState();
@@ -176,6 +179,11 @@ export class TimerCore {
     if (this.callbacks.updateUI) {
       this.callbacks.updateUI(this.state);
     }
+  }
+
+  // Update break auto-start preference
+  setAutoStartBreak(enabled) {
+    this.autoStartBreak = Boolean(enabled);
   }
   
   // Update timer controls
@@ -326,10 +334,15 @@ export class TimerCore {
     this.updateBreakUI();
     this.updateDisplay();
     this.updateControls(false);
-    
+
     // Call the onBreakStart callback if provided
     if (this.callbacks.onBreakStart) {
       this.callbacks.onBreakStart();
+    }
+
+    // If enabled, automatically start the break countdown
+    if (this.autoStartBreak) {
+      this.start(false);
     }
   }
   
