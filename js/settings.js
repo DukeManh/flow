@@ -46,6 +46,8 @@ export function initSettings() {
   // Get DOM elements
   settingsModal = document.getElementById('settingsModal');
   closeModalBtn = settingsModal.querySelector('.close-modal');
+
+  const saveSettingsBtn = document.getElementById('saveSettingsBtn');
   
   // Get settings button
   const settingsBtn = document.getElementById('settingsBtn');
@@ -56,6 +58,10 @@ export function initSettings() {
   // Add event listeners
   settingsBtn.addEventListener('click', openSettings);
   closeModalBtn.addEventListener('click', closeSettings);
+  saveSettingsBtn?.addEventListener('click', async () => {
+    await autoSaveSettings();
+    closeSettings();
+  });
   
   // Add event listeners for auto-save functionality
   const presetRadios = document.querySelectorAll('input[name="timer-preset"]');
