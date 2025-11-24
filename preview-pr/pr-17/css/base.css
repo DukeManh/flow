@@ -1,0 +1,418 @@
+/* Base styles and theme variables */
+
+:root {
+  /* Set common defaults without theme-specific colors */
+  --radius: 8px;
+  --transition: 0.2s ease;
+}
+
+/* Base element styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body styles (now using theme-specific variables) */
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 16px);
+  transition: background-color var(--transition), color var(--transition);
+  min-height: 100vh;
+  padding: 16px 16px 80px; 
+}
+
+
+
+/* Icon spacing - only adds space for icons in card headers */
+.card h2 i.fas, 
+.card h2 i.far, 
+.card h2 i.fab {
+  margin-right: 8px;
+}
+
+.volume-label i.fas {
+  margin-right: 4px; /* Smaller margin for volume controls */
+}
+
+/* Base button styles */
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+button:disabled {
+  background: var(--muted);
+  cursor: not-allowed;
+}
+
+/* Button states for all buttons */
+button:hover {
+  opacity: 0.9;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Focus mode toggle */
+.focus-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border: 1px solid var(--accent);
+  transition: all var(--transition);
+}
+
+.focus-text {
+  font-size: 14px;
+}
+
+body.distraction .focus-btn {
+  background: var(--accent);
+  color: white;
+}
+
+/* Distraction mode */
+body.distraction #musicCard,
+body.distraction #historyCard,
+body.distraction #insightsCard {
+  display: none;
+}
+
+.input {
+  flex: 1;
+  padding: 8px;
+  font-size: 0.9rem;
+  border: 1px solid var(--muted);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+
+/* Settings button styling */
+.settings-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--transition);
+  padding: 2px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-btn:hover {
+  color: var(--accent);
+}
+
+/* Timer presets in settings */
+.timer-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 15px 0;
+}
+
+.preset-option {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--shadow);
+  transition: all var(--transition);
+  cursor: pointer;
+}
+
+.preset-option:hover {
+  border-color: var(--accent);
+}
+
+.preset-option input[type="radio"] {
+  margin-top: 3px;
+  margin-right: 10px;
+}
+
+.preset-option label {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  cursor: pointer;
+}
+
+.preset-description {
+  color: var(--muted);
+  font-size: 0.85em;
+  margin-top: 3px;
+}
+
+/* Custom timer inputs styling */
+.custom-timer-inputs {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--shadow);
+  display: none; /* Hidden by default */
+}
+
+.preset-option input[type="radio"]:checked + label .custom-timer-inputs {
+  display: block; /* Show when custom preset is selected */
+}
+
+.timer-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.timer-input-group:last-child {
+  margin-bottom: 0;
+}
+
+.timer-input-group label {
+  min-width: 80px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.timer-input-group input[type="number"] {
+  width: 72px;
+  padding: 10px 6px;
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+  background: var(--bg-alt);
+  color: var(--fg);
+  font-size: 0.9em;
+  text-align: center;
+}
+
+.timer-input-group input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.timer-input-group span {
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.settings-description {
+  color: var(--text-secondary, #999);
+  font-size: 0.85em;
+  margin-top: 4px;
+  margin-left: 24px; /* Align with text after checkbox */
+  opacity: 0.85;
+}
+
+/* Add or update these styles for the modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background-color: var(--bg-alt);
+  padding: 20px;
+  border-radius: var(--radius);
+  min-width: 300px;
+  max-width: 500px;
+  max-height: 90vh;
+  position: relative;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+}
+
+.close-modal {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color var(--transition);
+}
+
+.close-modal:hover {
+  color: var(--accent);
+}
+
+.modal h2 {
+  margin-bottom: 16px;
+  padding-right: 30px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--fg);
+}
+
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--muted);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.form-group input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.color-option {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform var(--transition), border-color var(--transition);
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.selected {
+  border-color: var(--fg);
+  transform: scale(1.1);
+}
+
+.modal-save-btn {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 100%;
+  margin-top: 16px;
+  transition: background-color var(--transition);
+}
+
+.modal-save-btn:hover {
+  background-color: var(--accent-secondary);
+}
+
+/* Make the main container animated on load */
+.container {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Splash screen for mobile */
+.splash-screen {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  animation: fadeOut 0.5s ease-in-out 1.5s forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; visibility: hidden; }
+}
+
+#insightsCard {
+  padding-left: 24px !important;
+}
+
+/* Checkbox control layout for settings */
+.checkbox-control {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.checkbox-control input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.checkbox-control label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.setting-description {
+  margin-top: 6px;
+  margin-left: 24px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+/* Settings options with checkbox */
+.settings-option {
+  margin: 12px 0;
+}
+
+.settings-option input[type="checkbox"] {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.settings-option label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 500;
+}
