@@ -1,0 +1,435 @@
+/* Task Planner Styles */
+
+.planner-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.planner-date {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.planner-navigation {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.planner-navigation .nav-btn {
+  background: none;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  color: var(--text);
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+}
+
+.planner-navigation .nav-btn:hover {
+  background-color: var(--surface);
+  border-color: var(--accent);
+}
+
+.planner-navigation .nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.planner-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+}
+
+.planner-status i {
+  font-size: 0.7rem;
+}
+
+.planner-status.on-track i {
+  color: var(--accent);
+}
+
+/* .planner-status.behind i {
+  color: var(--error);
+} */
+
+.planner-status.ahead i {
+  color: var(--accent);
+}
+
+.planner-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.planner-time {
+  display: flex;
+  flex-direction: column;
+}
+
+#plannerCurrentTime {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.planner-end-time {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Update timeline height to accommodate stacked tasks */
+.planner-timeline {
+  position: relative;
+  height: 100px; /* Increased total height for stacked tasks */
+  background-color: var(--surface);
+  border-radius: 5px;
+  margin-bottom: 15px;
+  overflow: visible;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  min-height: 100px;
+}
+
+/* Timeline container needs to be taller to accommodate stacked tasks */
+.timeline-container {
+  position: relative;
+  height: 80px; /* Increased height for stacked tasks */
+  width: 100%;
+  min-height: 80px;
+  background-color: var(--surface);
+  border-radius: 5px 5px 0 0; /* Round only top corners */
+}
+
+/* Update now indicator height */
+.timeline-now-indicator {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 80px; /* Updated to match new container height */
+  background-color: var(--accent);
+  z-index: 10;
+  pointer-events: none;
+  box-shadow: 0 0 4px var(--accent);
+}
+
+.timeline-task {
+  position: absolute;
+  height: 25px; /* Slightly smaller height for better stacking */
+  background-color: var(--accent); /* Default blue for future tasks */
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  min-width: 2px;
+  z-index: 5;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  /* top position will be calculated dynamically for stacking */
+}
+
+.timeline-task.current {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--success);
+}
+
+.timeline-task.completed {
+  opacity: 0.7; /* Slightly dimmed but still solid */
+}
+
+/* .timeline-task.overdue {
+  background-color: var(--error);
+} */
+
+.timeline-task:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  z-index: 15;
+}
+
+/* Past task styling */
+.timeline-task.past-task {
+  opacity: 0.6;
+  /* background-color: var(--text-secondary) !important; Grey for past tasks */
+  cursor: default !important;
+}
+
+.timeline-task.past-task:hover {
+  filter: none !important;
+  transform: none !important;
+  z-index: 5 !important;
+}
+
+.planner-task.past-task {
+  opacity: 0.7;
+  border-left: 3px solid var(--text-secondary);
+  cursor: default !important;
+}
+
+.planner-task.past-task:hover {
+  transform: none !important;
+}
+
+.planner-task.past-task .task-title {
+  color: var(--text-secondary);
+}
+
+.past-indicator {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Time markers at the bottom of timeline */
+.timeline-time-markers {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 5px 5px; /* Round only bottom corners */
+}
+
+.timeline-time-marker {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  padding: 0 4px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  margin-top: 2px;
+}
+
+.timeline-time-marker::before {
+  content: '';
+  position: absolute;
+  top: -20px; /* Position above the marker */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 18px; /* Extend up to near the task area */
+  background-color: var(--text-secondary);
+  opacity: 0.3;
+}
+
+.planner-tasks {
+  margin-bottom: 15px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.planner-task {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  margin-bottom: 8px;
+  background-color: var(--surface);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+}
+
+.planner-task:hover {
+  transform: translateX(2px);
+}
+
+.planner-task.current {
+  border-left: 3px solid var(--accent);
+}
+
+.planner-task.overdue {
+}
+
+.planner-task.completed {
+  opacity: 0.8; /* Slightly dimmed but still solid */
+  border-left: 3px solid var(--success);
+}
+
+.task-details {
+  flex: 1;
+}
+
+.task-title {
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.task-time {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-action-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 2px;
+  transition: color 0.2s ease;
+}
+
+.task-action-btn:hover {
+  color: var(--text);
+}
+
+.planner-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.planner-action-btn {
+  background: none;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.planner-action-btn:hover {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+/* Empty state styling */
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state p {
+  margin: 5px 0;
+}
+
+/* Task Planner Modal */
+.task-form-group {
+  margin-bottom: 15px;
+}
+
+.task-form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.task-form-group input,
+.task-form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid var(--surface);
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+.task-time-inputs {
+  display: flex;
+  gap: 10px;
+}
+
+.task-time-inputs .time-input-group {
+  flex: 1;
+}
+
+.end-time-display {
+  margin-top: 10px;
+  padding: 8px;
+  background-color: var(--surface);
+  border-radius: 5px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Responsive styles */
+@media (max-width: 600px) {
+  .task-time-inputs {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+/* Empty state styling */
+.empty-state {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state p {
+  margin: 8px 0;
+}
+
+.empty-state strong {
+  color: var(--text);
+}
+
+.empty-state-hint {
+  font-size: 0.9rem;
+  margin-top: 15px !important;
+  opacity: 0.8;
+}
+
+/* Timeline placeholder styling */
+.timeline-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.timeline-placeholder-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.placeholder-icon {
+  font-size: 1.2rem;
+}
+
+.placeholder-text {
+  white-space: nowrap;
+}
+
+/* General time markers styling */
+.timeline-time-marker.general-marker {
+  opacity: 0.6;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
