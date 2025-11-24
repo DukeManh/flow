@@ -37,8 +37,11 @@ export function initTimer() {
     onSessionEnd: recordSession,
     onBreakEnd: () => {
       if (pendingPresetRestore && timerCore) {
-        updateTimerPresetWithoutInterruption(pendingPresetRestore);
+        const presetToRestore = pendingPresetRestore;
         pendingPresetRestore = null;
+
+        updateTimerPreset(presetToRestore);
+        timerCore.start();
       }
     },
     getTodos: getTodos,
