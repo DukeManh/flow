@@ -34,7 +34,30 @@ export function initTimer() {
   // Initialize timer core
   timerCore = new TimerCore({
     // Set up callbacks
-    onSessionEnd: recordSession,
+    onSessionEnd: (session) => {
+      recordSession(session);
+
+      // Skip break after a starter run and immediately restore the user's preset
+      if (timerCore?.state.currentPreset === 'starter' && pendingPresetRestore) {
+        const presetToRestore = pendingPresetRestore;
+        pendingPresetRestore = null;
+
+        // Restore the preset so durations reset correctly
+        updateTimerPreset(presetToRestore);
+
+        // Ensure we remain in focus mode and start fresh
+        timerCore.state.onBreak = false;
+        timerCore.state.remainingTime = timerCore.state.workDuration;
+        timerCore.updateBreakUI();
+        timerCore.updateDisplay();
+
+        // Immediately begin the restored focus session
+        timerCore.start();
+        return { skipBreak: true };
+      }
+
+      return null;
+    },
     onBreakEnd: () => {
       if (pendingPresetRestore && timerCore) {
         const presetToRestore = pendingPresetRestore;
