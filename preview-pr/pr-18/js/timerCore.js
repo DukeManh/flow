@@ -192,6 +192,10 @@ export class TimerCore {
     
     this.state.isRunning = running;
     
+    if (this.elements.starterBtn) {
+      this.elements.starterBtn.disabled = running;
+    }
+
     if (this.state.onBreak) {
       if (this.elements.startBtn) {
         this.elements.startBtn.disabled = running;
@@ -221,7 +225,7 @@ export class TimerCore {
     } else {
       if (this.elements.startBtn) {
         this.elements.startBtn.disabled = running;
-        this.elements.startBtn.textContent = "Lock In";
+        this.elements.startBtn.textContent = "Start";
       }
       
       if (this.elements.pauseBtn) {
