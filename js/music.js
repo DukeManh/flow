@@ -10,7 +10,8 @@ import {
   musicLabels
 } from './constants.js';
 import storageService from './storage.js';
-import { initAdBlocker } from './adBlocker.js'; // Import our new ad blocker
+import { initAdBlocker } from './adBlocker.js'; // Import our ad blocker
+import { initSponsorBlocker, removeSponsorBlocker } from './sponsorBlocker.js'; // SponsorBlock integration
 
 // Music elements
 let ytPlayer, customVidInput;
@@ -70,9 +71,11 @@ export async function initMusic() {
   
   // Initialize YouTube player with the remembered video
   ytPlayer.src = `https://www.youtube.com/embed/${currentVideoID}?autoplay=0&loop=1&playlist=${currentVideoID}&rel=0&controls=1&iv_load_policy=3&modestbranding=1&enablejsapi=1&origin=${window.location.origin}`;
-  
+
   // Initialize the ad blocker for the YouTube player
   initAdBlocker(ytPlayer);
+  // Initialize SponsorBlocker to skip sponsored segments
+  initSponsorBlocker(ytPlayer, currentVideoID);
   
   // Update button labels
   updateButtonLabels();
@@ -88,8 +91,12 @@ async function changeVideo(id) {
   // Updated YouTube embed URL with ad-blocking parameters
   ytPlayer.src = `https://www.youtube.com/embed/${id}?autoplay=1&loop=1&playlist=${id}&rel=0&controls=1&iv_load_policy=3&modestbranding=1&enablejsapi=1&origin=${window.location.origin}`;
   
-  // Re-initialize the ad blocker for the new video
-  setTimeout(() => initAdBlocker(ytPlayer), 500);
+  // Re-initialize the ad and sponsor blockers for the new video
+  setTimeout(() => {
+    initAdBlocker(ytPlayer);
+    removeSponsorBlocker(ytPlayer);
+    initSponsorBlocker(ytPlayer, id);
+  }, 500);
   
   await saveLastVideoIDToStorage(id);
   setCurrentVideo(id);
